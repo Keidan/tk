@@ -1,0 +1,9 @@
+lib
+*~
+Makefile
+CMakeFiles
+CMakeCache*
+cmake_*
+#*
+.#*
+doc
