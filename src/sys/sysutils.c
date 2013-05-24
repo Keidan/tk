@@ -29,6 +29,25 @@
 
 #define USEC_PER_SEC         1000000UL
 
+
+
+/**
+ * @fn long sysutils_fsize(FILE* file)
+ * @brief Recupere la taille du fichier.
+ * @param file Taille.
+ * @return Long.
+ */
+long sysutils_fsize(FILE* file) {
+  long size = 0L, old = 0L;
+  if (file) {
+    old = ftell(file);
+    fseek(file, 0L, SEEK_END);
+    size = ftell(file);
+    fseek(file, old, SEEK_SET);
+  }
+  return size;
+}
+
 void sysutils_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file) {
   snprintf(filename, FILENAME_MAX, "/proc/%d/%s", pid, file);
 }

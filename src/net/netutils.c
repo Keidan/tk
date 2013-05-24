@@ -388,23 +388,6 @@ void netutils_size_to_string(long size, char ssize[NETUTILS_MAX_SSIZE]) {
 }
 
 /**
- * @fn long netutils_fsize(FILE* file)
- * @brief Recupere la taille du fichier.
- * @param file Taille.
- * @return Long.
- */
-long netutils_fsize(FILE* file) {
-  long size = 0L, old = 0L;
-  if (file) {
-    old = ftell(file);
-    fseek(file, 0L, SEEK_END);
-    size = ftell(file);
-    fseek(file, old, SEEK_SET);
-  }
-  return size;
-}
-
-/**
  * @fn pcap_hdr_t netutils_pcap_global_hdr(void)
  * @brief Construction du main header du fichier.
  * @return pcap_hdr_t

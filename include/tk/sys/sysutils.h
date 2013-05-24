@@ -45,4 +45,11 @@
   double sysutils_get_phy_memory_size_in(sysutils_unit_et unit);
   long long sysutils_jiffies_to_microsecond(long long jiffies);
 
+  /**
+   * @fn long sysutils_fsize(FILE* file)
+   * @brief Recupere la taille du fichier.
+   * @param file Taille.
+   * @return Long.
+   */
+  long sysutils_fsize(FILE* file);
 #endif /* __SYSUTILS_H__ */
