@@ -68,26 +68,6 @@
  */
 #define NETUTILS_PCAP_SNAPLEN           65535
 
-/**
- * @def VALUE_1KO
- * @brief Valeur 1 Ko en octets
- * @see bns_utils_size_to_string
- */
-#define VALUE_1KO   0x400
-/**
- * @def VALUE_1MO
- * @brief Valeur 1 Mo en octets
- * @see bns_utils_size_to_string
- */
-#define VALUE_1MO   0x100000
-/**
- * @def VALUE_1GO
- * @brief Valeur 1 Go en octets
- * @see bns_utils_size_to_string
- */
-#define VALUE_1GO   0x40000000
-
-
 
 /**
  * Liste toutes les interfaces et les ajoutent a la liste (IMPORTANT: apres appel de cette methode des sockets sont ouverts).
@@ -368,24 +348,6 @@ unsigned int netutils_ip_to_long(const char* s) {
   return ntohl(n.sin_addr.s_addr);
 }
 
-/**
- * @fn void netutils_size_to_string(long size, char ssize[NETUTILS_MAX_SSIZE])
- * @brief Convertie une taille en string avec l'unite.
- * @param size Taille.
- * @param ssize Output
- */
-void netutils_size_to_string(long size, char ssize[NETUTILS_MAX_SSIZE]) {
-  memset(ssize, 0, NETUTILS_MAX_SSIZE);
-  float s = size;
-  if(size < VALUE_1KO)
-    snprintf(ssize, NETUTILS_MAX_SSIZE, "%ld octet%s", size, size > 1 ? "s" : "");
-  else if(size < VALUE_1MO)
-    snprintf(ssize, NETUTILS_MAX_SSIZE, "%ld Ko", (long)ceil(s/VALUE_1KO));
-  else if(size < VALUE_1GO)
-    snprintf(ssize, NETUTILS_MAX_SSIZE, "%ld Mo", (long)ceil(s/VALUE_1MO));
-  else
-    snprintf(ssize, NETUTILS_MAX_SSIZE, "%ld Go",  (long)ceil(s/VALUE_1GO));
-}
 
 /**
  * @fn pcap_hdr_t netutils_pcap_global_hdr(void)

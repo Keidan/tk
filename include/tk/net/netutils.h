@@ -101,12 +101,6 @@
       __u32 orig_len;      /**< actual length of packet */
   } pcaprec_hdr_t;
 
-  /**
-   * @def NETUTILS_MAX_SSIZE
-   * @brief Taille max du string utilise avec la fonction "netutils_size_to_string"
-   * @see bns_utils_size_to_string
-   */
-  #define NETUTILS_MAX_SSIZE 15
 
 
   typedef enum { NETUTILS_CONVERT_NONE, NETUTILS_CONVERT_HOST2NET, NETUTILS_CONVERT_NET2HOST} netutils_convert_et;
@@ -228,14 +222,6 @@
   unsigned int netutils_ip_to_long(const char* s);
 
   /**
-   * @fn long netutils_fsize(FILE* file)
-   * @brief Recupere la taille du fichier.
-   * @param file Taille.
-   * @return Long.
-   */
-  long netutils_fsize(FILE* file);
-
-  /**
    * @fn pcap_hdr_t netutils_pcap_global_hdr(void)
    * @brief Construction du main header du fichier.
    * @return pcap_hdr_t
@@ -248,15 +234,6 @@
    * @return pcaprec_hdr_t.
    */
   pcaprec_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len);
-
-
-  /**
-   * @fn void netutils_size_to_string(long size, char ssize[NETUTILS_MAX_SSIZE])
-   * @brief Convertie une taille en string avec l'unite.
-   * @param size Taille.
-   * @param ssize Output
-   */
-  void netutils_size_to_string(long size, char ssize[NETUTILS_MAX_SSIZE]);
 
   /**
    * @fn void netutils_write_pcap_packet(const FILE* output, const char* buffer, size_t a_length, size_t r_length, _Bool *first)

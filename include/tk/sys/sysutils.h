@@ -30,6 +30,12 @@
   #define SYSUTILS_1GB   0x40000000
 
 
+  /**
+   * @def SYSUTILS_MAX_SSIZE
+   * @brief Taille max du string utilise avec la fonction "sysutils_size_to_string"
+   * @see sysutils_size_to_string
+   */
+  #define SYSUTILS_MAX_SSIZE 15
 
   typedef enum { SYSUTILS_UNIT_BYTE, SYSUTILS_UNIT_KBYTES, SYSUTILS_UNIT_MBYTES, SYSUTILS_UNIT_GBYTES} sysutils_unit_et;
 
@@ -52,4 +58,13 @@
    * @return Long.
    */
   long sysutils_fsize(FILE* file);
+
+
+  /**
+   * @fn void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE])
+   * @brief Convertie une taille en string avec l'unite.
+   * @param size Taille.
+   * @param ssize Output
+   */
+  void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE]);
 #endif /* __SYSUTILS_H__ */
