@@ -74,7 +74,7 @@ long sysutils_fsize(FILE* file) {
  * @param size Taille.
  * @param ssize Output
  */
-void netutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE]) {
+void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE]) {
   memset(ssize, 0, SYSUTILS_MAX_SSIZE);
   float s = size;
   if(size < VALUE_1KO)
