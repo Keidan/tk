@@ -8,14 +8,15 @@ This software is distributed in the hope that it will be useful, but WITHOUT ANY
 Instructions
 ============
 
+
 download the software :
 
-  mkdir devel<br>
-  cd devel<br>
-  git clone git://github.com/Keidan/tk.git<br>
-  cd tk<br>
-  cmake -DCMAKE_BUILD_TYPE=[x86|x86_64|xscale] -DDISTRIBUTION=[debug|release] .<br>
-  make<br>
+	mkdir devel
+	cd devel
+	git clone git://github.com/Keidan/tk.git
+	cd tk
+	cmake -DCMAKE_BUILD_TYPE=[x86|x86_64|xscale] -DDISTRIBUTION=[debug|release] .
+	make
   
 
 License (like GPL)
