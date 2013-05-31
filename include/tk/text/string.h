@@ -39,14 +39,14 @@
    * @brief Simple fonction indexof
    * @param source Chaine de recherche.
    * @param needed Chaine a chercher.
-   * @param Retourne -1 si non trouve sinon sa position.
+   * @return Retourne -1 si non trouve sinon sa position.
    */
   int string_indexof(const char* source, const char* needed);
 
   /**
    * @brief Test si une chaine est un entier ou non.
    * @param source Chaine de test.
-   * @param Retourne 1 si oui sinon retourne 0.
+   * @return Retourne 1 si oui sinon retourne 0.
    */
   int string_isint(const char* source);
 
@@ -66,7 +66,7 @@
 
   /**
    * @brief Converti un entier string en int
-   * @param source Chaine source.
+   * @param str Chaine source.
    * @param def Valeur en cas d'erreur.
    * @return l'entier.
    */

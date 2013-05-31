@@ -69,7 +69,7 @@ long sysutils_fsize(FILE* file) {
 }
 
 /**
- * @fn void netutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE])
+ * @fn void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE])
  * @brief Convertie une taille en string avec l'unite.
  * @param size Taille.
  * @param ssize Output
