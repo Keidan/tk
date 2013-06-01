@@ -44,6 +44,15 @@
   int string_indexof(const char* source, const char* needed);
 
   /**
+   * @fn size_t string_count(const char* source, const char needed)
+   * @brief Compte le nombre de fois ou le char est trouve.
+   * @param source Chaine de recherche.
+   * @param needed Char a compter.
+   * @return Nombre d'occurences.
+   */
+  size_t string_count(const char* source, const char needed);
+
+  /**
    * @brief Test si une chaine est un entier ou non.
    * @param source Chaine de test.
    * @return Retourne 1 si oui sinon retourne 0.
