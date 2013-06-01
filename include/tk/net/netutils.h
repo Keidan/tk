@@ -37,11 +37,16 @@
   /* nombre max de chars dans une ligne */
   #define PRINT_HEX_MAX_PER_LINES 16
 
+  #define NETUTILS_SMAC_LEN 18
+
+  typedef char smac_t[NETUTILS_SMAC_LEN];
+  typedef __u8 mac_t[ETH_ALEN];
 
   struct netutils_filter_s {
     __u32 ip;
     __u32 port;
     char iface[IF_NAMESIZE];
+    smac_t mac;
   };
 
 /* utilisee pour le decodage de la reponse/requete ARP */
@@ -250,4 +255,29 @@
    * @param first Cette variable permet l'ecriture du header global, en debut de fichier uniquement.
    */
   void netutils_write_pcap_packet(FILE* output, const char* buffer, size_t a_length, size_t r_length, _Bool *first);
+
+  /**
+   * @fn void netutils_mac2str(mac_t mac, smac_t m)
+   * @brief Convertion d'un tableau MAC vers une chaine MAC.
+   * @param mac MAC a convertir.
+   * @param m MAC en str.
+   */
+  void netutils_mac2str(mac_t mac, smac_t m);
+
+  /**
+   * @fn void netutils_str2mac(smac_t mac, mac_t m)
+   * @brief Convertion d'un string MAC versun tableau MAC.
+   * @param mac MAC a convertir.
+   * @param m MAC en tableau.
+   */
+  void netutils_str2mac(smac_t mac, mac_t m);
+
+  /**
+   * @fn _Bool netutils_valid_mac(smac_t mac)
+   * @brief Test la validite d'une adresse MAC.
+   * @param mac Adresse MAC a tester.
+   * @return 1 Si elle est valide sinon 0.
+   */
+  _Bool netutils_valid_mac(smac_t mac);
+
 #endif /* __NETUTILS_H__ */

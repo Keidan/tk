@@ -34,6 +34,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <math.h>
+#include <regex.h>
 #include <tk/net/netutils.h>
 #include <tk/sys/log.h>
 
@@ -576,6 +577,64 @@ void netutils_release_buffer(struct netutils_headers_s *net) {
 }
 
 /**
+ * @fn _Bool netutils_valid_mac(smac_t mac)
+ * @brief Test la validite d'une adresse MAC.
+ * @param mac Adresse MAC a tester.
+ * @return 1 Si elle est valide sinon 0.
+ */
+_Bool netutils_valid_mac(smac_t mac) {
+   regex_t preg;
+   const char *str_regex = "/([0-9A-F]{2}:){5}[0-9A-F]{2}$/i";
+   int err = regcomp(&preg, str_regex, REG_NOSUB|REG_EXTENDED);
+   if(!err) {
+      int match = regexec(&preg, mac, 0, NULL, 0);
+      regfree(&preg);
+      if(!match) {
+         printf ("%s est une adresse internet valide\n", mac);
+	 return 1;
+      }
+      else if(match == REG_NOMATCH)
+	return 0;
+      else {
+         char *text;
+         size_t size;
+         size = regerror(err, &preg, NULL, 0);
+         text = malloc(sizeof (*text) * size);
+         if(text) {
+            regerror (err, &preg, text, size);
+	    logger(LOG_ERR, "%s\n", text);
+            free (text);
+         }
+         else {
+	    logger(LOG_ERR, "Unable to alloc memory for regex message!\n");
+         }
+      }
+   }
+   return 0;
+}
+/**
+ * @fn void netutils_mac2str(mac_t mac, smac_t m)
+ * @brief Convertion d'un tableau MAC vers une chaine MAC.
+ * @param mac MAC a convertir.
+ * @param m MAC en str.
+ */
+void netutils_mac2str(mac_t mac, smac_t m) {
+  sprintf(m, "%02x:%02x:%02x:%02x:%02x:%02x", 
+	 mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+/**
+ * @fn void netutils_str2mac(smac_t mac, mac_t m)
+ * @brief Convertion d'un string MAC versun tableau MAC.
+ * @param mac MAC a convertir.
+ * @param m MAC en tableau.
+ */
+void netutils_str2mac(smac_t mac, mac_t m) {
+  sscanf(mac, "%x:%x:%x:%x:%x:%x", 
+	 (__u32*)&m[0], (__u32*)&m[1], (__u32*)&m[2], (__u32*)&m[3], (__u32*)&m[4], (__u32*)&m[5]);
+}
+
+/**
  * @fn _Bool netutils_match_from_simple_filter(struct netutils_headers_s *net, struct netutils_filter_s filter)
  * @brief Test si le regle matche ou non.
  * @param net entetes.
@@ -583,7 +642,16 @@ void netutils_release_buffer(struct netutils_headers_s *net) {
  * @return Retourne 1 si match.
  */
 _Bool netutils_match_from_simple_filter(struct netutils_headers_s *net, struct netutils_filter_s filter) {
-  _Bool ip_found = 0, port_found = 0;
+  _Bool ip_found = 0, port_found = 0, mac_found = 0;
+  if(netutils_valid_mac(filter.mac)) {
+    mac_t m;
+    netutils_str2mac(filter.mac, m);
+    if(memcmp(net->eth->h_source, m, ETH_ALEN) == 0)
+      mac_found = 1;
+    else if(memcmp(net->eth->h_dest, m, ETH_ALEN) == 0)
+      mac_found = 1;
+    if(!mac_found) return 0;
+  } else mac_found = 1;
   if(net->eth->h_proto == ETH_P_IP || net->eth->h_proto == ETH_P_IPV6) {
     if(net->ipv4) {
       if(filter.ip) {
@@ -629,5 +697,5 @@ _Bool netutils_match_from_simple_filter(struct netutils_headers_s *net, struct n
       } else port_found = ip_found = 1;
     }
   }
-  return ip_found && port_found;
+  return mac_found && ip_found && port_found;
 }
