@@ -584,7 +584,7 @@ void netutils_release_buffer(struct netutils_headers_s *net) {
  */
 _Bool netutils_valid_mac(smac_t mac) {
    regex_t preg;
-   const char *str_regex = "/([0-9A-F]{2}:){5}[0-9A-F]{2}$/i";
+   const char *str_regex = "(([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2})|(([0-9A-Fa-f]{4}.){2}[0-9A-Fa-f]{4})";
    int err = regcomp(&preg, str_regex, REG_NOSUB|REG_EXTENDED);
    if(!err) {
       int match = regexec(&preg, mac, 0, NULL, 0);
