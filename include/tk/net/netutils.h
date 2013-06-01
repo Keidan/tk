@@ -106,7 +106,44 @@
       __u32 orig_len;      /**< actual length of packet */
   } pcaprec_hdr_t;
 
+  /**
+   * @def NETUTILS_PCAP_VERSION_MAJOR
+   * @brief Version major du fichier pcap.
+   * @see netutils_utils_pcap_global_hdr
+   */
+  #define NETUTILS_PCAP_VERSION_MAJOR     2
+  /**
+   * @def NETUTILS_PCAP_VERSION_MINOR
+   * @brief Version minor du fichier pcap.
+   * @see netutils_utils_pcap_global_hdr
+   */
+  #define NETUTILS_PCAP_VERSION_MINOR     4
+  /**
+   * @def NETUTILS_PCAP_MAGIC_NATIVE
+   * @brief Magic du fichier pcap.
+   * @see netutils_utils_pcap_global_hdr
+   */
+  #define NETUTILS_PCAP_MAGIC_NATIVE      0xa1b2c3d4
+  /**
+   * @def NETUTILS_PCAP_MAGIC_SWAPPED
+   * @brief Magic du fichier pcap.
+   * @see netutils_utils_pcap_global_hdr
+   */
+  #define NETUTILS_PCAP_MAGIC_SWAPPED      0xd4c3b2a1
+  /**
+   * @def NETUTILS_PCAP_LINKTYPE_ETHERNET
+   * @brief Type de capture.
+   * @see netutils_utils_pcap_global_hdr
+   */
+  #define NETUTILS_PCAP_LINKTYPE_ETHERNET 1
+  /**
+   * @def NETUTILS_PCAP_SNAPLEN
+   * @brief Taille de la capture.
+   * @see netutils_utils_pcap_global_hdr
+   */
+  #define NETUTILS_PCAP_SNAPLEN           65535
 
+  #define netutils_pcap_magic_str(magic) (magic == NETUTILS_PCAP_MAGIC_NATIVE ? "NATIVE" : ( magic == NETUTILS_PCAP_MAGIC_SWAPPED ? "SWAPPED" : "UNKNOWN"))
 
   typedef enum { NETUTILS_CONVERT_NONE, NETUTILS_CONVERT_HOST2NET, NETUTILS_CONVERT_NET2HOST} netutils_convert_et;
 

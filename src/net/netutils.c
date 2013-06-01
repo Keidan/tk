@@ -38,37 +38,6 @@
 #include <tk/net/netutils.h>
 #include <tk/sys/log.h>
 
-/**
- * @def NETUTILS_PCAP_VERSION_MAJOR
- * @brief Version major du fichier pcap.
- * @see netdump_utils_pcap_global_hdr
- */
-#define NETUTILS_PCAP_VERSION_MAJOR     2
-/**
- * @def NETUTILS_PCAP_VERSION_MINOR
- * @brief Version minor du fichier pcap.
- * @see netdump_utils_pcap_global_hdr
- */
-#define NETUTILS_PCAP_VERSION_MINOR     4
-/**
- * @def NETUTILS_PCAP_MAGIC_NATIVE
- * @brief Magic du fichier pcap.
- * @see netdump_utils_pcap_global_hdr
- */
-#define NETUTILS_PCAP_MAGIC_NATIVE      0xa1b2c3d4
-/**
- * @def NETUTILS_PCAP_LINKTYPE_ETHERNET
- * @brief Type de capture.
- * @see netdump_utils_pcap_global_hdr
- */
-#define NETUTILS_PCAP_LINKTYPE_ETHERNET 1
-/**
- * @def NETUTILS_PCAP_SNAPLEN
- * @brief Taille de la capture.
- * @see netdump_utils_pcap_global_hdr
- */
-#define NETUTILS_PCAP_SNAPLEN           65535
-
 
 /**
  * Liste toutes les interfaces et les ajoutent a la liste (IMPORTANT: apres appel de cette methode des sockets sont ouverts).
