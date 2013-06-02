@@ -266,9 +266,10 @@
   /**
    * @fn pcap_hdr_t netutils_pcap_global_hdr(void)
    * @brief Construction du main header du fichier.
+   * @param link Data link type.
    * @return pcap_hdr_t
    */
-  pcap_hdr_t netutils_pcap_global_hdr(void);
+  pcap_hdr_t netutils_pcap_global_hdr(__u32 link);
 
   /**
    * @fn pcap_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len)
@@ -286,12 +287,13 @@
    * | Global Header | Packet Header | Packet Data | Packet Header | Packet Data | Packet Header | Packet Data | ... |
    * -----------------------------------------------------------------------------------------------------------------
    * @param output Fichier de sortie.
+   * @param link Data link type.
    * @param buffer Buffer d'entree.
    * @param a_length Taille demandee a l'appel de recvfrom.
    * @param r_length Taille recuperee apres l'appel de recvfrom.
    * @param first Cette variable permet l'ecriture du header global, en debut de fichier uniquement.
    */
-  void netutils_write_pcap_packet(FILE* output, const char* buffer, size_t a_length, size_t r_length, _Bool *first);
+  void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, size_t a_length, size_t r_length, _Bool *first);
 
   /**
    * @fn void netutils_mac2str(mac_t mac, smac_t m)

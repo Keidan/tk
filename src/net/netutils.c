@@ -322,9 +322,10 @@ unsigned int netutils_ip_to_long(const char* s) {
 /**
  * @fn pcap_hdr_t netutils_pcap_global_hdr(void)
  * @brief Construction du main header du fichier.
+ * @param link Data link type.
  * @return pcap_hdr_t
  */
-pcap_hdr_t netutils_pcap_global_hdr(void) {
+pcap_hdr_t netutils_pcap_global_hdr(__u32 link) {
   pcap_hdr_t hdr;
   memset(&hdr, 0, sizeof(pcap_hdr_t));
   hdr.magic_number = NETUTILS_PCAP_MAGIC_NATIVE;
@@ -334,7 +335,7 @@ pcap_hdr_t netutils_pcap_global_hdr(void) {
   hdr.thiszone = timezone;
   hdr.sigfigs = 0;
   hdr.snaplen = NETUTILS_PCAP_SNAPLEN;
-  hdr.network = NETUTILS_PCAP_LINKTYPE_ETHERNET;
+  hdr.network = link;
   return hdr;
 }
 
@@ -363,14 +364,15 @@ pcaprec_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
  * | Global Header | Packet Header | Packet Data | Packet Header | Packet Data | Packet Header | Packet Data | ... |
  * -----------------------------------------------------------------------------------------------------------------
  * @param output Fichier de sortie.
+ * @param link Data link type.
  * @param buffer Buffer d'entree.
  * @param a_length Taille demandee a l'appel de recvfrom.
  * @param r_length Taille recuperee apres l'appel de recvfrom.
  * @param first Cette variable permet l'ecriture du header global, en debut de fichier uniquement.
  */
-void netutils_write_pcap_packet(FILE* output, const char* buffer, size_t a_length, size_t r_length, _Bool *first) {
+void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, size_t a_length, size_t r_length, _Bool *first) {
   if(*first) {
-    pcap_hdr_t ghdr = netutils_pcap_global_hdr();
+    pcap_hdr_t ghdr = netutils_pcap_global_hdr(link);
     fwrite(&ghdr, 1, sizeof(pcap_hdr_t), output);
     *first = 0;
   }
