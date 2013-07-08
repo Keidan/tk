@@ -55,7 +55,7 @@ void string_toupper(const char* source, char* dest) {
  * @param str Chaine d'entree.
  * @param begin Point de depart.
  * @param len Longueur.
- * @return Fragment de chaine.
+ * @return Fragment de chaine (strdup utilise).
  */
 char* string_substring(const char* str, size_t begin, size_t len)  { 
   if (str == 0 || strlen(str) == 0 || strlen(str) < begin || strlen(str) < (begin+len)) 

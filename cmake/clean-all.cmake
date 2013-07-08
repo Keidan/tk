@@ -3,12 +3,12 @@ set(cmake_generated ${CMAKE_BINARY_DIR}/CMakeCache.txt
                     ${CMAKE_BINARY_DIR}/cmake_install.cmake  
                     ${CMAKE_BINARY_DIR}/Makefile
                     ${CMAKE_BINARY_DIR}/CMakeFiles
-                    ${CMAKE_BINARY_DIR}/src/library/cmake_install.cmake  
-                    ${CMAKE_BINARY_DIR}/src/library/Makefile
-                    ${CMAKE_BINARY_DIR}/src/library/CMakeFiles
-                    ${CMAKE_BINARY_DIR}/src/binary/cmake_install.cmake  
-                    ${CMAKE_BINARY_DIR}/src/binary/Makefile
-                    ${CMAKE_BINARY_DIR}/src/binary/CMakeFiles
+                    ${CMAKE_BINARY_DIR}/src/zlib-minizip/cmake_install.cmake  
+                    ${CMAKE_BINARY_DIR}/src/zlib-minizip/Makefile
+                    ${CMAKE_BINARY_DIR}/src/zlib-minizip/CMakeFiles
+                    ${CMAKE_BINARY_DIR}/src/tk/cmake_install.cmake  
+                    ${CMAKE_BINARY_DIR}/src/tk/Makefile
+                    ${CMAKE_BINARY_DIR}/src/tk/CMakeFiles
                     ${CMAKE_BINARY_DIR}/bin/x86
                     ${CMAKE_BINARY_DIR}/bin/x86_64
                     ${CMAKE_BINARY_DIR}/bin/xscale

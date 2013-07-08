@@ -55,7 +55,7 @@
   /**
    * @brief Recuperation du prochain token.
    * @param tok Handle sur le token.
-   * @return Nouveau token ou null.
+   * @return Nouveau token ou null (strdup utilise).
    */
   char* stringtoken_next_token(stringtoken_t tok);
 

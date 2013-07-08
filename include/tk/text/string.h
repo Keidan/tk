@@ -31,7 +31,7 @@
    * @param str Chaine d'entree.
    * @param begin Point de depart.
    * @param len Longueur.
-   * @return Fragment de chaine.
+   * @return Fragment de chaine (strdup utilise).
    */
   char* string_substring(const char* str, size_t begin, size_t len);
 

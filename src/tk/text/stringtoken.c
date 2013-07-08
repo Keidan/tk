@@ -87,7 +87,7 @@ int stringtoken_has_more_tokens(stringtoken_t tok) {
 /**
  * @brief Recuperation du prochain token.
  * @param tok Handle sur le token.
- * @return Nouveau token ou null.
+ * @return Nouveau token ou null (strdup utilisé).
  */
 char* stringtoken_next_token(stringtoken_t tok) {
   stringtoken_handle_t *t = (stringtoken_handle_t *)tok;

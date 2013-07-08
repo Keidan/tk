@@ -13,11 +13,13 @@ endif()
 message("-- Target mode: ${DISTRIBUTION}")
 
 # update directories
-set(TK_SRC_DIR ${CMAKE_SOURCE_DIR}/src)
+set(TK_SRC_DIR ${CMAKE_SOURCE_DIR}/src/tk)
+set(ZLIB_SRC_DIR ${CMAKE_SOURCE_DIR}/src/zlib-minizip)
 set(TK_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
 # global config
 include_directories("${TK_INCLUDE_DIR}")
+include_directories("${TK_INCLUDE_DIR}/zlib-minizip")
 
 # add custom targets
 add_custom_target(clean-all
@@ -76,4 +78,5 @@ else()
   message(FATAL_ERROR "Invalid usage please use: cmake -DCMAKE_BUILD_TYPE=[x86|x86_64|xscale]")
 endif()
 
+add_subdirectory(${ZLIB_SRC_DIR})
 add_subdirectory(${TK_SRC_DIR})
