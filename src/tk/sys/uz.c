@@ -40,7 +40,7 @@
 uz_t uz_open(const char filename[FILENAME_MAX]) {
   uz_t uz = NULL;
   if(!(uz = (uz_t)malloc(sizeof(struct uz_ctx_s)))) {
-    uzlogger("Unable to alloc a memory for the zip file '%s'", filename);
+    uzlogger("Unable to alloc a memory for the zip file '%s'\n", filename);
     return NULL;
   }
   memset(uz, 0, sizeof(struct uz_ctx_s));
@@ -49,13 +49,13 @@ uz_t uz_open(const char filename[FILENAME_MAX]) {
   /* Open the zip file */
   uz->ctx = unzOpen(uz->filename);
   if(!uz->ctx) {
-    uzlogger("Unable to open the zip file '%s'", uz->filename);
+    uzlogger("Unable to open the zip file '%s'\n", uz->filename);
     uz_close(uz);
     return NULL;
   }
   /* Get info about the zip file */
   if(unzGetGlobalInfo(uz->ctx, &uz->ginfo) != UNZ_OK) {
-    uzlogger("Unable to read the global info related to the '%s' zip file", uz->filename);
+    uzlogger("Unable to read the global info related to the '%s' zip file\n", uz->filename);
     uz_close(uz);
     return NULL;
   }
@@ -110,11 +110,11 @@ int uz_get_contents(uz_t uz, uz_file_content_fct uz_file_content) {
   struct uzentry_s entry;
   int ret = 0;
   if(!uz_is_valid(uz)) {
-    uzlogger("Invalid zip pointer!");
+    uzlogger("Invalid zip pointer!\n");
     return -1;
   }
   if(!uz_file_content) {
-    uzlogger("Invalid file content callback!");
+    uzlogger("Invalid file content callback!\n");
     return -1;
   }
   
@@ -123,7 +123,7 @@ int uz_get_contents(uz_t uz, uz_file_content_fct uz_file_content) {
     memset(&entry, 0, sizeof(struct uzentry_s));
     /* Get info about current file. */
     if(unzGetCurrentFileInfo(uz->ctx, &entry.info, entry.name, FILENAME_MAX, NULL, 0, NULL, 0) != UNZ_OK) {
-      uzlogger("Could not read file info from the zip file '%s'", uz->filename);
+      uzlogger("Could not read file info from the zip file '%s'\n", uz->filename);
       ret = -1;
       break;
     }
@@ -133,7 +133,7 @@ int uz_get_contents(uz_t uz, uz_file_content_fct uz_file_content) {
     else {
       // Entry is a file, so extract it.
       if(unzOpenCurrentFile(uz->ctx) != UNZ_OK) {
-	uzlogger("Could not open file '%s' into the zip file '%s'", entry.name, uz->filename);
+	uzlogger("Could not open file '%s' into the zip file '%s'\n", entry.name, uz->filename);
 	ret = -1;
 	break;
       }
@@ -141,7 +141,7 @@ int uz_get_contents(uz_t uz, uz_file_content_fct uz_file_content) {
       int error = UNZ_OK;
       entry.content = (char*)malloc(entry.info.uncompressed_size);
       if(!entry.content) {
-	uzlogger("Unable to alloc a memory for the content of the zipped file '%s'", entry.name);
+	uzlogger("Unable to alloc a memory for the content of the zipped file '%s'\n", entry.name);
 	ret = -1;
 	break;
       }
@@ -149,7 +149,7 @@ int uz_get_contents(uz_t uz, uz_file_content_fct uz_file_content) {
       do {
 	error = unzReadCurrentFile(uz->ctx, entry.content, entry.info.uncompressed_size);
 	if ( error < 0 ) {
-	  uzlogger("Could not read file '%s' into the zip file '%s': %d", entry.name, uz->filename, error);
+	  uzlogger("Could not read file '%s' into the zip file '%s': %d\n", entry.name, uz->filename, error);
 	  unzCloseCurrentFile(uz->ctx);
 	  break;
 	}
@@ -161,7 +161,7 @@ int uz_get_contents(uz_t uz, uz_file_content_fct uz_file_content) {
     /* Go the the next entry listed in the zip file. */
     if((i+1) < uz->ginfo.number_entry) {
       if (unzGoToNextFile(uz->ctx) != UNZ_OK) {
-  	uzlogger("Could not read next file from the zip file '%s'", uz->filename);
+  	uzlogger("Could not read next file from the zip file '%s'\n", uz->filename);
   	break;
       }
     }
