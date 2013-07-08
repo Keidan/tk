@@ -10,4 +10,4 @@ set(lib_src
   ${TK_SRC_DIR}/net/netprint.c 
 )
 add_library(tk SHARED ${lib_src})
-target_link_libraries(tk m)
+target_link_libraries(tk m zlib-minizip)
