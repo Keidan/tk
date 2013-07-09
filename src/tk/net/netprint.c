@@ -54,43 +54,42 @@ struct ipv6hdr {
     struct  in6_addr   daddr;
 };
 
-
-/**
- * @fn void netprint_print_headers(const char* buffer, __u32 length, struct bns_network_s net)
- * @brief Affichage des entetes.
- * @param buffer Buffer de donnee.
- * @param length Taille du buffer.
- * @param net Entetes.
- */
+  /**
+   * @fn void netprint_print_headers(const char* buffer, __u32 length, struct bns_network_s net)
+   * @brief Print all headers.
+   * @param buffer Buffer datas.
+   * @param length Buffer length.
+   * @param net Headers.
+   */
 void netprint_print_headers(const char* buffer, __u32 length, struct netutils_headers_s net) {
-  /* affichage de l'entete ethernet */
+  /* print the ethernet header */
   netprint_print_eth(net.eth);
-  /* Si le paquet contient un header IP v4/v6 on decode */
+  /* If the packet contains an IP v4/v6 header */
   if(net.ipv4) {
-    /* affichage de l'entete IP */
+    /* printf the IP header */
     netprint_print_ip(net.ipv4);
     if(net.tcp) {
-      /* affichage de l'entete TCP */
+      /* print the TCP header */
       netprint_print_tcp(net.tcp);
     } else if(net.udp) {
-      /* affichage de l'entete UDP */
+      /* printf the UDP header */
       netprint_print_upd(net.udp);
     }
-    /* Si le paquet contient un header ARP */
+    /* If the packet contains an ARP header */
   } else if(net.arp) {
-    /* affichage de l'entete ARP */
+    /* print the ARP header */
     netprint_print_arp(net.arp);
-  } /* le paquet ne contient pas de header ip ni arp ; non gere ici*/
-  printf("\n");/* mise en page */
-  /* affichage du buffer */
+  } 
+  printf("\n");/* layout */
+  /* print the buffer */
   netutils_print_hex(stdout, (char*)buffer, length, 0);
 }
 
-/**
- * @fn void netprint_print_eth(struct ethhdr *eth)
- * @brief Affichage de l'entete Ethernet.
- * @param eth Entete Ethernet.
- */
+  /**
+   * @fn void netprint_print_eth(struct ethhdr *eth)
+   * @brief Print the ethernet header.
+   * @param eth Ethernet header.
+   */
 void netprint_print_eth(struct ethhdr *eth) {
   printf("Ethernet:\n");
   printf("\tSource: %02x:%02x:%02x:%02x:%02x:%02x\n\tDestination: %02x:%02x:%02x:%02x:%02x:%02x\n\tType:0x%04x\n",
@@ -99,11 +98,11 @@ void netprint_print_eth(struct ethhdr *eth) {
 	 eth->h_proto);
 }
 
-/**
- * @fn void netprint_print_arp(struct arphdrs *arpp)
- * @brief Affichage de l'entete ARP.
- * @param arpp Entete ARP.
- */
+  /**
+   * @fn void netprint_print_arp(struct arphdrs *arpp)
+   * @brief Print the ARP header.
+   * @param arpp ARP header
+   */
 void netprint_print_arp(struct arphdrs *arpp) {
   struct arphdr *arp = arpp->arp1;
   struct arphdr2 *p2 = arpp->arp2;
@@ -115,8 +114,8 @@ void netprint_print_arp(struct arphdrs *arpp) {
   printf("\tOpcode: %s (%x)\n", (arp->ar_op == 2 ? "reply" : (arp->ar_op == 1 ? "request" : "unknown")) , arp->ar_op);
 
   /* 
-   * Uniquement pour les requetes reponse et si la taille du protocol vaut 4 (IPv4).
-   * Je n'ai rien sous la main pour tester l'IPv6, je passe mon tour pour le moment...
+   * Only for the response requests and if the size of the protocol is 4 (IPv4).
+   * I have nothing on hand to test IPv6, I'll pass for now ...
    */
   if(p2) {
     printf("\tSender MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
@@ -130,14 +129,13 @@ void netprint_print_arp(struct arphdrs *arpp) {
   }
 }
 
-/**
- * @fn void netprint_print_ip(struct iphdr* ipv4)
- * @brief Affichage de l'entete IPv4/IPv6.
- * @param ipv4 Entete IPv4.
- */
+  /**
+   * @fn void netprint_print_ip(struct iphdr* ipv4)
+   * @brief Print the IP v4 header.
+   * @param ipv4 IPv4 header.
+   */
 void netprint_print_ip(struct iphdr* ipv4) {
   if(ipv4->version == 4) {
-    /* Affichage de l'entete IPv4 */
     char src [INET_ADDRSTRLEN], dst [INET_ADDRSTRLEN];
     memset(dst, 0, sizeof(dst));
     memset(src, 0, sizeof(src));
@@ -176,11 +174,11 @@ void netprint_print_ip(struct iphdr* ipv4) {
   }
 }
 
-/**
- * @fn void netprint_print_upd(struct udphdr *udp)
- * @brief Affichage de l'entete UDP.
- * @param udp Entete UDP.
- */
+  /**
+   * @fn void netprint_print_upd(struct udphdr *udp)
+   * @brief Print the UDP header.
+   * @param udp UDP header
+   */
 void netprint_print_upd(struct udphdr *udp) {
   /* Affichage de l'entete UDP */
   printf("User Datagram Protocol:\n");
@@ -188,11 +186,11 @@ void netprint_print_upd(struct udphdr *udp) {
   printf("\tLength: %d\n\tChecksum: 0x%04x\n", udp->len, udp->check);
 }
 
-/**
- * @fn void netprint_print_tcp(struct tcphdr *tcp)
- * @brief Affichage de l'entete TCP.
- * @param tcp Entet TCP.
- */
+  /**
+   * @fn void netprint_print_tcp(struct tcphdr *tcp)
+   * @brief Print the TCP header
+   * @param tcp TCP header.
+   */
 void netprint_print_tcp(struct tcphdr *tcp) { 
   /* Affichage de l'entete TCP */
   printf("Transmission Control Protocol:\n");

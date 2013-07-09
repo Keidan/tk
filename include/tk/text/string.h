@@ -27,58 +27,74 @@
   #include <string.h>
 
   /**
-   * @brief Simple fonction substring
-   * @param str Chaine d'entree.
-   * @param begin Point de depart.
-   * @param len Longueur.
-   * @return Fragment de chaine (strdup utilise).
+   * @fn char* string_substring(const char* str, size_t begin, size_t len)
+   * @brief Substract a string.
+   * @param str Input string.
+   * @param begin Begin index.
+   * @param len Length.
+   * @return substring (free required).
    */
   char* string_substring(const char* str, size_t begin, size_t len);
 
   /**
-   * @brief Simple fonction indexof
-   * @param source Chaine de recherche.
-   * @param needed Chaine a chercher.
-   * @return Retourne -1 si non trouve sinon sa position.
+   * @fn int string_indexof(const char* source, const char* needed)
+   * @brief Search the index of the needed string into the input string.
+   * @param source Search string.
+   * @param needed Needed string.
+   * @return -1 if not found else 0.
    */
   int string_indexof(const char* source, const char* needed);
 
   /**
    * @fn size_t string_count(const char* source, const char needed)
-   * @brief Compte le nombre de fois ou le char est trouve.
-   * @param source Chaine de recherche.
-   * @param needed Char a compter.
-   * @return Nombre d'occurences.
+   * @brief Count the number of occurences of the needed char.
+   * @param source Search string.
+   * @param needed The char.
+   * @return Occurences number.
    */
   size_t string_count(const char* source, const char needed);
 
   /**
-   * @brief Test si une chaine est un entier ou non.
-   * @param source Chaine de test.
-   * @return Retourne 1 si oui sinon retourne 0.
+   * @fn int string_isint(const char* source)
+   * @brief Test if the string is a valid digit.
+   * @param source The source string
+   * @return 1 if the string is a valid int.
    */
   int string_isint(const char* source);
 
+
   /**
-   * @brief Passe une chaine en minuscule.
-   * @param source Chaine source.
-   * @param dest Chaine de destination.
+   * @fn void string_tolower(const char* source, char* dest)
+   * @brief Convert a string in lower case.
+   * @param source Source string.
+   * @param dest Destination string.
    */
   void string_tolower(const char* source, char* dest);
 
   /**
-   * @brief Passe une chaine en majuscule.
-   * @param source Chaine source.
-   * @param dest Chaine de destination.
+   * @fn void string_toupper(const char* source, char* dest)
+   * @brief Convert a string in upper case.
+   * @param source Source string.
+   * @param dest Destination string.
    */
   void string_toupper(const char* source, char* dest);
 
   /**
-   * @brief Converti un entier string en int
-   * @param str Chaine source.
-   * @param def Valeur en cas d'erreur.
-   * @return l'entier.
+   * @fn int string_parse_int(char* str, int def)
+   * @brief Convert a string int to int value.
+   * @param str Src string.
+   * @param def the default value on error
+   * @return the int value.
    */
   int string_parse_int(char* str, int def);
+
+  /**
+   * @fn _Bool string_match(const char* str, const char* regex)
+   * @brief Test if the regex match with the input string.
+   * @param str The string to test.
+   * @param regex The regex
+   * @return 1 if the regex match else 0.
+   */
+  _Bool string_match(const char* str, const char* regex);
 
 #endif /* __STRING_H__ */

@@ -1,25 +1,25 @@
 /**
- *******************************************************************************
- * @file stringtoken.c
- * @author Keidan
- * @date 10/04/2013
- * @par Project
- * tk
- *
- * @par Copyright
- * Copyright 2011-2013 Keidan, all right reserved
- *
- * This software is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY.
- *
- * Licence summary : 
- *    You can modify and redistribute the sources code and binaries.
- *    You can send me the bug-fix
- *
- * Term of the licence in in the file licence.txt.
- *
- *******************************************************************************
- */
+*******************************************************************************
+* @file stringtoken.c
+* @author Keidan
+* @date 10/04/2013
+* @par Project
+* tk
+*
+* @par Copyright
+* Copyright 2011-2013 Keidan, all right reserved
+*
+* This software is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY.
+*
+* Licence summary : 
+*    You can modify and redistribute the sources code and binaries.
+*    You can send me the bug-fix
+*
+* Term of the licence in in the file licence.txt.
+*
+*******************************************************************************
+*/
 #include <tk/text/stringtoken.h>
 #include <tk/text/string.h>
 #include <stdio.h>
@@ -30,18 +30,18 @@
 #include <limits.h>
 
 typedef struct {
-  char*    str;
-  char*    sep;
-  uint32_t len;
-  uint32_t offset;
+    char*    str;
+    char*    sep;
+    uint32_t len;
+    uint32_t offset;
 } stringtoken_handle_t;
 
-
 /**
- * @brief Initialisation du string token.
- * @param str Chaine a utiliser.
- * @param sep Separateur.
- * @return Retourne un handle sur le token ou null.
+ * @fn stringtoken_t stringtoken_init(const char* str, const char* sep)
+ * @brief Initialisation of the string token.
+ * @param str String to use.
+ * @param sep Delimiter.
+ * @return Get a token pointer else NULL on error.
  */
 stringtoken_t stringtoken_init(const char* str, const char* sep) {
   stringtoken_handle_t *tok = malloc(sizeof(stringtoken_handle_t));
@@ -52,6 +52,12 @@ stringtoken_t stringtoken_init(const char* str, const char* sep) {
   return tok;
 }
 
+/**
+ * @fn uint32_t stringtoken_count(stringtoken_t tok)
+ * @brief Count the number of tokens.
+ * @param tok Token pointer.
+ * @return The number of tokens.
+ */
 uint32_t stringtoken_count(stringtoken_t tok) {
   stringtoken_handle_t *t = (stringtoken_handle_t *)tok;
   if(!t) return 0;
@@ -66,28 +72,32 @@ uint32_t stringtoken_count(stringtoken_t tok) {
 }
 
 /**
- * @brief Liberation des ressources.
- * @param tok Handle sur le token.
+ * @fn void stringtoken_release(stringtoken_t tok)
+ * @brief Release the token.
+ * @param tok Token pointer.
  */
 void stringtoken_release(stringtoken_t tok) {
   free(tok);
 }
 
+
 /**
- * @brief Test si il y a encore des tokens.
- * @param tok Handle sur le token.
- * @return 1 si il en reste sinon 0.
+ * @fn _Bool stringtoken_has_more_tokens(stringtoken_t tok)
+ * @brief Test if the token contains more tokens.
+ * @param tok Token pointer.
+ * @return 1 if has more else 0.
  */
-int stringtoken_has_more_tokens(stringtoken_t tok) {
+_Bool stringtoken_has_more_tokens(stringtoken_t tok) {
   stringtoken_handle_t *t = (stringtoken_handle_t *)tok;
   if(!t) return 0;
   return t->offset < t->len;
 }
 
 /**
- * @brief Recuperation du prochain token.
- * @param tok Handle sur le token.
- * @return Nouveau token ou null (strdup utilisé).
+ * @fn char* stringtoken_next_token(stringtoken_t tok)
+ * @brief Get the next token.
+ * @param tok Token pointer
+ * @return New token else NULL (free is required for non NULL values)
  */
 char* stringtoken_next_token(stringtoken_t tok) {
   stringtoken_handle_t *t = (stringtoken_handle_t *)tok;
@@ -116,10 +126,12 @@ char* stringtoken_next_token(stringtoken_t tok) {
   return s;
 }
 
+
 /**
- * @brief Changement de separateur.
- * @param tok Handle sur le token.
- * @param sep Nouveau separateur.
+ * @fn void stringtoken_set_separator(stringtoken_t tok, char* sep)
+ * @brief update the delimiter.
+ * @param tok Token pointer.
+ * @param sep New delmiter.
  */
 void stringtoken_set_separator(stringtoken_t tok, char* sep) {
   stringtoken_handle_t *t = (stringtoken_handle_t *)tok;
@@ -127,9 +139,10 @@ void stringtoken_set_separator(stringtoken_t tok, char* sep) {
 }
 
 /**
- * @brief Test si la condition peut etre splitee.
- * @param c Char a tester.
- * @param sep Separateur.
+ * @fn int stringtoken_split_condition(char c, char* sep)
+ * @brief Test if the condition can be splited.
+ * @param c Char to test.
+ * @param sep Delimiter.
  */
 int stringtoken_split_condition(char c, char* sep) {
   uint32_t i;

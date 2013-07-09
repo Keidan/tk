@@ -31,30 +31,10 @@
 
 #define USEC_PER_SEC         1000000UL
 
-
-/**
- * @def VALUE_1KO
- * @brief Valeur 1 Ko en octets
- * @see bns_utils_size_to_string
- */
-#define VALUE_1KO   0x400
-/**
- * @def VALUE_1MO
- * @brief Valeur 1 Mo en octets
- * @see bns_utils_size_to_string
- */
-#define VALUE_1MO   0x100000
-/**
- * @def VALUE_1GO
- * @brief Valeur 1 Go en octets
- * @see bns_utils_size_to_string
- */
-#define VALUE_1GO   0x40000000
-
 /**
  * @fn long sysutils_fsize(FILE* file)
- * @brief Recupere la taille du fichier.
- * @param file Taille.
+ * @brief Getting the file size.
+ * @param file The file.
  * @return Long.
  */
 long sysutils_fsize(FILE* file) {
@@ -70,21 +50,21 @@ long sysutils_fsize(FILE* file) {
 
 /**
  * @fn void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE])
- * @brief Convertie une taille en string avec l'unite.
- * @param size Taille.
+ * @brief Convert a size into a string (with unit).
+ * @param size Size.
  * @param ssize Output
  */
 void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE]) {
   memset(ssize, 0, SYSUTILS_MAX_SSIZE);
   float s = size;
-  if(size < VALUE_1KO)
+  if(size < SYSUTILS_1KB)
     snprintf(ssize, SYSUTILS_MAX_SSIZE, "%ld octet%s", size, size > 1 ? "s" : "");
-  else if(size < VALUE_1MO)
-    snprintf(ssize, SYSUTILS_MAX_SSIZE, "%ld Ko", (long)ceil(s/VALUE_1KO));
-  else if(size < VALUE_1GO)
-    snprintf(ssize, SYSUTILS_MAX_SSIZE, "%ld Mo", (long)ceil(s/VALUE_1MO));
+  else if(size < SYSUTILS_1MB)
+    snprintf(ssize, SYSUTILS_MAX_SSIZE, "%ld Ko", (long)ceil(s/SYSUTILS_1KB));
+  else if(size < SYSUTILS_1GB)
+    snprintf(ssize, SYSUTILS_MAX_SSIZE, "%ld Mo", (long)ceil(s/SYSUTILS_1MB));
   else
-    snprintf(ssize, SYSUTILS_MAX_SSIZE, "%ld Go",  (long)ceil(s/VALUE_1GO));
+    snprintf(ssize, SYSUTILS_MAX_SSIZE, "%ld Go",  (long)ceil(s/SYSUTILS_1GB));
 }
 
 void sysutils_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file) {

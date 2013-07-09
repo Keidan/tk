@@ -27,25 +27,28 @@
 
 
 /**
- * Fonction permetant l'ouverture des logs syslog.
- * @param ident Identifiant utilise pour les logs.
- * @param option options syslogs.
- * @param facility Facility syslog.
+ * @fn void log_init(const char* ident, int option, int facility)
+ * @brief Open the syslog session.
+ * @param ident Log identifier.
+ * @param option syslogs options.
+ * @param facility syslogs facility.
  */
 void log_init(const char* ident, int option, int facility) {
   openlog (ident, option, facility);
 }
 
 /**
- * Fonction permetant la fermeture des logs syslog.
+ * @fn void log_close()
+ * @brief Close the syslog session.
  */
 void log_close() {
   closelog();
 }
 
 /**
- * Fonction permetant de logger un message.
- * @param prio Prio du log.
+ * @fn void log_print(int prio, const char* fmt, ...)
+ * @brief Log a new message.
+ * @param prio Log priority.
  * @param fmt Format/message.
  */
 void log_print(int prio, const char* fmt, ...) {

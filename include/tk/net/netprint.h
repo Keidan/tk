@@ -31,45 +31,45 @@
 
   /**
    * @fn void netprint_print_headers(const char* buffer, __u32 length, struct bns_network_s net)
-   * @brief Affichage des entetes.
-   * @param buffer Buffer de donnee.
-   * @param length Taille du buffer.
-   * @param net Entetes.
+   * @brief Print all headers.
+   * @param buffer Buffer datas.
+   * @param length Buffer length.
+   * @param net Headers.
    */
   void netprint_print_headers(const char* buffer, __u32 length, struct netutils_headers_s net);
 
   /**
    * @fn void netprint_print_eth(struct ethhdr *eth)
-   * @brief Affichage de l'entete Ethernet.
-   * @param eth Entete Ethernet.
+   * @brief Print the ethernet header.
+   * @param eth Ethernet header.
    */
   void netprint_print_eth(struct ethhdr *eth);
 
   /**
    * @fn void netprint_print_arp(struct arphdrs *arpp)
-   * @brief Affichage de l'entete ARP.
-   * @param arpp Entete ARP.
+   * @brief Print the ARP header.
+   * @param arpp ARP header
    */
   void netprint_print_arp(struct arphdrs *arpp);
 
   /**
    * @fn void netprint_print_ip(struct iphdr* ipv4)
-   * @brief Affichage de l'entete IPv4/IPv6.
-   * @param ipv4 Entete IPv4.
+   * @brief Print the IP v4 header.
+   * @param ipv4 IPv4 header.
    */
   void netprint_print_ip(struct iphdr* ipv4);
 
   /**
    * @fn void netprint_print_upd(struct udphdr *udp)
-   * @brief Affichage de l'entete UDP.
-   * @param udp Entete UDP.
+   * @brief Print the UDP header.
+   * @param udp UDP header
    */
   void netprint_print_upd(struct udphdr *udp);
 
   /**
    * @fn void netprint_print_tcp(struct tcphdr *tcp)
-   * @brief Affichage de l'entete TCP.
-   * @param tcp Entet TCP.
+   * @brief Print the TCP header
+   * @param tcp TCP header.
    */
   void netprint_print_tcp(struct tcphdr *tcp);
 

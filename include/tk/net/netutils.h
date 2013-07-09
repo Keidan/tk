@@ -149,123 +149,123 @@
 
  /**
    * @fn int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, bns_packet_convert_et convert)
-   * @brief Decodage des paquets en fonction du buffer.
-   * @param buffer Buffer de donnee.
-   * @param length Taille du buffer.
-   * @param net Liste des entetes.
-   * @param convert Conversion de certains champs des differentes entetes.
-   * @return -1 sur erreur sinon la taill de la payload (peut etre 0).
+   * @brief Decode the packets in terms of the input buffer.
+   * @param buffer The buffer datas.
+   * @param length The buffer length.
+   * @param net Headers list.
+   * @param convert Convert required fields.
+   * @return -1 on error else the payload length (can be equals to 0).
    */
   int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, netutils_convert_et convert);
 
   /**
    * @fn void netutils_release_buffer(struct netutils_headers_s *net)
-   * @brief Liberation des ressources allouee par decode_network_buffer.
-   * @param net Liste des entetes a liberer.
+   * @brief Release the resources allocated by the decoder function.
+   * @param net The headers pointer.
    */
   void netutils_release_buffer(struct netutils_headers_s *net);
 
   /**
    * @fn _Bool netutils_match_from_simple_filter(struct netutils_header_s *net, struct netutils_filter_s filter)
-   * @brief Test si le regle matche ou non.
-   * @param net entetes.
-   * @param filter Filtre a tester.
-   * @return Retourne 1 si match.
+   * @brief Check if the input rule match.
+   * @param net Headers.
+   * @param filter Filter to test.
+   * @return 1 if the rule match.
    */
   _Bool netutils_match_from_simple_filter(struct netutils_headers_s *net, struct netutils_filter_s filter);
 
   /**
    * @fn int netutils_is_ipv4(const char* ip)
-   * @brief Test si l'adresse ip est valide.
-   * @param ip Adresse IP.
-   * @return -1 si erreur, 0 si non match, 1 si match.
+   * @brief Test if the input string is an ipv4.
+   * @param ip IP address.
+   * @return -1 on error, 0 not match, 1 match.
    */
   int netutils_is_ipv4(const char* ip);
 
   /**
    * @fn int netutils_hostname_to_ip(const char *hostname, char* ip)
-   * @brief Recuperation de l'adresse ip en fonction du nom de host.
-   * @param hostname Nom du host.
-   * @param ip Adresse IP.
-   * @return -1 si erreur sinon 0.
+   * @brief Convert a hostname to an ip.
+   * @param hostname Name of the host.
+   * @param ip IP address.
+   * @return -1 on error else 0.
    */
   int netutils_hostname_to_ip(const char *hostname, char* ip);
 
   /**
    * @fn _Bool netutils_device_is_up(int fd, char name[IF_NAMESIZE])
-   * @brief Effectue un test pour savoir si le device est up
-   * @param fd FD pour l'ioctl.
-   * @param name Nom du device.
-   * @return Vrai si up.
+   * @brief Test if the current device is up.
+   * @param fd Device FD.
+   * @param name Device name.
+   * @return 1 if up else 0..
    */
   _Bool netutils_device_is_up(int fd, char name[IF_NAMESIZE]);
 
   /**
    * @fn __u32 netutils_datas_available(int fd)
-   * @brief Recuperation du nombre de donnees a lire.
-   * @param fd fd a tester.
-   * @return Nb donnees a lire. 
+   * @brief Get the number of available datas to be read.
+   * @param fd Socket FD.
+   * @return Available datas.
    */
   __u32 netutils_datas_available(int fd);
 
   /**
    * @fn void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw)
-   * @brief Affichage d'un packet (wireshark like).
-   * @param std Flux de sortie.
+   * @brief Print the packet in hexa (wireshark like).
+   * @param std Output stream.
    * @param buffer Packet.
-   * @param len Taille du packet.
-   * @param print_raw Affichage en raw mode.
+   * @param len Packet length.
+   * @param print_raw Display in raw mode.
    */
   void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw);
 
   /**
    * @fn int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE])
-   * @brief Liste toutes les interfaces et les ajoutent a la liste (IMPORTANT: apres appel de cette methode des sockets sont ouverts).
-   * @param ifaces Liste des interfaces (la taille vaut 1 ou 0 si iname n'est pas vide).
-   * @param maxfd Utilise pour le select.
-   * @param rset fd_set utilise pour le select.
-   * @param iname Demande la configuration d'une interface.
-   * @return -1 en cas d'erreur sinon 0.
+   * @brief List all network interfaces, configures and adds into the list (CAUTION: after the call of this function a socket is opened).
+   * @param ifaces Interfaces list.
+   * @param maxfd Used by select function.
+   * @param rset fd_set Used by select function.
+   * @param iname The interface name.
+   * @return -1 on error else 0.
    */
   int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE]);
 
   /**
    * @fn void netutils_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family)
-   * @brief Ajout d'un interface a la liste.
-   * @param list Liste d'interfaces.
-   * @param name Nom de l'interface.
-   * @param index Index de l'interface.
-   * @param fd FD du socket utilise.
-   * @param family Famille de l'interface.
+   * @brief Add an interface into the list.
+   * @param list Interfaces list.
+   * @param name Interface name.
+   * @param index Interface index.
+   * @param fd Socket FD.
+   * @param family Interface family.
    */
   void netutils_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family);
 
   /**
    * @fn void netutils_clear_ifaces(struct iface_s* ifaces)
-   * @brief Suppression des elements de la liste.
-   * @param ifaces Liste a vider.
+   * @brief Clear the interfaces list.
+   * @param ifaces List to clear.
    */
   void netutils_clear_ifaces(struct iface_s* ifaces);
 
   /**
    * @fn const char* netutils_long_to_ip(unsigned int v)
-   * @brief Transforme un long en adresse IP.
-   * @param v long a transformer.
-   * @return L'adresse IP.
+   * @brief Convert a long value to an IP address.
+   * @param v Long value.
+   * @return IP addr.
    */
   const char* netutils_long_to_ip(unsigned int v);
 
   /**
    * @fn unsigned int netutils_ip_to_long(const char* s)
-   * @brief Transforme une adresse IP en long.
-   * @param s IP a transformer.
-   * @return Long.
+   * @brief Convert an IP address to a long value.
+   * @param s IP address
+   * @return Long value.
    */
   unsigned int netutils_ip_to_long(const char* s);
 
   /**
    * @fn pcap_hdr_t netutils_pcap_global_hdr(void)
-   * @brief Construction du main header du fichier.
+   * @brief Build the main header of the pcap file.
    * @param link Data link type.
    * @return pcap_hdr_t
    */
@@ -273,49 +273,49 @@
 
   /**
    * @fn pcap_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len)
-   * @brief Construction du header par paquets.
+   * @brief Build the packet header of the pcap file.
    * @return pcaprec_hdr_t.
    */
   pcaprec_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len);
 
   /**
    * @fn void netutils_write_pcap_packet(const FILE* output, const char* buffer, size_t a_length, size_t r_length, _Bool *first)
-   * @brief Ecriture des headers pcap et du buffer dans le fichier specifie.
+   * @brief Writes all pcap headers and the packet buffer into the specified file.
    * Source: http://wiki.wireshark.org/Development/LibpcapFileFormat
    * Packet structure:
    * -----------------------------------------------------------------------------------------------------------------
    * | Global Header | Packet Header | Packet Data | Packet Header | Packet Data | Packet Header | Packet Data | ... |
    * -----------------------------------------------------------------------------------------------------------------
-   * @param output Fichier de sortie.
+   * @param output Output file
    * @param link Data link type.
-   * @param buffer Buffer d'entree.
-   * @param a_length Taille demandee a l'appel de recvfrom.
-   * @param r_length Taille recuperee apres l'appel de recvfrom.
-   * @param first Cette variable permet l'ecriture du header global, en debut de fichier uniquement.
+   * @param buffer Input buffer .
+   * @param a_length Size before the call of the recvfrom function.
+   * @param r_length Size after the call of the recvfrom function.
+   * @param first Memorize if we need to write the first packet header.
    */
   void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, size_t a_length, size_t r_length, _Bool *first);
 
   /**
    * @fn void netutils_mac2str(mac_t mac, smac_t m)
-   * @brief Convertion d'un tableau MAC vers une chaine MAC.
-   * @param mac MAC a convertir.
-   * @param m MAC en str.
+   * @brief Convert a MAC array into a string.
+   * @param mac MAC to convert.
+   * @param m MAC in string.
    */
   void netutils_mac2str(mac_t mac, smac_t m);
 
   /**
    * @fn void netutils_str2mac(smac_t mac, mac_t m)
-   * @brief Convertion d'un string MAC versun tableau MAC.
-   * @param mac MAC a convertir.
-   * @param m MAC en tableau.
+   * @brief Convert a MAC string into a MAC array.
+   * @param mac MAC to convert
+   * @param m MAC in array.
    */
   void netutils_str2mac(smac_t mac, mac_t m);
 
   /**
    * @fn _Bool netutils_valid_mac(smac_t mac)
-   * @brief Test la validite d'une adresse MAC.
-   * @param mac Adresse MAC a tester.
-   * @return 1 Si elle est valide sinon 0.
+   * @brief Test if the MAC is valid.
+   * @param mac MAC address to test.
+   * @return 1 if valid else 0.
    */
   _Bool netutils_valid_mac(smac_t mac);
 

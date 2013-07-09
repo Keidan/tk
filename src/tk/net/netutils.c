@@ -1,25 +1,25 @@
 /**
- *******************************************************************************
- * @file netutils.c
- * @author Keidan
- * @date 03/01/2013
- * @par Project
- * tk
- *
- * @par Copyright
- * Copyright 2011-2013 Keidan, all right reserved
- *
- * This software is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY.
- *
- * Licence summary : 
- *    You can modify and redistribute the sources code and binaries.
- *    You can send me the bug-fix
- *
- * Term of the licence in in the file licence.txt.
- *
- *******************************************************************************
- */
+*******************************************************************************
+* @file netutils.c
+* @author Keidan
+* @date 03/01/2013
+* @par Project
+* tk
+*
+* @par Copyright
+* Copyright 2011-2013 Keidan, all right reserved
+*
+* This software is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY.
+*
+* Licence summary : 
+*    You can modify and redistribute the sources code and binaries.
+*    You can send me the bug-fix
+*
+* Term of the licence in in the file licence.txt.
+*
+*******************************************************************************
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,16 +36,18 @@
 #include <math.h>
 #include <regex.h>
 #include <tk/net/netutils.h>
+#include <tk/text/string.h>
 #include <tk/sys/log.h>
 
 
 /**
- * Liste toutes les interfaces et les ajoutent a la liste (IMPORTANT: apres appel de cette methode des sockets sont ouverts).
- * @param ifaces Liste des interfaces (la taille vaut 1 ou 0 si iname n'est pas vide).
- * @param maxfd Utilise pour le select.
- * @param rset fd_set utilise pour le select.
- * @param iname Demande la configuration d'une interface.
- * @return -1 en cas d'erreur sinon 0.
+ * @fn int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE])
+ * @brief List all network interfaces, configures and adds into the list (CAUTION: after the call of this function a socket is opened).
+ * @param ifaces Interfaces list.
+ * @param maxfd Used by select function.
+ * @param rset fd_set Used by select function.
+ * @param iname The interface name.
+ * @return -1 on error else 0.
  */
 int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE]) {
   int i;
@@ -64,18 +66,18 @@ int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, co
     return -1;
   }
 
-  /* init de la liste */
+  /* init the list */
   INIT_LIST_HEAD(&(ifaces->list));
 
-  /* boucle sur les interfaces */
+  /* loop for each interfaces */
   i = 0; /* init */
   while(1){
     if(!nameindex[i].if_name) break;
-    /* Recuperation du nom qui sera utilise plus bas. */
+    /* Get the iface name */
     name = nameindex[i++].if_name;
     if(iname[0] && strncmp(iname, name, IF_NAMESIZE) != 0) continue;
 
-    /* Creation d'un socket qui sera utilise pour l'ecoute + les ios*/
+    /* Create a socket*/
     /* Socket raw */
     fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if(fd < 0) {
@@ -84,17 +86,16 @@ int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, co
       return -1;
     }
 
-    /* Pas d'ajout de l'interface si elle n'est pas UP */
+    /* Continue if the iface is not up */
     if(!netutils_device_is_up(fd, name)) {
       close(fd);
       continue;
     }
       
-    /* set du fd_set + calcul du maxfd */
     if(fd > *maxfd) *maxfd = fd;
     FD_SET(fd, rset);
 
-    /* Recuperation de l'index correspondant a l'interface reseau  */
+    /* Get the iface index */
     strncpy((char *)ifr.ifr_name, name, IF_NAMESIZE);
     if((ioctl(fd, SIOCGIFINDEX, &ifr)) == -1) {
       if_freenameindex(nameindex);
@@ -103,18 +104,17 @@ int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, co
       return -1;
     }
 
-    /* Init de la structure sockaddr_ll */
     sll.sll_family = PF_PACKET;
     sll.sll_ifindex = ifr.ifr_ifindex;
-    sll.sll_protocol = htons(ETH_P_ALL); /* On veut ecouter tous les paquets */
+    sll.sll_protocol = htons(ETH_P_ALL); /* listen all packets */
 
-    /* recuperation de la famille de l'interface. */
+    /* Get the iface index */
     if(ioctl(fd, SIOCGIFHWADDR, &ifr) == 0) {
       family = ifr.ifr_hwaddr.sa_family;
     } else
       family = -1;
 
-    /* Bind sur l'interface*/
+    /* Bind*/
     if((bind(fd, (struct sockaddr *)&sll, sizeof(sll))) == -1) {
       if_freenameindex(nameindex);
       close(fd);
@@ -122,23 +122,23 @@ int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, co
       return -1;
     }
 
-    /* ajout de l'interface */
+    /* add the iface */
     netutils_add_iface(ifaces, name, ifr.ifr_ifindex, fd, family);
   }
 
-  /* Liberation des ressources */
+  /* Release the pointer */
   if_freenameindex(nameindex);
   return 0;
 }
 
 /**
  * @fn void netutils_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family)
- * @brief Ajout d'un interface a la liste.
- * @param list Liste d'interfaces.
- * @param name Nom de l'interface.
- * @param index Index de l'interface.
- * @param fd FD du socket utilise.
- * @param family Famille de l'interface.
+ * @brief Add an interface into the list.
+ * @param list Interfaces list.
+ * @param name Interface name.
+ * @param index Interface index.
+ * @param fd Socket FD.
+ * @param family Interface family.
  */
 void netutils_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family) {
   struct iface_s* node;
@@ -147,7 +147,7 @@ void netutils_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index,
     logger(LOG_ERR, "if_nameindex: (%d) %s.\n", errno, strerror(errno));
     return;
   }
-  /* init + ajout de l'element */
+  /* init + add */
   strncpy(node->name, name, IF_NAMESIZE);
   node->fd = fd;
   node->index = index;
@@ -157,50 +157,46 @@ void netutils_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index,
 
 /**
  * @fn void netutils_clear_ifaces(struct iface_s* ifaces)
- * @brief Suppression des elements de la liste.
- * @param ifaces Liste a vider.
+ * @brief Clear the interfaces list.
+ * @param ifaces List to clear.
  */
 void netutils_clear_ifaces(struct iface_s* ifaces) {
   struct iface_s* iter;
   while(!list_empty(&ifaces->list) ) {
     iter = list_entry(ifaces->list.next, struct iface_s, list);
-    close(iter->fd); /* close du socket */
-    list_del(&iter->list); /*delete de l'item dans la liste */
+    close(iter->fd); 
+    list_del(&iter->list);
     free(iter);
   }
 }
 
 /**
  * @fn _Bool netutils_device_is_up(int fd, char name[IF_NAMESIZE])
- * @brief Effectue un test pour savoir si le device est up
- * @param fd FD pour l'ioctl.
- * @param name Nom du device.
- * @return Vrai si up.
+ * @brief Test if the current device is up.
+ * @param fd Device FD.
+ * @param name Device name.
+ * @return 1 if up else 0..
  */
 _Bool netutils_device_is_up(int fd, char name[IF_NAMESIZE]) {
   struct ifreq ifr;
   memset(&ifr, 0, sizeof(ifr));
-  /* copy du nom de l'interface */
   strncpy((char *)ifr.ifr_name, name, IF_NAMESIZE);
-  /* demande la liste des flags */
   int ret = ioctl(fd, SIOCGIFFLAGS, &ifr);
   if (ret == -1) {
     logger(LOG_ERR, "flags: (%d) %s.\n", errno, strerror(errno));
     return ret;
   }
-  /* 1 si le flag up est positionne */
   return !!(ifr.ifr_flags & IFF_UP);
 }
 
 /**
  * @fn __u32 netutils_datas_available(int fd)
- * @brief Recuperation du nombre de donnees a lire.
- * @param fd fd a tester.
- * @return Nb donnees a lire. 
+ * @brief Get the number of available datas to be read.
+ * @param fd Socket FD.
+ * @return Available datas.
  */
 __u32 netutils_datas_available(int fd) {
   __u32 available = 0;
-  /* demande le nombre d'octets quipeuvent etre lues */
   int ret = ioctl(fd, FIONREAD, &available);
   if (ret == -1) {
     logger(LOG_ERR, "available: (%d) %s.\n", errno, strerror(errno));
@@ -211,9 +207,9 @@ __u32 netutils_datas_available(int fd) {
 
 /**
  * @fn int netutils_is_ipv4(const char* ip)
- * @brief Test si l'adresse ip est valide.
- * @param ip Adresse IP.
- * @return -1 si erreur, 0 si non match, 1 si match.
+ * @brief Test if the input string is an ipv4.
+ * @param ip IP address.
+ * @return -1 on error, 0 not match, 1 match.
  */
 int netutils_is_ipv4(const char* ip) {    
   struct in_addr i_addr;
@@ -226,10 +222,10 @@ int netutils_is_ipv4(const char* ip) {
  
 /**
  * @fn int netutils_hostname_to_ip(const char *hostname, char* ip)
- * @brief Recuperation de l'adresse ip en fonction du nom de host.
- * @param hostname Nom du host.
- * @param ip Adresse IP.
- * @return -1 si erreur sinon 0.
+ * @brief Convert a hostname to an ip.
+ * @param hostname Name of the host.
+ * @param ip IP address.
+ * @return -1 on error else 0.
  */
 int netutils_hostname_to_ip(const char *hostname, char* ip) {
   struct hostent *he;
@@ -249,11 +245,11 @@ int netutils_hostname_to_ip(const char *hostname, char* ip) {
 
 /**
  * @fn void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw)
- * @brief Affichage d'un packet (wireshark like).
- * @param std Flux de sortie.
+ * @brief Print the packet in hexa (wireshark like).
+ * @param std Output stream.
  * @param buffer Packet.
- * @param len Taille du packet.
- * @param print_raw Affichage en raw mode.
+ * @param len Packet length.
+ * @param print_raw Display in raw mode.
  */
 void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw) {
   int i = 0, max = PRINT_HEX_MAX_PER_LINES, loop = len;
@@ -264,12 +260,12 @@ void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw) {
     __u8 c = *(p++);
     if(!print_raw) {
       fprintf(std, "%02x ", c);
-      /* uniquement les espaces et les char visibles */
+      /* only the visibles char */
       if(c >= 0x20 && c <= 0x7e) line[i] = c;
-      /* sinon on masque avec un '.' */
+      /* else mask with '.' */
       else line[i] = 0x2e; /* . */
     } else fprintf(std, "%02x", c);
-    /* on passe a la ligne suivante */
+    /* next line */
     if(i == max) {
       if(!print_raw)
 	fprintf(std, "  %s\n", line);
@@ -278,27 +274,27 @@ void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw) {
       i = 0;
       memset(line, 0, sizeof(line));
     }
-    /* sinon suivant */
+    /* next */
     else i++;
-    /* espace a la moitie */
+    /* add a space in the midline */
     if(i == max / 2 && !print_raw) {
       fprintf(std, " ");
       line[i++] = 0x20;
     }
   }
-  /* Cette etape permet d'aligner 'line'*/
+  /* align 'line'*/
   if(i != 0 && (i < max || i <= len) && !print_raw) {
-    while(i++ <= max) fprintf(std, "   "); /* comble avec 3 espaces ex: "00 " */
+    while(i++ <= max) fprintf(std, "   "); /* 3 spaces ex: "00 " */
     fprintf(std, "  %s\n", line);
   }
   fprintf(std, "\n");
 }
 
 /**
- * @fn unsigned int netutils_ip_to_long(const char* s)
- * @brief Transforme une adresse IP en long.
- * @param s IP a transformer.
- * @return Long.
+ * @fn const char* netutils_long_to_ip(unsigned int v)
+ * @brief Convert a long value to an IP address.
+ * @param v Long value.
+ * @return IP addr.
  */
 const char* netutils_long_to_ip(unsigned int v)  {
   struct in_addr x;
@@ -308,9 +304,9 @@ const char* netutils_long_to_ip(unsigned int v)  {
 
 /**
  * @fn unsigned int netutils_ip_to_long(const char* s)
- * @brief Transforme une adresse IP en long.
- * @param s IP a transformer.
- * @return Long.
+ * @brief Convert an IP address to a long value.
+ * @param s IP address
+ * @return Long value.
  */
 unsigned int netutils_ip_to_long(const char* s) {
   struct sockaddr_in n;
@@ -321,7 +317,7 @@ unsigned int netutils_ip_to_long(const char* s) {
 
 /**
  * @fn pcap_hdr_t netutils_pcap_global_hdr(void)
- * @brief Construction du main header du fichier.
+ * @brief Build the main header of the pcap file.
  * @param link Data link type.
  * @return pcap_hdr_t
  */
@@ -331,17 +327,16 @@ pcap_hdr_t netutils_pcap_global_hdr(__u32 link) {
   hdr.magic_number = NETUTILS_PCAP_MAGIC_NATIVE;
   hdr.version_major = NETUTILS_PCAP_VERSION_MAJOR;
   hdr.version_minor = NETUTILS_PCAP_VERSION_MINOR;  
-  tzset(); /* force le set de la variable timezone */
+  tzset(); /* reload the timezone field */
   hdr.thiszone = timezone;
   hdr.sigfigs = 0;
   hdr.snaplen = NETUTILS_PCAP_SNAPLEN;
   hdr.network = link;
   return hdr;
 }
-
 /**
  * @fn pcap_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len)
- * @brief Construction du header par paquets.
+ * @brief Build the packet header of the pcap file.
  * @return pcaprec_hdr_t.
  */
 pcaprec_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
@@ -357,18 +352,18 @@ pcaprec_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
 
 /**
  * @fn void netutils_write_pcap_packet(const FILE* output, const char* buffer, size_t a_length, size_t r_length, _Bool *first)
- * @brief Ecriture des headers pcap et du buffer dans le fichier specifie.
+ * @brief Writes all pcap headers and the packet buffer into the specified file.
  * Source: http://wiki.wireshark.org/Development/LibpcapFileFormat
  * Packet structure:
  * -----------------------------------------------------------------------------------------------------------------
  * | Global Header | Packet Header | Packet Data | Packet Header | Packet Data | Packet Header | Packet Data | ... |
  * -----------------------------------------------------------------------------------------------------------------
- * @param output Fichier de sortie.
+ * @param output Output file
  * @param link Data link type.
- * @param buffer Buffer d'entree.
- * @param a_length Taille demandee a l'appel de recvfrom.
- * @param r_length Taille recuperee apres l'appel de recvfrom.
- * @param first Cette variable permet l'ecriture du header global, en debut de fichier uniquement.
+ * @param buffer Input buffer .
+ * @param a_length Size before the call of the recvfrom function.
+ * @param r_length Size after the call of the recvfrom function.
+ * @param first Memorize if we need to write the first packet header.
  */
 void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, size_t a_length, size_t r_length, _Bool *first) {
   if(*first) {
@@ -382,15 +377,14 @@ void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, si
   fflush(output);
 }
 
-
 /**
- * @fn int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, netutils_convert_et convert)
- * @brief Decodage des paquets en fonction du buffer.
- * @param buffer Buffer de donnee.
- * @param length Taille du buffer.
- * @param net Liste des entetes.
- * @param convert Conversion de certains champs des differentes entetes.
- * @return -1 sur erreur sinon la taill de la payload (peut etre 0).
+ * @fn int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, bns_packet_convert_et convert)
+ * @brief Decode the packets in terms of the input buffer.
+ * @param buffer The buffer datas.
+ * @param length The buffer length.
+ * @param net Headers list.
+ * @param convert Convert required fields.
+ * @return -1 on error else the payload length (can be equals to 0).
  */
 int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, netutils_convert_et convert) {
   __u32 offset = sizeof(struct ethhdr);
@@ -532,8 +526,8 @@ int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_hea
 
 /**
  * @fn void netutils_release_buffer(struct netutils_headers_s *net)
- * @brief Liberation des ressources allouee par decode_network_buffer.
- * @param net Liste des entetes a liberer.
+ * @brief Release the resources allocated by the decoder function.
+ * @param net The headers pointer.
  */
 void netutils_release_buffer(struct netutils_headers_s *net) {
   if(net->eth) free(net->eth), net->eth = NULL;
@@ -549,68 +543,44 @@ void netutils_release_buffer(struct netutils_headers_s *net) {
 
 /**
  * @fn _Bool netutils_valid_mac(smac_t mac)
- * @brief Test la validite d'une adresse MAC.
- * @param mac Adresse MAC a tester.
- * @return 1 Si elle est valide sinon 0.
+ * @brief Test if the MAC is valid.
+ * @param mac MAC address to test.
+ * @return 1 if valid else 0.
  */
 _Bool netutils_valid_mac(smac_t mac) {
-   regex_t preg;
-   const char *str_regex = "(([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2})|(([0-9A-Fa-f]{4}.){2}[0-9A-Fa-f]{4})";
-   int err = regcomp(&preg, str_regex, REG_NOSUB|REG_EXTENDED);
-   if(!err) {
-      int match = regexec(&preg, mac, 0, NULL, 0);
-      regfree(&preg);
-      if(!match) {
-         printf ("%s est une adresse internet valide\n", mac);
-	 return 1;
-      }
-      else if(match == REG_NOMATCH)
-	return 0;
-      else {
-         char *text;
-         size_t size;
-         size = regerror(err, &preg, NULL, 0);
-         text = malloc(sizeof (*text) * size);
-         if(text) {
-            regerror (err, &preg, text, size);
-	    logger(LOG_ERR, "%s\n", text);
-            free (text);
-         }
-         else {
-	    logger(LOG_ERR, "Unable to alloc memory for regex message!\n");
-         }
-      }
-   }
-   return 0;
+  const char *str_regex = "(([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2})|(([0-9A-Fa-f]{4}.){2}[0-9A-Fa-f]{4})";
+  return string_match(mac, str_regex);
 }
+
 /**
  * @fn void netutils_mac2str(mac_t mac, smac_t m)
- * @brief Convertion d'un tableau MAC vers une chaine MAC.
- * @param mac MAC a convertir.
- * @param m MAC en str.
+ * @brief Convert a MAC array into a string.
+ * @param mac MAC to convert.
+ * @param m MAC in string.
  */
 void netutils_mac2str(mac_t mac, smac_t m) {
   sprintf(m, "%02x:%02x:%02x:%02x:%02x:%02x", 
-	 mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 /**
  * @fn void netutils_str2mac(smac_t mac, mac_t m)
- * @brief Convertion d'un string MAC versun tableau MAC.
- * @param mac MAC a convertir.
- * @param m MAC en tableau.
+ * @brief Convert a MAC string into a MAC array.
+ * @param mac MAC to convert
+ * @param m MAC in array.
  */
 void netutils_str2mac(smac_t mac, mac_t m) {
   sscanf(mac, "%x:%x:%x:%x:%x:%x", 
 	 (__u32*)&m[0], (__u32*)&m[1], (__u32*)&m[2], (__u32*)&m[3], (__u32*)&m[4], (__u32*)&m[5]);
 }
 
+
 /**
- * @fn _Bool netutils_match_from_simple_filter(struct netutils_headers_s *net, struct netutils_filter_s filter)
- * @brief Test si le regle matche ou non.
- * @param net entetes.
- * @param filter Filtre a tester.
- * @return Retourne 1 si match.
+ * @fn _Bool netutils_match_from_simple_filter(struct netutils_header_s *net, struct netutils_filter_s filter)
+ * @brief Check if the input rule match.
+ * @param net Headers.
+ * @param filter Filter to test.
+ * @return 1 if the rule match.
  */
 _Bool netutils_match_from_simple_filter(struct netutils_headers_s *net, struct netutils_filter_s filter) {
   _Bool ip_found = 0, port_found = 0, mac_found = 0;

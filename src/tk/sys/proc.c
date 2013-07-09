@@ -40,17 +40,17 @@ int proc_stat(struct proc_stat_s *stat, i_t pid) {
   size_t sz = 0, d = 0;
   char filename[FILENAME_MAX];
   char *buffer = 0;
-  /* build le nom du fichier */
+  /* build the file name */
   sysutils_get_proc_filename(filename, pid, "stat");
 
-  /* ouverture du fichier */
+  /* open the file */
   if((file = fopen(filename, "r")) == NULL) {
     logger(LOG_ERR, "fopen('%s') failed: (%d) %s!\n", filename, errno, strerror(errno));
     return -1;
   }
 
   d = getline(&buffer, &sz, file);
-  d++; // pour le warning......
+  d++; // for the warning .... ugly and useless for some gcc...
   fclose (file);
   memset(stat, 0, sizeof(struct proc_stat_s));
   sscanf(buffer, "%d %s %c %d %d %d %d %d %lu %lu %lu %lu %lu %llu %llu %llu %llu %d %d %d %d "

@@ -25,14 +25,32 @@
 
   #include <stdio.h>
 
+
+  /**
+   * @def SYSUTILS_1KO
+   * @brief Value of 1 Kb in octets
+   * @see bns_utils_size_to_string
+   */
   #define SYSUTILS_1KB   0x400
+
+  /**
+   * @def SYSUTILS_1MO
+   * @brief Value of 1 Mb in octets
+   * @see bns_utils_size_to_string
+   */
   #define SYSUTILS_1MB   0x100000
+
+  /**
+   * @def SYSUTILS_1GO
+   * @brief Value of 1 Gb in octets
+   * @see bns_utils_size_to_string
+   */
   #define SYSUTILS_1GB   0x40000000
 
 
   /**
    * @def SYSUTILS_MAX_SSIZE
-   * @brief Taille max du string utilise avec la fonction "sysutils_size_to_string"
+   * @brief Maximum size of the string used by the "sysutils_size_to_string" function.
    * @see sysutils_size_to_string
    */
   #define SYSUTILS_MAX_SSIZE 15
@@ -53,8 +71,8 @@
 
   /**
    * @fn long sysutils_fsize(FILE* file)
-   * @brief Recupere la taille du fichier.
-   * @param file Taille.
+   * @brief Getting the file size.
+   * @param file The file.
    * @return Long.
    */
   long sysutils_fsize(FILE* file);
@@ -62,8 +80,8 @@
 
   /**
    * @fn void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE])
-   * @brief Convertie une taille en string avec l'unite.
-   * @param size Taille.
+   * @brief Convert a size into a string (with unit).
+   * @param size Size.
    * @param ssize Output
    */
   void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE]);
