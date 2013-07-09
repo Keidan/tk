@@ -45,6 +45,7 @@
   struct uz_ctx_s {
       int magic;
       char filename [FILENAME_MAX];        /* Zip file name */
+      char dir_delimiter;
       unzFile ctx;                         /* Internale zip context */
       unz_global_info ginfo;               /* Global informations about the zip file */
   };
@@ -54,42 +55,59 @@
 
   /**
    * @fn uz_t uz_open(const char filename[FILENAME_MAX])
-   * @brief Ouvre un fichier ZIP.
-   * @param filename Chemin du fichier ZIP.
-   * @return Le context ZIP ou NULL en cas d'erreur.
+   * @brief Open a new ZIP file.
+   * @param filename ZIP file name.
+   * @return The ZIP context else NULL on error.
    */
   uz_t uz_open(const char filename[FILENAME_MAX]);
 
   /**
    * @fn _Bool uz_is_valid(uz_t uz)
-   * @brief Test si le pointeur est valide.
-   * @param uz Context ZIP.
-   * @return 0 si il n'est pas valide sinon 1.
+   * @brief Check if the inut pointer is valid.
+   * @param uz Pointer to test.
+   * @return 1 the pointer is valid else 0.
    */
   _Bool uz_is_valid(uz_t uz);
 
   /**
    * @fn void uz_close(uz_t uz)
-   * @brief Ferme le context ZIP.
-   * @param uz Context ZIP.
+   * @brief Close the zip context.
+   * @param uz ZIP context.
    */
   void uz_close(uz_t uz);
 
   /**
-   * @fn _Bool uz_is_dir(char* path)
-   * @brief Test si le fichier est un repertoire ou non.
-   * @param path fichier a tester.
-   * @return 0 si il n'est pas un repertoire sinon 1.
+   * @fn _Bool uz_is_dir(uz_t uz, char* path)
+   * @brief Test if the input path os a directry.
+   * @param uz ZIP context.
+   * @param path Path to test.
+   * @return 1 if the current path is a directory else 0.
    */
-  _Bool uz_is_dir(char* path);
+  _Bool uz_is_dir(uz_t uz, char* path);
 
   /**
    * @fn int uz_get_contents(uz_t uz, uz_file_content_fct uz_file_content)
-   * @brief Recuperation et decompression des fichiers du ZIP.
-   * @param uz Context ZIP.
-   * @param uz_file_content Fonction appelee apres decompression d'un fichier.
-   * @return -1 en cas d'erreur sinon 0.
+   * @brief Unzip the ZIP files.
+   * @param uz ZIP context.
+   * @param uz_file_content Callback to received the uncompressed file datas.
+   * @return -1 on failure else 0.
    */
   int uz_get_contents(uz_t uz, uz_file_content_fct uz_file_content);
 
+  /**
+   * @fn void uz_set_dir_delimiter(uz_t uz, char delimiter)
+   * @brief Change the directory delimiter.
+   * @param uz ZIP context.
+   * @param delimiter The new deimiter.
+   */
+  void uz_set_dir_delimiter(uz_t uz, char delimiter);
+
+
+  /**
+   * @fn char uz_get_dir_delimiter(uz_t uz)
+   * @brief Get the current directory delimiter.
+   * @param uz ZIP context.
+   * @return The deimiter.
+   */
+  char uz_get_dir_delimiter(uz_t uz);
 #endif /* __UZ_H__ */
