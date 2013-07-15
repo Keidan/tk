@@ -5,7 +5,7 @@ set(lib_src
   ${TK_SRC_DIR}/sys/log.c 
   ${TK_SRC_DIR}/sys/sysutils.c 
   ${TK_SRC_DIR}/sys/proc.c
-  ${TK_SRC_DIR}/sys/uz.c 
+  ${TK_SRC_DIR}/sys/z.c 
   ${TK_SRC_DIR}/net/netutils.c 
   ${TK_SRC_DIR}/net/netprint.c 
 )
