@@ -35,7 +35,7 @@
 #include <time.h>
 #include <math.h>
 #include <regex.h>
-#include <tk/net/netutils.h>
+#include <tk/io/net/netutils.h>
 #include <tk/text/string.h>
 #include <tk/sys/log.h>
 

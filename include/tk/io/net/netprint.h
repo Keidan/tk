@@ -24,7 +24,7 @@
 #ifndef __NETPRINT_H__
   #define __NETPRINT_H__
 
-  #include <tk/net/netutils.h>
+  #include <tk/io/net/netutils.h>
   #include <limits.h>
 
   #define NETPRINT_SET_NSET(cond) (cond ? "Set" : "Not Set")

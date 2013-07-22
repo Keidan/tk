@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <tk/net/netprint.h>
-#include <tk/net/netutils.h>
+#include <tk/io/net/netprint.h>
+#include <tk/io/net/netutils.h>
 #include <tk/sys/log.h>
 
 

@@ -6,8 +6,9 @@ set(lib_src
   ${TK_SRC_DIR}/sys/sysutils.c 
   ${TK_SRC_DIR}/sys/proc.c
   ${TK_SRC_DIR}/sys/z.c 
-  ${TK_SRC_DIR}/net/netutils.c 
-  ${TK_SRC_DIR}/net/netprint.c 
+  ${TK_SRC_DIR}/io/sr.c
+  ${TK_SRC_DIR}/io/net/netutils.c 
+  ${TK_SRC_DIR}/io/net/netprint.c 
 )
 add_library(tk SHARED ${lib_src})
 target_link_libraries(tk m zlib-minizip)
