@@ -29,6 +29,11 @@
   #define SR_PRINTF_BUF_LEN          0xFF
   #define SR_DELAY_ON_READ_ERROR     0x05
 
+
+  #define CFLOW_STR(cf) (cf == SR_CFLOW_NONE ? "none" : (cf == SR_CFLOW_XONXOFF ? "xonxoff" : (cf == SR_CFLOW_RTSCTS ? "rtscts" : "unknown")))
+
+  #define PARITY_STR(p) (p == SR_PARITY_NONE ? "none" : (p == SR_PARITY_ODD ? "odd" : (p == SR_PARITY_EVEN ? "even" : "unknown")))
+
   typedef enum { 
     SR_DBITS_5=5,
     SR_DBITS_6,
@@ -43,7 +48,7 @@
 
   typedef enum {
     SR_CFLOW_NONE = 0,
-    SR_CFLOWL_XONXOFF,
+    SR_CFLOW_XONXOFF,
     SR_CFLOW_RTSCTS
   } sr_cflow_et;
 
@@ -75,11 +80,34 @@
   sr_t sr_open(struct sr_cfg_s cfg);
 
   /**
+   * @fn sr_t sr_open_from_string(const char* cfg)
+   * @brief Open the sr port and configure it.
+   * @param cfg The sr configuration.
+   * @return The sr context else NULL on error.
+   */
+  sr_t sr_open_from_string(const char* cfg);
+
+  /**
    * @fn void sr_close(sr_t sr)
    * @brief Close the sr port.
    * @param sr The sr context.
    */
   void sr_close(sr_t sr);
+
+  /**
+   * @fn int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string)
+   * @brief Fill the config from a string, format: dev=device:b=baud:d=data_bits:s=stop_bits:c=flowcontrol:p=parity
+   * dev: serial device (eg: dev=/dev/ttyS0).
+   * b: Nb bauds (eg: b=9600).
+   * d: Data bits, possible values: 5, 6, 7 or 8 (eg: d=8).
+   * s: Stop bits, possible values: 1 or 2 (eg: s=1).
+   * c: Flow control, possible values: none, xonxoff or rtscts (eg: c:none).
+   * p: Parity, possible values: none,odd or even (eg: p=none).
+   * @param cfg The output config.
+   * @param string The input config.
+   * @return -1 on error else 0.
+   */
+  int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string);
 
   /**
    * @fn int sr_start_read(sr_t sr, sr_read_f sr_read)

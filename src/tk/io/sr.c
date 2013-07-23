@@ -12,12 +12,22 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <tk/text/string.h>
+#include <tk/text/stringtoken.h>
 
 #define SR_MAGIC     0x532141
 #define SCAST(sr)    ((struct sr_s*)sr)
 #define IS_VALID(sr) (sr && SCAST(sr)->magic == SR_MAGIC)
 
-
+typedef enum {
+  SR_DEVICE_SET=1,
+  SR_BAUD_SET=2,
+  SR_DBITS_SET=4,
+  SR_SBITS_SET=8,
+  SR_FLOW_SET=16,
+  SR_PAR_SET=24,
+  SR_SET_NB=6
+} sr_set_et;
 
 struct sr_s {
     int magic;
@@ -102,6 +112,23 @@ static void* sr_read_cb(void* ptr);
  */
 static char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes);
 
+
+
+/**
+ * @fn sr_t sr_open_from_string(const char* cfg)
+ * @brief Open the sr port and configure it.
+ * @param cfg The sr configuration.
+ * @return The sr context else NULL on error.
+ */
+sr_t sr_open_from_string(const char* cfg) {
+  struct sr_cfg_s cf;
+  if(sr_parse_config_from_string(&cf, cfg) == -1) {
+    logger(LOG_ERR, "%s: Invalid configuration!", __func__);
+    return NULL;
+  }
+  return sr_open(cf);
+}
+
 /**
  * @fn sr_t sr_open(struct sr_cfg_s cfg)
  * @brief Open the sr port and configure it.
@@ -161,7 +188,7 @@ sr_t sr_open(struct sr_cfg_s cfg) {
 
   ctx->newtio.c_cflag = res;
   ctx->newtio.c_cflag |= (CLOCAL | CREAD);
-    ctx->newtio.c_iflag = IGNBRK | IGNPAR | ICRNL;
+  ctx->newtio.c_iflag = IGNBRK | IGNPAR | ICRNL;
   
   /* Raw output. */
   ctx->newtio.c_oflag = 0;
@@ -296,6 +323,111 @@ int sr_write(sr_t sr, const void* buffer, uint32_t length) {
   }
   struct sr_s *s = SCAST(sr);
   return write(s->fd, buffer, length);
+}
+
+/**
+ * @fn int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string)
+ * @brief Fill the config from a string, format: dev=device:b=baud:d=data_bits:s=stop_bits:c=flowcontrol:p=parity
+ * dev: serial device (eg: dev=/dev/ttyS0).
+ * b: Nb bauds (eg: b=9600).
+ * d: Data bits, possible values: 5, 6, 7 or 8 (eg: d=8).
+ * s: Stop bits, possible values: 1 or 2 (eg: s=1).
+ * c: Flow control, possible values: none, xonxoff or rtscts (eg: c:none).
+ * p: Parity, possible values: none,odd or even (eg: p=none).
+ * @param cfg The output config.
+ * @param string The input config.
+ * @return -1 on error else 0.
+ */
+int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string) {
+  int flags = 0;
+  char* t, *st_name, *st_value;
+  stringtoken_t tok, sub_tok;
+  if(!cfg) {
+    logger(LOG_ERR, "Invalid config pointer!");
+    return -1;
+  }
+  memset(cfg, 0, sizeof(struct sr_cfg_s));
+  tok = stringtoken_init(string, ":");
+  printf("count:%d - %d\n", stringtoken_count(tok), SR_SET_NB);
+  if(stringtoken_count(tok) != SR_SET_NB) {
+    stringtoken_release(tok);
+    logger(LOG_ERR, "Invalid parameters numbers!");
+    return -1;
+  }
+  while(stringtoken_has_more_tokens(tok)) {
+    t = stringtoken_next_token(tok);
+    sub_tok = stringtoken_init(t, "=");
+    if(stringtoken_count(sub_tok) != 2) {
+      stringtoken_release(tok);
+      stringtoken_release(sub_tok);
+      logger(LOG_ERR, "Invalid sub parameters numbers!");
+      return -1;
+    }
+    st_name = stringtoken_next_token(sub_tok);
+    st_value = stringtoken_next_token(sub_tok);
+    if(!strcmp(st_name, "dev")) {
+      strncpy(cfg->dev, st_value, SR_DEVICE_NAME_LENGTH);
+      if(strlen(cfg->dev))
+	flags |= SR_DEVICE_SET;
+    } else if(!strcmp(st_name, "b")) {
+      cfg->baud = string_parse_int(st_value, 0);
+      if(cfg->baud) flags |= SR_BAUD_SET;
+    } else if(!strcmp(st_name, "d")) {
+      cfg->dbits = string_parse_int(st_value, 0);
+      if(cfg->dbits) flags |= SR_DBITS_SET;
+    } else if(!strcmp(st_name, "s")) {
+      cfg->sbits = string_parse_int(st_value, 0);
+      if(cfg->sbits) flags |= SR_SBITS_SET;
+    } else if(!strcmp(st_name, "c")) {
+      if(!strcmp(st_value, "none")) {
+	cfg->cflow = SR_CFLOW_NONE;
+	flags |= SR_FLOW_SET;
+      } else if(!strcmp(st_value, "xonxoff")) {
+	cfg->cflow = SR_CFLOW_XONXOFF;
+	flags |= SR_FLOW_SET;
+      } else if(!strcmp(st_value, "rtscts")) {
+	cfg->cflow = SR_CFLOW_RTSCTS;
+	flags |= SR_FLOW_SET;
+      }
+    } else if(!strcmp(st_name, "p")) {
+      if(!strcmp(st_value, "none")) {
+	cfg->parity = SR_PARITY_NONE;
+	flags |= SR_PAR_SET;
+      } else if(!strcmp(st_value, "odd")) {
+	cfg->parity = SR_PARITY_ODD;
+	flags |= SR_PAR_SET;
+      } else if(!strcmp(st_value, "even")) {
+	cfg->parity = SR_PARITY_EVEN;
+	flags |= SR_PAR_SET;
+      }
+    }
+    stringtoken_release(sub_tok);
+    free(st_name);
+    free(st_value);
+    free(t);
+  }
+  stringtoken_release(tok);
+  if(!(flags & SR_DEVICE_SET)) {
+    logger(LOG_ERR, "Device required!");
+    return -1;
+  } else if(!(flags & SR_BAUD_SET)) {
+    logger(LOG_ERR, "Baud required!");
+    return -1;
+  } else if(!(flags & SR_DBITS_SET)) {
+    logger(LOG_ERR, "Data bits required!");
+    return -1;
+  } else if(!(flags & SR_SBITS_SET)) {
+    logger(LOG_ERR, "Stop bits required!");
+    return -1;
+  } else if(!(flags & SR_FLOW_SET)) {
+    logger(LOG_ERR, "Flow control required!");
+    return -1;
+  } else if(!(flags & SR_PAR_SET)) {
+    logger(LOG_ERR, "Parity required!");
+    return -1;
+  }
+  logger(LOG_INFO, "Device configuration {device=%s, baud=%d, data_bits=%d, stop_bits=%d, flow_control=%s, parity=%s", cfg->dev, cfg->baud, cfg->dbits, cfg->sbits, CFLOW_STR(cfg->cflow), PARITY_STR(cfg->parity));
+  return 0;
 }
 
 /**
@@ -474,7 +606,7 @@ static int sr_cflow(sr_cflow_et cflow, unsigned int *res) {
       *res &= ~CRTSCTS;
       *res &= ~(IXON|IXOFF|IXANY);
       break;
-    case SR_CFLOWL_XONXOFF:
+    case SR_CFLOW_XONXOFF:
       *res = (IXON|IXOFF|IXANY);
       break;
     case SR_CFLOW_RTSCTS:    
@@ -512,3 +644,4 @@ static char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes) {
   }
   return buffer;
 }
+
