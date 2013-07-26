@@ -185,6 +185,7 @@ sr_t sr_open(struct sr_cfg_s cfg) {
     sr_close(ctx);
     return NULL;
   }
+  logger(LOG_INFO, "Device configuration {device=%s, baud=%d, data_bits=%d, stop_bits=%d, flow_control=%s, parity=%s}", cfg.dev, cfg.baud, cfg.dbits, cfg.sbits, CFLOW_STR(cfg.cflow), PARITY_STR(cfg.parity));
 
   ctx->newtio.c_cflag = res;
   ctx->newtio.c_cflag |= (CLOCAL | CREAD);
@@ -426,7 +427,6 @@ int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string) {
     logger(LOG_ERR, "Parity required!");
     return -1;
   }
-  logger(LOG_INFO, "Device configuration {device=%s, baud=%d, data_bits=%d, stop_bits=%d, flow_control=%s, parity=%s", cfg->dev, cfg->baud, cfg->dbits, cfg->sbits, CFLOW_STR(cfg->cflow), PARITY_STR(cfg->parity));
   return 0;
 }
 
