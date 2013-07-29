@@ -72,6 +72,14 @@
   };
 
   /**
+   * @fn void sr_get_info(sr_t sr, string_t buf)
+   * @brief Get the serial informations.
+   * @param sr The serial pointer.
+   * @param buf The informations buffer.
+   */
+  void sr_get_info(sr_t sr, string_t buf);
+
+  /**
    * @fn sr_t sr_open(struct sr_cfg_s cfg)
    * @brief Open the sr port and configure it.
    * @param cfg The sr configuration.

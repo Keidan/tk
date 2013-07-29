@@ -207,12 +207,12 @@ sr_t sr_open(struct sr_cfg_s cfg) {
 }
 
 /**
- * @fn void serial_get_info(sr_t sr, string_t buf)
+ * @fn void sr_get_info(sr_t sr, string_t buf)
  * @brief Get the serial informations.
  * @param sr The serial pointer.
  * @param buf The informations buffer.
  */
-void serial_get_info(sr_t sr, string_t buf) {
+void sr_get_info(sr_t sr, string_t buf) {
   if(!IS_VALID(sr)) {
     logger(LOG_ERR, "%s: Invalid or null serial pointer!", __func__);
     return;
