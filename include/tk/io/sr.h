@@ -164,4 +164,32 @@
    */
   int sr_read(sr_t sr, unsigned char* buffer, uint32_t length);
 
+  /**
+   * @fn int sr_update_vmin(sr_t sr, uint8_t vmin)
+   * @brief Update the vmin value.
+   * @param sr The serial pointer
+   * @param vmin The new value.
+   * @return -1 on error else 0
+   */
+  int sr_update_vmin(sr_t sr, uint8_t vmin);
+
+  /**
+   * @fn int sr_update_vtime(sr_t sr, uint8_t vtime)
+   * @brief Update the vtime value.
+   * @param sr The serial pointer
+   * @param vtime The new value.
+   * @return -1 on error else 0
+   */
+  int sr_update_vtime(sr_t sr, uint8_t vtime);
+
+  /**
+   * @fn int sr_update_vmin_and_vtime(sr_t sr, uint8_t vmin, uint8_t vtime)
+   * @brief Update the vtime value.
+   * @param sr The serial pointer
+   * @param vmin The new value.
+   * @param vtime The new value.
+   * @return -1 on error else 0
+   */
+  int sr_update_vmin_and_vtime(sr_t sr, uint8_t vmin, uint8_t vtime);
+
 #endif /* __SR_H__ */

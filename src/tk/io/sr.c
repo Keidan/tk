@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/ioctl.h>
-#include <sys/select.h>
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
@@ -36,7 +35,6 @@ struct sr_s {
     pthread_t th;
     struct termios oldtio;
     struct termios newtio;
-    fd_set readfs;    /* file descriptor set */
     int    loop;    /* loop while TRUE */
 };
 
@@ -191,10 +189,9 @@ sr_t sr_open(struct sr_cfg_s cfg) {
   
   /* Raw output. */
   ctx->newtio.c_oflag = 0;
-  ctx->newtio.c_lflag = ICANON;
-  ctx->newtio.c_cc[VTIME]    = 0;     /* inter-character timer unused */
-  ctx->newtio.c_cc[VMIN]     = 1;     /* blocking read until 1 character arrives */
-
+  ctx->newtio.c_cc[VTIME]    = 2;     /* inter-character timer unused */
+  ctx->newtio.c_cc[VMIN]     = 254;     /* blocking read until 1 character arrives */
+  
   /* now clean the modem line and activate the settings for the port */
   tcflush(ctx->fd, TCIFLUSH);
   if(tcsetattr(ctx->fd, TCSANOW, &ctx->newtio) < 0)  {
@@ -218,8 +215,7 @@ void sr_get_info(sr_t sr, string_t buf) {
   }
   bzero(buf, sizeof(string_t));
   struct sr_s *s = SCAST(sr);
-  speed_t baud = cfgetospeed(&s->newtio);
-  sprintf(buf, "Serial configurtion: %s{baud=%d", s->cfg.dev, baud);
+  sprintf(buf, "Serial configurtion: %s{baud=%d", s->cfg.dev, s->cfg.baud);
   
   switch(s->newtio.c_cflag & CSIZE) {
     case CS5: strcat(buf, ",dbits=5"); break;
@@ -240,8 +236,8 @@ void sr_get_info(sr_t sr, string_t buf) {
   else strcat(buf, ",parity=none");
 
   if(s->newtio.c_cflag & CRTSCTS) strcat(buf, ",cflow=rts/cts");
-  else if(s->newtio.c_cflag & (IXON|IXOFF|IXANY))
-    strcat(buf, ",cflow=xon/xoff");
+//  else if(s->newtio.c_cflag & (IXON|IXOFF|IXANY))
+//    strcat(buf, ",cflow=xon/xoff");
   else strcat(buf, ",cflow=none");
   
   if(s->newtio.c_cflag & CLOCAL) strcat(buf, ",clocal=yes");
@@ -251,6 +247,82 @@ void sr_get_info(sr_t sr, string_t buf) {
  
   if(s->newtio.c_lflag & ECHO) strcat(buf, ",echo=yes");
   else strcat(buf, ",echo=no");
+  strcat(buf, "}");
+}
+
+/**
+ * @fn int sr_update_vmin(sr_t sr, uint8_t vmin)
+ * @brief Update the vmin value.
+ * @param sr The serial pointer
+ * @param vmin The new value.
+ * @return -1 on error else 0
+ */
+int sr_update_vmin(sr_t sr, uint8_t vmin) {
+  if(!IS_VALID(sr)) {
+    logger(LOG_ERR, "%s: Invalid or null sr pointer!", __func__);
+    return -1;
+  }
+  struct sr_s *s = SCAST(sr);
+  struct termio t;
+  t.c_cc[VTIME] = s->newtio.c_cc[VTIME];
+  t.c_cc[VMIN] = vmin;
+  if(ioctl(s->fd, TCSETAW, &t) == -1) {
+    logger(LOG_ERR, "%s: Unable to change the vmin value: (%d) %s\n", __func__, errno, strerror(errno));
+    return -1;
+  }
+  s->newtio.c_cc[VMIN] = vmin;
+  return 0;
+}
+
+/**
+ * @fn int sr_update_vtime(sr_t sr, uint8_t vtime)
+ * @brief Update the vtime value.
+ * @param sr The serial pointer
+ * @param vtime The new value.
+ * @return -1 on error else 0
+ */
+int sr_update_vtime(sr_t sr, uint8_t vtime) {
+  if(!IS_VALID(sr)) {
+    logger(LOG_ERR, "%s: Invalid or null sr pointer!", __func__);
+    return -1;
+  }
+  struct sr_s *s = SCAST(sr);
+  struct termio t;
+  t.c_cc[VMIN] = s->newtio.c_cc[VMIN];
+  t.c_cc[VTIME] = vtime;
+  if(ioctl(s->fd, TCSETAW, &t) == -1) {
+    logger(LOG_ERR, "%s: Unable to change the vtime value: (%d) %s\n", __func__, errno, strerror(errno));
+    return -1;
+  }
+  s->newtio.c_cc[VTIME] = vtime;
+  return 0;
+}
+
+
+/**
+ * @fn int sr_update_vmin_and_vtime(sr_t sr, uint8_t vmin, uint8_t vtime)
+ * @brief Update the vtime value.
+ * @param sr The serial pointer
+ * @param vmin The new value.
+ * @param vtime The new value.
+ * @return -1 on error else 0
+ */
+int sr_update_vmin_and_vtime(sr_t sr, uint8_t vmin, uint8_t vtime) {
+  if(!IS_VALID(sr)) {
+    logger(LOG_ERR, "%s: Invalid or null sr pointer!", __func__);
+    return -1;
+  }
+  struct sr_s *s = SCAST(sr);
+  struct termio t;
+  t.c_cc[VMIN] = vmin;
+  t.c_cc[VTIME] = vtime;
+  if(ioctl(s->fd, TCSETAW, &t) == -1) {
+    logger(LOG_ERR, "%s: Unable to change the vmin and vtime value: (%d) %s\n", __func__, errno, strerror(errno));
+    return -1;
+  }
+  s->newtio.c_cc[VMIN] = vmin;
+  s->newtio.c_cc[VTIME] = vtime;
+  return 0;
 }
 
 /**
@@ -435,7 +507,7 @@ int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string) {
       cfg->dbits = string_parse_int(st_value, 0);
       if(cfg->dbits) flags |= SR_DBITS_SET;
     } else if(!strcmp(st_name, "s")) {
-      cfg->sbits = string_parse_int(st_value, 0);
+      cfg->sbits = string_parse_int(st_value, 0) == 1 ? SR_SBITS_1 : SR_SBITS_2;
       if(cfg->sbits) flags |= SR_SBITS_SET;
     } else if(!strcmp(st_name, "c")) {
       if(!strcmp(st_value, "none")) {
@@ -496,28 +568,18 @@ int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string) {
  */
 static void* sr_read_cb(void* ptr) {
   struct sr_s *s = SCAST(ptr);
-  FD_ZERO(&s->readfs);
-  FD_SET(s->fd, &s->readfs);
   unsigned char *buffer;
-  int32_t reads, maxfd = s->fd + 1;
   uint32_t bytes;
   logger(LOG_INFO, "%s: Wait on port %d for device message.", __func__, s->fd);
   /* loop for input */
   while (s->loop) {
     
     /* block until input becomes available */
-    int r = select(maxfd, &s->readfs, NULL, NULL, NULL);
-    if(r == -1) {
-      logger(LOG_ERR, "%s: Select error: (%d) %s.", __func__, errno, strerror(errno));
-      return NULL;
-    }
-    if(!FD_ISSET(s->fd, &s->readfs)) continue;
-
     if((buffer = sr_prepare_buffer(s, &bytes)) == NULL) {
       sleep(SR_DELAY_ON_READ_ERROR);      
       continue;
     }
-    reads = read(s->fd, buffer, bytes);
+    int reads = read(s->fd, buffer, bytes);
     if(reads == -1) {
       logger(LOG_ERR, "%s: Unable to read datas: (%d) %s.", __func__, errno, strerror(errno));
       free(buffer);
@@ -692,15 +754,7 @@ static int sr_cflow(sr_cflow_et cflow, unsigned int *res) {
  */
 static unsigned char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes) {
   unsigned char *buffer;
-
-  if(ioctl(s->fd, FIONREAD, bytes) == -1) {
-    logger(LOG_ERR, "%s: Unable to get the available datas: (%d) %s.", __func__, errno, strerror(errno));
-    return NULL;
-  }
-  if(!bytes) {
-    logger(LOG_ERR, "%s: Select reached without bytes (b=0)", __func__);
-    return NULL;
-  }
+  *bytes = s->newtio.c_cc[VMIN];
   if((buffer = (unsigned char*) malloc(*bytes)) == NULL) {
     logger(LOG_ERR, "%s: Unable to allocate memory for read buffer.", __func__);
     return NULL;
