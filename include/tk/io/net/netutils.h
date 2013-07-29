@@ -209,14 +209,14 @@
   __u32 netutils_datas_available(int fd);
 
   /**
-   * @fn void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw)
+   * @fn void netutils_print_hex(FILE* std, __u8* buffer, int len, _Bool print_raw)
    * @brief Print the packet in hexa (wireshark like).
    * @param std Output stream.
    * @param buffer Packet.
    * @param len Packet length.
    * @param print_raw Display in raw mode.
    */
-  void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw);
+  void netutils_print_hex(FILE* std, __u8* buffer, int len, _Bool print_raw);
 
   /**
    * @fn int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE])

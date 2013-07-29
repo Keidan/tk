@@ -60,7 +60,7 @@
 
   typedef void* sr_t;
 
-  typedef void (*sr_read_f)(sr_t sr, char* buffer, uint32_t length);
+  typedef void (*sr_read_f)(sr_t sr, unsigned char* buffer, uint32_t length);
 
   struct sr_cfg_s {
       char dev[SR_DEVICE_NAME_LENGTH];
@@ -144,5 +144,15 @@
    * @return -1 on error else 0.
    */
   int sr_write(sr_t sr, const void* buffer, uint32_t length);
+
+  /**
+   * @fn int sr_read(sr_t sr, unsigned char* buffer, uint32_t length)
+   * @brief Read a command from the sr.
+   * @param sr The sr context.
+   * @param buffer The buffer datas.
+   * @param length The buffer length.
+   * @return The linux read code.
+   */
+  int sr_read(sr_t sr, unsigned char* buffer, uint32_t length);
 
 #endif /* __SR_H__ */

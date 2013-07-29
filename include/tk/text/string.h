@@ -26,6 +26,8 @@
   #include <stdint.h>
   #include <string.h>
 
+  typedef char string_t[255];
+
   /**
    * @fn char* string_substring(const char* str, size_t begin, size_t len)
    * @brief Substract a string.

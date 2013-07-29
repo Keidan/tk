@@ -104,13 +104,13 @@ static void* sr_read_cb(void* ptr);
 static void* sr_read_cb(void* ptr);
 
 /**
- * @fn static char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes)
+ * @fn static unsigned char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes)
  * @brief Prepare the read buffer.
  * @param sr Sr context
  * @param bytes The available bytes.
  * @raturn The allocated buffer else NULL on error.
  */
-static char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes);
+static unsigned char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes);
 
 
 
@@ -185,7 +185,6 @@ sr_t sr_open(struct sr_cfg_s cfg) {
     sr_close(ctx);
     return NULL;
   }
-  logger(LOG_INFO, "Device configuration {device=%s, baud=%d, data_bits=%d, stop_bits=%d, flow_control=%s, parity=%s}", cfg.dev, cfg.baud, cfg.dbits, cfg.sbits, CFLOW_STR(cfg.cflow), PARITY_STR(cfg.parity));
 
   ctx->newtio.c_cflag = res;
   ctx->newtio.c_cflag |= (CLOCAL | CREAD);
@@ -198,17 +197,61 @@ sr_t sr_open(struct sr_cfg_s cfg) {
   ctx->newtio.c_cc[VMIN]     = 1;     /* blocking read until 1 character arrives */
 
   /* now clean the modem line and activate the settings for the port */
-  if(tcflush(ctx->fd, TCIFLUSH) < 0)  {
-    logger(LOG_ERR, "%s: Unable to call tcfluch for dev '%s': (%d) %s", __func__, ctx->cfg.dev, errno, strerror(errno));
-    sr_close(ctx);
-    return NULL;
-  }
+  tcflush(ctx->fd, TCIFLUSH);
   if(tcsetattr(ctx->fd, TCSANOW, &ctx->newtio) < 0)  {
     logger(LOG_ERR, "%s: Unable to call tcsetattr for dev '%s': (%d) %s", __func__, ctx->cfg.dev, errno, strerror(errno));
     sr_close(ctx);
     return NULL;
   }
   return ctx;
+}
+
+/**
+ * @fn void serial_get_info(sr_t sr, string_t buf)
+ * @brief Get the serial informations.
+ * @param sr The serial pointer.
+ * @param buf The informations buffer.
+ */
+void serial_get_info(sr_t sr, string_t buf) {
+  if(!IS_VALID(sr)) {
+    logger(LOG_ERR, "%s: Invalid or null serial pointer!", __func__);
+    return;
+  }
+  bzero(buf, sizeof(string_t));
+  struct sr_s *s = SCAST(sr);
+  speed_t baud = cfgetospeed(&s->newtio);
+  sprintf(buf, "Serial configurtion: %s{baud=%d", s->cfg.dev, baud);
+  
+  switch(s->newtio.c_cflag & CSIZE) {
+    case CS5: strcat(buf, ",dbits=5"); break;
+    case CS6: strcat(buf, ",dbits=6"); break;
+    case CS7: strcat(buf, ",dbits=7"); break;
+    default:
+    case CS8: strcat(buf, ",dbits=8"); break;
+  }
+
+  if(s->newtio.c_cflag & CSTOPB)
+    strcat(buf, ",sbits=2");
+  else
+    strcat(buf, ",sbits=1");
+
+  if(s->newtio.c_cflag & PARENB)
+    if(s->newtio.c_cflag & PARODD) strcat(buf, ",parity=odd");
+    else strcat(buf, ",parity=even");
+  else strcat(buf, ",parity=none");
+
+  if(s->newtio.c_cflag & CRTSCTS) strcat(buf, ",cflow=rts/cts");
+  else if(s->newtio.c_cflag & (IXON|IXOFF|IXANY))
+    strcat(buf, ",cflow=xon/xoff");
+  else strcat(buf, ",cflow=none");
+  
+  if(s->newtio.c_cflag & CLOCAL) strcat(buf, ",clocal=yes");
+  else strcat(buf, ",clocal=no");
+  if(s->newtio.c_cflag & CREAD) strcat(buf, ",cread=yes");
+  else strcat(buf, ",cread=no");
+ 
+  if(s->newtio.c_lflag & ECHO) strcat(buf, ",echo=yes");
+  else strcat(buf, ",echo=no");
 }
 
 /**
@@ -327,6 +370,23 @@ int sr_write(sr_t sr, const void* buffer, uint32_t length) {
 }
 
 /**
+ * @fn int sr_read(sr_t sr, unsigned char* buffer, uint32_t length)
+ * @brief Read a command from the sr.
+ * @param sr The sr context.
+ * @param buffer The buffer datas.
+ * @param length The buffer length.
+ * @return The linux read code.
+ */
+int sr_read(sr_t sr, unsigned char* buffer, uint32_t length) {
+  if(!IS_VALID(sr)) {
+    logger(LOG_ERR, "%s: Invalid or null sr pointer!", __func__);
+    return -1;
+  }
+  struct sr_s *s = SCAST(sr);
+  return read(s->fd, buffer, length);
+}
+
+/**
  * @fn int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string)
  * @brief Fill the config from a string, format: dev=device:b=baud:d=data_bits:s=stop_bits:c=flowcontrol:p=parity
  * dev: serial device (eg: dev=/dev/ttyS0).
@@ -349,7 +409,6 @@ int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string) {
   }
   memset(cfg, 0, sizeof(struct sr_cfg_s));
   tok = stringtoken_init(string, ":");
-  printf("count:%d - %d\n", stringtoken_count(tok), SR_SET_NB);
   if(stringtoken_count(tok) != SR_SET_NB) {
     stringtoken_release(tok);
     logger(LOG_ERR, "Invalid parameters numbers!");
@@ -440,14 +499,19 @@ static void* sr_read_cb(void* ptr) {
   struct sr_s *s = SCAST(ptr);
   FD_ZERO(&s->readfs);
   FD_SET(s->fd, &s->readfs);
-  char *buffer;
+  unsigned char *buffer;
   int32_t reads, maxfd = s->fd + 1;
   uint32_t bytes;
-  
+  logger(LOG_INFO, "%s: Wait on port %d for device message.", __func__, s->fd);
   /* loop for input */
   while (s->loop) {
+    
     /* block until input becomes available */
-    select(maxfd, &s->readfs, NULL, NULL, NULL);
+    int r = select(maxfd, &s->readfs, NULL, NULL, NULL);
+    if(r == -1) {
+      logger(LOG_ERR, "%s: Select error: (%d) %s.", __func__, errno, strerror(errno));
+      return NULL;
+    }
     if(!FD_ISSET(s->fd, &s->readfs)) continue;
 
     if((buffer = sr_prepare_buffer(s, &bytes)) == NULL) {
@@ -456,7 +520,7 @@ static void* sr_read_cb(void* ptr) {
     }
     reads = read(s->fd, buffer, bytes);
     if(reads == -1) {
-      logger(LOG_ERR, "%s: Unable to read datas: (%d) %s.", errno, strerror(errno), __func__);
+      logger(LOG_ERR, "%s: Unable to read datas: (%d) %s.", __func__, errno, strerror(errno));
       free(buffer);
       sleep(SR_DELAY_ON_READ_ERROR);
       continue;
@@ -603,14 +667,14 @@ static int sr_parity(sr_parity_et parity, unsigned int *res) {
 static int sr_cflow(sr_cflow_et cflow, unsigned int *res) {
   switch(cflow) {
     case SR_CFLOW_NONE:
-      *res &= ~CRTSCTS;
-      *res &= ~(IXON|IXOFF|IXANY);
+      if((*res & CRTSCTS)) *res &= ~CRTSCTS;
+      if((*res & (IXON|IXOFF|IXANY))) *res &= ~(IXON|IXOFF|IXANY);
       break;
     case SR_CFLOW_XONXOFF:
-      *res = (IXON|IXOFF|IXANY);
+      if(!(*res & (IXON|IXOFF|IXANY))) *res |= (IXON|IXOFF|IXANY);
       break;
     case SR_CFLOW_RTSCTS:    
-      *res = CRTSCTS;
+      if(!(*res & CRTSCTS)) *res |= CRTSCTS;
       break;
     default :
       logger(LOG_ERR, "%s: Flow control not supported %d.", __func__, cflow);
@@ -627,8 +691,8 @@ static int sr_cflow(sr_cflow_et cflow, unsigned int *res) {
  * @param bytes The available bytes.
  * @raturn The allocated buffer else NULL on error.
  */
-static char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes) {
-  char *buffer;
+static unsigned char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes) {
+  unsigned char *buffer;
 
   if(ioctl(s->fd, FIONREAD, bytes) == -1) {
     logger(LOG_ERR, "%s: Unable to get the available datas: (%d) %s.", __func__, errno, strerror(errno));
@@ -638,7 +702,7 @@ static char* sr_prepare_buffer(struct sr_s *s, uint32_t *bytes) {
     logger(LOG_ERR, "%s: Select reached without bytes (b=0)", __func__);
     return NULL;
   }
-  if((buffer = (char*) malloc(*bytes)) == NULL) {
+  if((buffer = (unsigned char*) malloc(*bytes)) == NULL) {
     logger(LOG_ERR, "%s: Unable to allocate memory for read buffer.", __func__);
     return NULL;
   }

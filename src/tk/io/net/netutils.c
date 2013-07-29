@@ -244,16 +244,16 @@ int netutils_hostname_to_ip(const char *hostname, char* ip) {
 }
 
 /**
- * @fn void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw)
+ * @fn void netutils_print_hex(FILE* std, __u8* buffer, int len, _Bool print_raw)
  * @brief Print the packet in hexa (wireshark like).
  * @param std Output stream.
  * @param buffer Packet.
  * @param len Packet length.
  * @param print_raw Display in raw mode.
  */
-void netutils_print_hex(FILE* std, char* buffer, int len, _Bool print_raw) {
+void netutils_print_hex(FILE* std, __u8* buffer, int len, _Bool print_raw) {
   int i = 0, max = PRINT_HEX_MAX_PER_LINES, loop = len;
-  __u8 *p = (__u8 *)buffer;
+  __u8 *p = buffer;
   char line [max + 3]; /* spaces + \0 */
   memset(line, 0, sizeof(line));
   while(loop--) {

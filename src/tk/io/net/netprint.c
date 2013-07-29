@@ -82,7 +82,7 @@ void netprint_print_headers(const char* buffer, __u32 length, struct netutils_he
   } 
   printf("\n");/* layout */
   /* print the buffer */
-  netutils_print_hex(stdout, (char*)buffer, length, 0);
+  netutils_print_hex(stdout, (__u8*)buffer, length, 0);
 }
 
   /**
