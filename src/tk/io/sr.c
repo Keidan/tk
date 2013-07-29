@@ -266,7 +266,7 @@ int sr_update_vmin(sr_t sr, uint8_t vmin) {
   struct termios t;
   memcpy(&t, &s->newtio, sizeof(struct termios));
   t.c_cc[VMIN] = vmin;
-  if(ioctl(s->fd, TCSETAW, &t) == -1) {
+  if(tcsetattr(s->fd, TCSANOW, &t) == -1) {
     logger(LOG_ERR, "%s: Unable to change the vmin value: (%d) %s\n", __func__, errno, strerror(errno));
     return -1;
   }
@@ -290,7 +290,7 @@ int sr_update_vtime(sr_t sr, uint8_t vtime) {
   struct termios t;
   memcpy(&t, &s->newtio, sizeof(struct termios));
   t.c_cc[VTIME] = vtime;
-  if(ioctl(s->fd, TCSETAW, &t) == -1) {
+  if(tcsetattr(s->fd, TCSANOW, &t) == -1) {
     logger(LOG_ERR, "%s: Unable to change the vtime value: (%d) %s\n", __func__, errno, strerror(errno));
     return -1;
   }
@@ -317,7 +317,7 @@ int sr_update_vmin_and_vtime(sr_t sr, uint8_t vmin, uint8_t vtime) {
   memcpy(&t, &s->newtio, sizeof(struct termios));
   t.c_cc[VMIN] = vmin;
   t.c_cc[VTIME] = vtime;
-  if(ioctl(s->fd, TCSETAW, &t) == -1) {
+  if(tcsetattr(s->fd, TCSANOW, &t) == -1) {
     logger(LOG_ERR, "%s: Unable to change the vmin and vtime value: (%d) %s\n", __func__, errno, strerror(errno));
     return -1;
   }
