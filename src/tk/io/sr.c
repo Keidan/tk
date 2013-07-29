@@ -12,7 +12,6 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
-#include <tk/text/string.h>
 #include <tk/text/stringtoken.h>
 
 #define SR_MAGIC     0x532141
