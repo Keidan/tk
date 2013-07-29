@@ -38,6 +38,45 @@ struct sr_s {
     int    loop;    /* loop while TRUE */
 };
 
+struct sr_baud_s {
+    speed_t ibaud;
+    speed_t obaud;
+};
+
+#define ARRAY_LENGTH(arr) (sizeof(arr) / sizeof(arr[0]))
+static struct sr_baud_s bauds[] = {
+  {      50, B50      },
+  {      75, B75      },
+  {     110, B110     },
+  {     134, B134     },
+  {     150, B150     },
+  {     200, B200     },
+  {     300, B300     },
+  {     600, B600     },
+  {    1200, B1200    },
+  {    1800, B1800    },
+  {    2400, B2400    },
+  {    4800, B4800    },
+  {    9600, B9600    },
+  {   19200, B19200   },
+  {   38400, B38400   },
+  {   57600, B57600   },
+  {  115200, B115200  },
+  {  230400, B230400  },
+  {  460800, B460800  },
+  {  500000, B500000  },
+  {  576000, B576000  },
+  {  921600, B921600  },
+  { 1000000, B1000000 },
+  { 1152000, B1152000 },
+  { 1500000, B1500000 },
+  { 2000000, B2000000 },
+  { 2500000, B2500000 },
+  { 3000000, B3000000 },
+  { 3500000, B3500000 },
+  { 4000000, B4000000 }
+};
+
 
 /**
  * @fn static int sr_baud(uint32_t baud, struct termios *res)
@@ -603,42 +642,15 @@ static void* sr_read_cb(void* ptr) {
  * @return -1 on error else 0
  */
 static int sr_baud(uint32_t baud, struct termios *res) {
-  switch(baud) {
-    case 50:      cfsetispeed(res, B50); cfsetospeed(res, B50);           break;
-    case 75:      cfsetispeed(res, B75); cfsetospeed(res, B75);           break;
-    case 110:     cfsetispeed(res, B110); cfsetospeed(res, B110);         break;
-    case 134:     cfsetispeed(res, B134); cfsetospeed(res, B134);         break;
-    case 150:     cfsetispeed(res, B150); cfsetospeed(res, B150);         break;
-    case 200:     cfsetispeed(res, B200); cfsetospeed(res, B200);         break;
-    case 300:     cfsetispeed(res, B300); cfsetospeed(res, B300);         break;
-    case 600:     cfsetispeed(res, B600); cfsetospeed(res, B600);         break;
-    case 1200:    cfsetispeed(res, B1200); cfsetospeed(res, B1200);       break;
-    case 1800:    cfsetispeed(res, B1800); cfsetospeed(res, B1800);       break;
-    case 2400:    cfsetispeed(res, B2400); cfsetospeed(res, B2400);       break;
-    case 4800:    cfsetispeed(res, B4800); cfsetospeed(res, B4800);       break;
-    case 9600:    cfsetispeed(res, B9600); cfsetospeed(res, B9600);       break;
-    case 19200:   cfsetispeed(res, B19200); cfsetospeed(res, B19200);     break;
-    case 38400:   cfsetispeed(res, B38400); cfsetospeed(res, B38400);     break;
-    case 57600:   cfsetispeed(res, B57600); cfsetospeed(res, B57600);     break;
-    case 115200:  cfsetispeed(res, B115200); cfsetospeed(res, B115200);   break;
-    case 230400:  cfsetispeed(res, B230400); cfsetospeed(res, B230400);   break;
-    case 460800:  cfsetispeed(res, B460800); cfsetospeed(res, B460800);   break;
-    case 500000:  cfsetispeed(res, B500000); cfsetospeed(res, B500000);   break;
-    case 576000:  cfsetispeed(res, B576000); cfsetospeed(res, B576000);   break;
-    case 921600:  cfsetispeed(res, B921600); cfsetospeed(res, B921600);   break;
-    case 1000000: cfsetispeed(res, B1000000); cfsetospeed(res, B1000000); break;
-    case 1152000: cfsetispeed(res, B1152000); cfsetospeed(res, B1152000); break;
-    case 1500000: cfsetispeed(res, B1500000); cfsetospeed(res, B1500000); break;
-    case 2000000: cfsetispeed(res, B2000000); cfsetospeed(res, B2000000); break;
-    case 2500000: cfsetispeed(res, B2500000); cfsetospeed(res, B2500000); break;
-    case 3000000: cfsetispeed(res, B3000000); cfsetospeed(res, B3000000); break;
-    case 3500000: cfsetispeed(res, B3500000); cfsetospeed(res, B3500000); break;
-    case 4000000: cfsetispeed(res, B4000000); cfsetospeed(res, B4000000); break;
-    default:
-      logger(LOG_ERR, "%s: Baud %d not supported", __func__, baud);
-      return -1;
-  }
-  return 0;
+  int i = 0;
+  for(;i < ARRAY_LENGTH(bauds); i++)
+    if(bauds[i].ibaud == baud) {
+      cfsetispeed(res, bauds[i].obaud);
+      cfsetospeed(res, bauds[i].obaud);
+      return 0;
+    }
+  logger(LOG_ERR, "%s: Baud %d not supported", __func__, baud);
+  return -1;
 }
 
 /**
