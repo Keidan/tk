@@ -70,6 +70,8 @@
       sr_sbits_et sbits;
       sr_cflow_et cflow;
       sr_parity_et parity;
+      uint8_t vmin;
+      uint8_t vtime;
   };
 
   /**
@@ -105,13 +107,15 @@
 
   /**
    * @fn int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string)
-   * @brief Fill the config from a string, format: dev=device:b=baud:d=data_bits:s=stop_bits:c=flowcontrol:p=parity
+   * @brief Fill the config from a string, format: dev=device:b=baud:d=data_bits:s=stop_bits:c=flowcontrol:p=parity:v=vmin:t=vtime
    * dev: serial device (eg: dev=/dev/ttyS0).
    * b: Nb bauds (eg: b=9600).
    * d: Data bits, possible values: 5, 6, 7 or 8 (eg: d=8).
    * s: Stop bits, possible values: 1 or 2 (eg: s=1).
    * c: Flow control, possible values: none, xonxoff or rtscts (eg: c:none).
    * p: Parity, possible values: none,odd or even (eg: p=none).
+   * v: vmin value
+   * t: vtime value
    * @param cfg The output config.
    * @param string The input config.
    * @return -1 on error else 0.

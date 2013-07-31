@@ -228,8 +228,8 @@ sr_t sr_open(struct sr_cfg_s cfg) {
   
   /* Raw output. */
   ctx->newtio.c_oflag = 0;
-  ctx->newtio.c_cc[VTIME]    = 2;     /* inter-character timer unused */
-  ctx->newtio.c_cc[VMIN]     = 254;     /* blocking read until 1 character arrives */
+  ctx->newtio.c_cc[VTIME]    = cfg.vtime;     /* inter-character timer unused */
+  ctx->newtio.c_cc[VMIN]     = cfg.vmin;     /* blocking read until 1 character arrives */
   
   /* now clean the modem line and activate the settings for the port */
   tcflush(ctx->fd, TCIFLUSH);
@@ -309,7 +309,7 @@ int sr_update_vmin(sr_t sr, uint8_t vmin) {
     logger(LOG_ERR, "%s: Unable to change the vmin value: (%d) %s\n", __func__, errno, strerror(errno));
     return -1;
   }
-  s->newtio.c_cc[VMIN] = vmin;
+  s->newtio.c_cc[VMIN] = s->cfg.vmin = vmin;
   return 0;
 }
 
@@ -333,7 +333,7 @@ int sr_update_vtime(sr_t sr, uint8_t vtime) {
     logger(LOG_ERR, "%s: Unable to change the vtime value: (%d) %s\n", __func__, errno, strerror(errno));
     return -1;
   }
-  s->newtio.c_cc[VTIME] = vtime;
+  s->newtio.c_cc[VTIME] = s->cfg.vtime = vtime;
   return 0;
 }
 
@@ -360,8 +360,8 @@ int sr_update_vmin_and_vtime(sr_t sr, uint8_t vmin, uint8_t vtime) {
     logger(LOG_ERR, "%s: Unable to change the vmin and vtime value: (%d) %s\n", __func__, errno, strerror(errno));
     return -1;
   }
-  s->newtio.c_cc[VMIN] = vmin;
-  s->newtio.c_cc[VTIME] = vtime;
+  s->newtio.c_cc[VMIN] = s->cfg.vmin = vmin;
+  s->newtio.c_cc[VTIME] = s->cfg.vtime = vtime;
   return 0;
 }
 
@@ -499,13 +499,15 @@ int sr_read(sr_t sr, unsigned char* buffer, uint32_t length) {
 
 /**
  * @fn int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string)
- * @brief Fill the config from a string, format: dev=device:b=baud:d=data_bits:s=stop_bits:c=flowcontrol:p=parity
+ * @brief Fill the config from a string, format: dev=device:b=baud:d=data_bits:s=stop_bits:c=flowcontrol:p=parity:v=vmin:t=vtime
  * dev: serial device (eg: dev=/dev/ttyS0).
  * b: Nb bauds (eg: b=9600).
  * d: Data bits, possible values: 5, 6, 7 or 8 (eg: d=8).
  * s: Stop bits, possible values: 1 or 2 (eg: s=1).
  * c: Flow control, possible values: none, xonxoff or rtscts (eg: c:none).
  * p: Parity, possible values: none,odd or even (eg: p=none).
+ * v: vmin value
+ * t: vtime value
  * @param cfg The output config.
  * @param string The input config.
  * @return -1 on error else 0.
@@ -571,6 +573,10 @@ int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string) {
 	cfg->parity = SR_PARITY_EVEN;
 	flags |= SR_PAR_SET;
       }
+    } else if(!strcmp(st_name, "v")) {
+      cfg->vmin = string_parse_int(st_value, 254);
+    } else if(!strcmp(st_name, "t")) {
+      cfg->vtime = string_parse_int(st_value, 1);
     }
     stringtoken_release(sub_tok);
     free(st_name);
