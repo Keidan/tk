@@ -224,7 +224,7 @@ sr_t sr_open(struct sr_cfg_s cfg) {
 
   ctx->newtio.c_cflag = res;
   ctx->newtio.c_cflag |= (CLOCAL | CREAD);
-  ctx->newtio.c_iflag = IGNBRK | IGNPAR | ICRNL;
+  ctx->newtio.c_iflag = IGNBRK | IGNPAR;
   
   /* Raw output. */
   ctx->newtio.c_oflag = 0;
