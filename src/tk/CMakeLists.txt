@@ -9,6 +9,7 @@ set(lib_src
   ${TK_SRC_DIR}/io/sr.c
   ${TK_SRC_DIR}/io/net/netutils.c 
   ${TK_SRC_DIR}/io/net/netprint.c 
+  ${TK_SRC_DIR}/shell/sterm.c
 )
 add_library(tk SHARED ${lib_src})
-target_link_libraries(tk m pthread zlib-minizip)
+target_link_libraries(tk m pthread zlib-minizip ncurses)
