@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <tk/shell/sterm.h>
+#include <tk/shell/shell_term.h>
 #include <unistd.h>
 
 int main(int argc, char** argv) {
-  sterm_t term = sterm_open();
+  shell_term_t term = shell_term_new();
   int x,y;
-  sterm_get_xy(term, &x, &y);
-  sterm_set_bold(term, 1);
-  sterm_printf(term, "X:%d, Y:%d\n", x, y);
-  sterm_set_bold(term, 0);
-  sterm_printf(term, "X:%d, Y:%d\n", x, y);
-  sterm_wgetch(term);
-  sterm_close(term);
+  shell_term_get_xy(term, &x, &y);
+  shell_term_set_bold(term, 1);
+  shell_term_printf(term, "X:%d, Y:%d\n", x, y);
+  shell_term_set_bold(term, 0);
+  shell_term_printf(term, "X:%d, Y:%d\n", x, y);
+  shell_term_wgetch(term);
+  shell_term_delete(term);
   return 0;
 }

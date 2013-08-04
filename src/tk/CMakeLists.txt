@@ -12,7 +12,8 @@ set(lib_src
   ${TK_SRC_DIR}/collection/llist.c 
   ${TK_SRC_DIR}/collection/llist_iter.c 
   ${TK_SRC_DIR}/collection/fifo.c 
-  ${TK_SRC_DIR}/shell/sterm.c
+  ${TK_SRC_DIR}/shell/shell_buffer.c
+  ${TK_SRC_DIR}/shell/shell_term.c
 )
 add_library(tk SHARED ${lib_src})
 target_link_libraries(tk m pthread zlib-minizip ncurses)
