@@ -1,8 +1,27 @@
+/**
+ *******************************************************************************
+ * @file shell_buffer.h
+ * @author Keidan
+ * @date 03/08/2013
+ * @par Project
+ * tk
+ *
+ * @par Copyright
+ * Copyright 2011-2013 Keidan, all right reserved
+ *
+ * This software is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY.
+ *
+ * Licence summary : 
+ *    You can modify and redistribute the sources code and binaries.
+ *    You can send me the bug-fix
+ *
+ * Term of the licence in in the file licence.txt.
+ *
+ *******************************************************************************
+ */
 #ifndef __SHELL_BUFFER_H__
   #define __SHELL_BUFFER_H__
-
-  #include <stdarg.h>
-
 
   typedef void* shell_buffer_t;
 
@@ -18,15 +37,6 @@
    * @param buffer The buffer pointer.
    */
   void shell_buffer_delete(shell_buffer_t buffer);
-
-  /**
-   * @fn void shell_buffer_vappend(shell_buffer_t buffer, const char* format, va_list args)
-   * @brief Append a new string to the buffer.
-   * @param buffer The buffer pointer.
-   * @param format The string format.
-   * @param args The arguments.
-   */
-  void shell_buffer_vappend(shell_buffer_t buffer, const char* format, va_list args);
 
   /**
    * @fn void shell_buffer_clear(shell_buffer_t buffer)

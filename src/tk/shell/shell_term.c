@@ -1,3 +1,25 @@
+/**
+ *******************************************************************************
+ * @file shell_term.c
+ * @author Keidan
+ * @date 01/08/2013
+ * @par Project
+ * tk
+ *
+ * @par Copyright
+ * Copyright 2011-2013 Keidan, all right reserved
+ *
+ * This software is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY.
+ *
+ * Licence summary : 
+ *    You can modify and redistribute the sources code and binaries.
+ *    You can send me the bug-fix
+ *
+ * Term of the licence in in the file licence.txt.
+ *
+ *******************************************************************************
+ */
 #include <tk/shell/shell_term.h>
 #include <tk/sys/log.h>
 #include <stdlib.h>
@@ -70,7 +92,7 @@ shell_term_t shell_term_new() {
   struct shell_term_s *term = malloc(sizeof(struct shell_term_s));
   if(!term) {
     logger(LOG_ERR, "Not enough memory.\n");
-    exit(1);
+    return NULL;
   }
   memset(term, 0, sizeof(struct shell_term_s));
   sem_init(&term->sinit, 0, 0);

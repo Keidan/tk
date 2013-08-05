@@ -14,6 +14,7 @@ set(lib_src
   ${TK_SRC_DIR}/collection/fifo.c 
   ${TK_SRC_DIR}/shell/shell_buffer.c
   ${TK_SRC_DIR}/shell/shell_term.c
+  ${TK_SRC_DIR}/shell/shell.c
 )
 add_library(tk SHARED ${lib_src})
 target_link_libraries(tk m pthread zlib-minizip ncurses)
