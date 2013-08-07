@@ -143,19 +143,15 @@ void shell_term_delete(shell_term_t term) {
 }
 
 /**
- * @fn void shell_term_printf(shell_term_t term, const char* format, ...)
+ * @fn void shell_term_print(shell_term_t term, stringbuffer_t buffer)
  * @brief Print a string into the terminal.
  * @param term The terminal pointer
- * @param format The string format
- * @param ... The arguments
+ * @param buffer The string
  */
-void shell_term_printf(shell_term_t term, const char* format, ...) {
+void shell_term_print(shell_term_t term, stringbuffer_t buffer) {
   if(!term) return;
   struct shell_term_s *t = (struct shell_term_s*)term;
-  va_list args;
-  va_start(args, format);
-  vwprintw(t->win, format, args);
-  va_end(args);
+  wprintw(t->win, "%s", stringbuffer_to_str(buffer));
   refresh();
 }
 

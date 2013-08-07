@@ -1,7 +1,8 @@
 
 set(lib_src 
   ${TK_SRC_DIR}/text/string.c 
-  ${TK_SRC_DIR}/text/stringtoken.c 
+  ${TK_SRC_DIR}/text/stringtoken.c
+  ${TK_SRC_DIR}/text/stringbuffer.c 
   ${TK_SRC_DIR}/sys/log.c 
   ${TK_SRC_DIR}/sys/sysutils.c 
   ${TK_SRC_DIR}/sys/proc.c
@@ -12,7 +13,6 @@ set(lib_src
   ${TK_SRC_DIR}/collection/llist.c 
   ${TK_SRC_DIR}/collection/llist_iter.c 
   ${TK_SRC_DIR}/collection/fifo.c 
-  ${TK_SRC_DIR}/shell/shell_buffer.c
   ${TK_SRC_DIR}/shell/shell_term.c
   ${TK_SRC_DIR}/shell/shell.c
 )

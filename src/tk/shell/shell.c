@@ -27,7 +27,7 @@
 
 struct shell_s {
     shell_term_t term;
-    shell_buffer_t buffer;
+    stringbuffer_t buffer;
 };
 
 
@@ -48,7 +48,7 @@ shell_t shell_new() {
     logger(LOG_ERR, "SHELL: Unable to allocate a new terminal.\n");
     return NULL;
   }
-  if((s->buffer = shell_buffer_new()) == NULL) {
+  if((s->buffer = stringbuffer_new()) == NULL) {
     shell_delete(s);
     logger(LOG_ERR, "SHELL: Unable to allocate a new buffer.\n");
     return NULL;
@@ -67,7 +67,7 @@ void shell_delete(shell_t shell) {
     if(s->term)
       shell_term_delete(s->term), s->term = NULL;
     if(s->buffer)
-      shell_buffer_delete(s->buffer), s->buffer = NULL;
+      stringbuffer_delete(s->buffer), s->buffer = NULL;
     free(s);
   }
 }
@@ -83,3 +83,11 @@ shell_term_t shell_get_term(shell_t shell) {
   if(!s) return NULL;
   return s->term;
 }
+
+/*void shell_printf(shell_t shell, const char* format, ...) {
+  struct shell_s *s = (struct shell_s*)shell;
+  va_list args;
+  va_start(args, format);
+  shell_term_vprintf(s->term, format, args);
+  va_end(args);
+  }*/

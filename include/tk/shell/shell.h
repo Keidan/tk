@@ -23,7 +23,7 @@
 #ifndef __SHELL_H__
   #define __SHELL_H__
 
-  #include <tk/shell/shell_buffer.h>
+  #include <tk/text/stringbuffer.h>
   #include <tk/shell/shell_term.h>
 
   typedef void* shell_t;
