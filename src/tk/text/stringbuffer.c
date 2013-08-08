@@ -97,6 +97,43 @@ uint32_t stringbuffer_length(stringbuffer_t buffer) {
 }
 
 /**
+ * @fn uint32_t stringbuffer_capacity(stringbuffer_t buffer)
+ * @brief Get the buffer capacity.
+ * @param buffer The buffer.
+ * @return The capacity
+ */
+uint32_t stringbuffer_capacity(stringbuffer_t buffer) {
+  struct stringbuffer_s *b = (struct stringbuffer_s*) buffer;
+  if(!b) return 0;
+  return b->alength ? b->alength - 1 : 0;
+}
+
+
+/**
+ * @fn int stringbuffer_set_capacity(stringbuffer_t buffer, uint32_t capacity)
+ * @brief Change the buffer capacity.
+ * @param buffer The buffer.
+ * @param capacity The buffer capacity.
+ * @return -1 on error else 0.
+ */
+int stringbuffer_set_capacity(stringbuffer_t buffer, uint32_t capacity) {
+  struct stringbuffer_s *b = (struct stringbuffer_s*) buffer;
+  char* tmp;
+  if(!b) return -1;
+  if((b->alength - 1) == capacity) return 0;
+  tmp = (char*)realloc(b->str, capacity + 1);
+  if(!tmp) {
+    logger(LOG_ERR, "%s: Not enough memory.\n", __func__);
+    return -1;
+  }
+
+  b->alength = capacity + 1;
+  b->str = tmp;
+  b->str[capacity] = 0;
+  return 0;
+}
+
+/**
  * @fn int stringbuffer_append(stringbuffer_t shell, const char* str)
  * @brief Append a string into the buffer.
  * @param buffer The buffer.
@@ -164,18 +201,11 @@ int stringbuffer_copy(stringbuffer_t buffer, const char* str) {
  */
 int stringbuffer_trim_to_size(stringbuffer_t buffer) {
   struct stringbuffer_s *b = (struct stringbuffer_s*) buffer;
-  char* tmp;
   if(!b || !b->str) return -1;
   if(!b->alength) return 0;
   if((b->alength - 1) == b->length) return 0;
-  tmp = (char*)realloc(b->str, b->length + 1);
-  if(!tmp) {
-    logger(LOG_ERR, "%s: Not enough memory.\n", __func__);
-    return -1;
-  }
-  b->alength = b->length + 1;
-  b->str = tmp;
-  return 0;
+  b->length = strlen(b->str);
+  return stringbuffer_set_capacity(b, b->length);
 }
 
 /**

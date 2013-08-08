@@ -64,6 +64,23 @@
   uint32_t stringbuffer_length(stringbuffer_t buffer);
 
   /**
+   * @fn uint32_t stringbuffer_capacity(stringbuffer_t buffer)
+   * @brief Get the buffer capacity.
+   * @param buffer The buffer.
+   * @return The capacity
+   */
+  uint32_t stringbuffer_capacity(stringbuffer_t buffer);
+
+  /**
+   * @fn int stringbuffer_set_capacity(stringbuffer_t buffer, uint32_t capacity)
+   * @brief Change the buffer capacity.
+   * @param buffer The buffer.
+   * @param capacity The buffer capacity.
+   * @return -1 on error else 0.
+   */
+  int stringbuffer_set_capacity(stringbuffer_t buffer, uint32_t capacity);
+
+  /**
    * @fn int stringbuffer_append(stringbuffer_t shell, const char* str)
    * @brief Append a string into the buffer.
    * @param buffer The buffer.
