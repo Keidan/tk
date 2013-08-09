@@ -90,6 +90,15 @@
   int stringbuffer_append(stringbuffer_t buffer, const char* str);
 
   /**
+   * @fn int stringbuffer_append_char(stringbuffer_t shell, const char c)
+   * @brief Append a char into the buffer.
+   * @param buffer The buffer.
+   * @param c The char to append.
+   * @return -1 on error else 0.
+   */
+  int stringbuffer_append_char(stringbuffer_t buffer, const char c);
+
+  /**
    * @fn int stringbuffer_copy(stringbuffer_t shell, const char* str)
    * @brief Erase the buffer with the copy string.
    * @param buffer The buffer.
@@ -97,6 +106,15 @@
    * @return -1 on error else 0.
    */
   int stringbuffer_copy(stringbuffer_t buffer, const char* str);
+
+  /**
+   * @fn int stringbuffer_copy_char(stringbuffer_t shell, const char c)
+   * @brief Erase the buffer with the copy char.
+   * @param buffer The buffer.
+   * @param c The char to copy.
+   * @return -1 on error else 0.
+   */
+  int stringbuffer_copy_char(stringbuffer_t buffer, const char c);
 
   /**
    * @fn int stringbuffer_trim_to_size(stringbuffer_t buffer)
@@ -135,5 +153,15 @@
    * @return -1 on error else 0.
    */
   int stringbuffer_erase(stringbuffer_t buffer,uint32_t index, uint32_t length);
+
+  /**
+   * @fn int stringbuffer_printf(stringbuffer_t buffer, const char* fmt, ...)
+   * @brief Simple printf into the stringbuffer.
+   * @param buffer The buffer.
+   * @param fmt The format.
+   * @param ... The arguments.
+   * @return -1 on error else 0.
+   */
+  int stringbuffer_printf(stringbuffer_t buffer, const char* fmt, ...);
 
 #endif /* __STRINGBUFFER_H__ */

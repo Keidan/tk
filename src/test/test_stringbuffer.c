@@ -41,6 +41,10 @@ int main(int argc, char** argv) {
   printf("Buffer after copy: '%s'\n", stringbuffer_to_str(b));
   stringbuffer_insert(b, 0, "0ab");
   printf("Buffer after insert: '%s'\n", stringbuffer_to_str(b));
+
+  stringbuffer_printf(b, "Hellow %s %d %c %x %p", "from", 10, 'A', 255, b);
+  printf("Buffer after printf: '%s'\n", stringbuffer_to_str(b));
+
   stringbuffer_delete(b);
 
   log_close();

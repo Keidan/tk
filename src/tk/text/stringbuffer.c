@@ -23,6 +23,7 @@
 #include <tk/text/stringbuffer.h>
 #include <tk/sys/log.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <tk/text/string.h>
 
@@ -134,6 +135,20 @@ int stringbuffer_set_capacity(stringbuffer_t buffer, uint32_t capacity) {
 }
 
 /**
+ * @fn int stringbuffer_append_char(stringbuffer_t shell, const char c)
+ * @brief Append a char into the buffer.
+ * @param buffer The buffer.
+ * @param c The char to append.
+ * @return -1 on error else 0.
+ */
+int stringbuffer_append_char(stringbuffer_t buffer, const char c) {
+  char cc[2];
+  cc[0] = c;
+  cc[1] = 0;
+  return stringbuffer_append(buffer, cc);
+}
+
+/**
  * @fn int stringbuffer_append(stringbuffer_t shell, const char* str)
  * @brief Append a string into the buffer.
  * @param buffer The buffer.
@@ -178,6 +193,19 @@ int stringbuffer_append(stringbuffer_t buffer, const char* str) {
   return 0;
 }
 
+/**
+ * @fn int stringbuffer_copy_char(stringbuffer_t shell, const char c)
+ * @brief Erase the buffer with the copy char.
+ * @param buffer The buffer.
+ * @param c The char to copy.
+ * @return -1 on error else 0.
+ */
+int stringbuffer_copy_char(stringbuffer_t buffer, const char c) {
+  char cc[2];
+  cc[0] = c;
+  cc[1] = 0;
+  return stringbuffer_copy(buffer, cc);
+}
 
 /**
  * @fn int stringbuffer_copy(stringbuffer_t shell, const char* str)
@@ -264,5 +292,73 @@ int stringbuffer_insert(stringbuffer_t buffer, uint32_t index, char* str) {
   b->length = strlen(b->str);
   stringbuffer_append(b, str);
   stringbuffer_append(b, tmp);
+  return 0;
+}
+
+/**
+ * @fn int stringbuffer_printf(stringbuffer_t buffer, const char* fmt, ...)
+ * @brief Simple printf into the stringbuffer.
+ * @param buffer The buffer.
+ * @param fmt The format.
+ * @param ... The arguments.
+ * @return -1 on error else 0.
+ */
+int stringbuffer_printf(stringbuffer_t buffer, const char* fmt, ...) {
+  struct stringbuffer_s *b = (struct stringbuffer_s*) buffer;
+  if(!b) return -1;
+  char *p;
+  int i;
+  unsigned u;
+  char *s;
+  va_list argp;
+  stringbuffer_clear(b);
+  va_start(argp, fmt);
+  p = (char*)fmt;
+  for(; *p!='\0';p++) {
+    if(*p=='%') {
+      stringbuffer_append_char(b, *p);
+      continue;
+    }
+    p++;
+
+    switch(*p) {
+      case 'c' : 
+	i = va_arg(argp, int);
+	stringbuffer_append_char(b, i);
+	break;
+      case 'i':
+      case 'd' : 
+	i = va_arg(argp, int);
+	if(i<0){
+	  i=-i;
+	  stringbuffer_append_char(b, '-');
+	}
+	stringbuffer_append(b, string_convert(i, 10));
+	break;
+      case 'o': 
+	i = va_arg(argp, unsigned int);
+	stringbuffer_append(b, string_convert(i, 8));
+	break;
+      case 's': 
+	s = va_arg(argp, char *); 
+	stringbuffer_append(b, s); 
+	break;
+      case 'u': 
+	u = va_arg(argp, unsigned int);
+	stringbuffer_append(b, string_convert(u,10));break;
+      case 'p':
+	u = va_arg(argp, unsigned int); 
+	stringbuffer_append(b, string_convert(u, 16));
+	break;
+      case 'x': 
+	u = va_arg(argp, unsigned int); 
+	stringbuffer_append(b, string_convert(u, 16));
+	break;
+      case '%': 
+	stringbuffer_append_char(b, '%');
+	break;
+    }
+  }
+  va_end(argp);
   return 0;
 }
