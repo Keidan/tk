@@ -77,6 +77,11 @@ elseif("${CMAKE_BUILD_TYPE}" MATCHES "xscale")
   set(LIBRARY_OUTPUT_PATH ${TK_LIB_DIR})
   set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/${DISTRIBUTION}/xscale)
   file(MAKE_DIRECTORY ${TK_LIB_DIR})
+  set(inc_base  "${CMAKE_X_HOME}/xscale-none-linux-gnueabi/include")
+  include_directories(
+    "${inc_base}"
+    "${inc_base}/ncurses"
+    )
 else()
   message(FATAL_ERROR "Invalid usage please use: cmake -DCMAKE_BUILD_TYPE=[x86|x86_64|xscale]")
 endif()
