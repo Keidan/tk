@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   stringbuffer_insert(b, 0, "0ab");
   printf("Buffer after insert: '%s'\n", stringbuffer_to_str(b));
 
-  stringbuffer_printf(b, "Hellow %s %d %c %x %p", "from", 10, 'A', 255, b);
+  stringbuffer_printf(b, "Hellow %s %d%d%d%d %c %x%X%#X %p", "from:klhjkhjkhjkhjk", 10,11,12,13, 'A', 255,255,255, b);
   printf("Buffer after printf: '%s'\n", stringbuffer_to_str(b));
 
   stringbuffer_delete(b);

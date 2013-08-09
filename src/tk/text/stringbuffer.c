@@ -23,14 +23,21 @@
 #include <tk/text/stringbuffer.h>
 #include <tk/sys/log.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 #include <tk/text/string.h>
 
+#define SMAGIC 0x8001
+#define EMAGIC 0x1337
+
 struct stringbuffer_s {
+    int smagic;
     char* str;
     uint32_t length;
     uint32_t alength;
+    int emagic;
 };
 
 /**
@@ -40,10 +47,12 @@ struct stringbuffer_s {
 stringbuffer_t stringbuffer_new() {
   struct stringbuffer_s *b = malloc(sizeof(struct stringbuffer_s));
   if(!b) {
-    logger(LOG_ERR, "STRINGBUFFER: Not enough memory.\n");
+    logger(LOG_ERR, "%s: Not enough memory.\n", __func__);
     return NULL;
   }
   memset(b, 0, sizeof(struct stringbuffer_s));
+  b->smagic = SMAGIC;
+  b->emagic = EMAGIC;
   return b;
 }
 
@@ -55,6 +64,10 @@ stringbuffer_t stringbuffer_new() {
 void stringbuffer_delete(stringbuffer_t buffer) {
   struct stringbuffer_s *b = (struct stringbuffer_s*) buffer;
   if(b) {
+    if(b->smagic != SMAGIC || b->emagic != EMAGIC) {
+      logger(LOG_ERR, "%s: Currupted buffer detected.\n", __func__);
+      return;
+    }
     if(b->str) free(b->str), b->str = NULL;
     b->length = b->alength = 0;
     free(b);
@@ -174,8 +187,8 @@ int stringbuffer_append(stringbuffer_t buffer, const char* str) {
     bzero(b->str, b->alength);
     strncpy(b->str, str, b->length);
   } else if(slen <= b->alength) {
-    b->length = slen;
-    strncat(b->str, str, b->length);
+    b->length += slen;
+    strncat(b->str, str, b->alength);
   } else {
     diff = abs(slen - b->alength) + 3;
     b->alength += diff;
@@ -306,59 +319,76 @@ int stringbuffer_insert(stringbuffer_t buffer, uint32_t index, char* str) {
 int stringbuffer_printf(stringbuffer_t buffer, const char* fmt, ...) {
   struct stringbuffer_s *b = (struct stringbuffer_s*) buffer;
   if(!b) return -1;
-  char *p;
-  int i;
-  unsigned u;
-  char *s;
-  va_list argp;
+  uint32_t ltmp = 40;
+  char *p, c, tmp[ltmp];
+  int i, count, idx;
+  va_list pa;
   stringbuffer_clear(b);
-  va_start(argp, fmt);
+  va_start(pa, fmt);
   p = (char*)fmt;
-  for(; *p!='\0';p++) {
-    if(*p=='%') {
+  while(*p != '\0') {
+    if(*p == '%') {
+      p++;
+      if((*p) == '#') { /* %#x */
+	stringbuffer_append(b, "0x");
+  	p++;
+      }
+      /* %02x */
+      if((isdigit(*p) || *p == ' ') && isdigit(*p+1)) {
+	c = *p;
+	count = (*p+1) - '0';
+	for(idx = 0; idx < count; idx++)
+	  stringbuffer_append_char(b, c);
+	p+=2;
+      }
+      switch (*p) {
+        case '%' :
+	  stringbuffer_append_char(b, *p);
+  	  break;
+        case 'c' :
+	  stringbuffer_append_char(b, (char)va_arg(pa, int));/* !!!!! */
+  	  break;
+        case 'd' :
+        case 'i' :
+  	  i = va_arg(pa, int);	
+	  if(i<0){
+	    i=-i;
+	    stringbuffer_append_char(b, '-');
+	  }
+	  stringbuffer_append(b, string_convert(i, 10));
+  	  break;
+        case 'u' :
+	  stringbuffer_append(b, string_convert(va_arg(pa, unsigned int), 10));
+  	  break;
+        case 'o' :
+	  stringbuffer_append(b, string_convert(va_arg(pa, unsigned int), 8));
+  	  break;
+        case 'p' :
+        case 'x' :
+	  stringbuffer_append(b, string_convert(va_arg(pa, unsigned int), 16));
+  	  break;
+        case 'X' :
+	  bzero(tmp, ltmp);
+	  string_toupper(string_convert(va_arg(pa, int), 16), tmp);
+	  stringbuffer_append(b, tmp);
+  	  break;
+        case 'f' :
+	  bzero(tmp, ltmp);
+  	  snprintf(tmp, ltmp, "%f", va_arg(pa, double));/* !!!!! */
+	  stringbuffer_append(b, tmp);
+  	  break;
+        case 's' :
+	  stringbuffer_append(b, va_arg(pa, char *)); 
+  	  break;
+	default:
+	  stringbuffer_append_char(b, *p); 
+      } /* end switch */
+    }
+    else {
       stringbuffer_append_char(b, *p);
-      continue;
     }
     p++;
-
-    switch(*p) {
-      case 'c' : 
-	i = va_arg(argp, int);
-	stringbuffer_append_char(b, i);
-	break;
-      case 'i':
-      case 'd' : 
-	i = va_arg(argp, int);
-	if(i<0){
-	  i=-i;
-	  stringbuffer_append_char(b, '-');
-	}
-	stringbuffer_append(b, string_convert(i, 10));
-	break;
-      case 'o': 
-	i = va_arg(argp, unsigned int);
-	stringbuffer_append(b, string_convert(i, 8));
-	break;
-      case 's': 
-	s = va_arg(argp, char *); 
-	stringbuffer_append(b, s); 
-	break;
-      case 'u': 
-	u = va_arg(argp, unsigned int);
-	stringbuffer_append(b, string_convert(u,10));break;
-      case 'p':
-	u = va_arg(argp, unsigned int); 
-	stringbuffer_append(b, string_convert(u, 16));
-	break;
-      case 'x': 
-	u = va_arg(argp, unsigned int); 
-	stringbuffer_append(b, string_convert(u, 16));
-	break;
-      case '%': 
-	stringbuffer_append_char(b, '%');
-	break;
-    }
   }
-  va_end(argp);
+  va_end(pa);
   return 0;
 }
