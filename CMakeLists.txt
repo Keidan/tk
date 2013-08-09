@@ -85,6 +85,7 @@ elseif("${CMAKE_BUILD_TYPE}" MATCHES "xscale")
 else()
   message(FATAL_ERROR "Invalid usage please use: cmake -DCMAKE_BUILD_TYPE=[x86|x86_64|xscale]")
 endif()
+link_directories("${TK_LIB_DIR}")
 
 add_subdirectory(${ZLIB_SRC_DIR})
 add_subdirectory(${TK_SRC_DIR})
