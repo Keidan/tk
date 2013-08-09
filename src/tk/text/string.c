@@ -157,3 +157,22 @@ _Bool string_match(const char* str, const char* regex) {
   }
   return 0;
 }
+
+/**
+ * @fn const char* string_convert(unsigned long num, int base)
+ * @brief Convert an unsigned int in string.
+ * @param num The uint
+ * @param base The desired base.
+ * @return The string.
+ */
+const char* string_convert(unsigned long num, int base) {
+  static char buf[33];
+  char *ptr;
+  ptr=&buf[sizeof(buf)-1];
+  *ptr='\0';
+  do {
+    *--ptr="0123456789abcdef"[num%base];
+    num /= base;
+  } while(num != 0);
+  return (const char*)ptr;
+}

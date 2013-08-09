@@ -99,4 +99,13 @@
    */
   _Bool string_match(const char* str, const char* regex);
 
+  /**
+   * @fn const char* string_convert(unsigned long num, int base)
+   * @brief Convert an unsigned int in string.
+   * @param num The uint
+   * @param base The desired base.
+   * @return The string.
+   */
+  const char* string_convert(unsigned long num, int base);
+
 #endif /* __STRING_H__ */
