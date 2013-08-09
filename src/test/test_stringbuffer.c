@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <tk/sys/log.h>
 #include <tk/text/stringbuffer.h>
+#include <tk/sys/sysutils.h>
 #include <unistd.h>
 
 
 int main(int argc, char** argv) {
-
-  log_init("test_stringbuffer", LOG_PID, LOG_USER);
+  sysutils_exit_action(log_init_cast("test_stringbuffer", LOG_PID, LOG_USER), NULL);
 
   stringbuffer_t b = stringbuffer_new();
   stringbuffer_append(b, "azerty");
@@ -47,6 +47,5 @@ int main(int argc, char** argv) {
 
   stringbuffer_delete(b);
 
-  log_close();
   return 0;
 }
