@@ -24,17 +24,14 @@
 #include <syslog.h>
 #include <stdarg.h>
 #include <stdio.h>
-
-
+ 
 /**
- * @fn void log_init(const char* ident, int option, int facility)
+ * @fn void log_init(struct log_s init)
  * @brief Open the syslog session.
- * @param ident Log identifier.
- * @param option syslogs options.
- * @param facility syslogs facility.
+ * @param init Log initializer.
  */
-void log_init(const char* ident, int option, int facility) {
-  openlog (ident, option, facility);
+void log_init(struct log_s init) {
+  openlog (init.ident, init.option, init.facility);
 }
 
 /**

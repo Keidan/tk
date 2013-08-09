@@ -35,14 +35,19 @@
 
   #define logger(prio, fmt, ...)      __TMP_LOG__(prio, "[%s::%s(%d) -> " fmt, __LOG_FILE__, __func__, __LINE__, ##__VA_ARGS__)
 
+  #define log_init_cast(i, o, f) (&((struct log_s){i, o, f}))
+  struct log_s {
+      char* ident;
+      int option;
+      int facility;
+  };
+
   /**
-   * @fn void log_init(const char* ident, int option, int facility)
+   * @fn void log_init(struct log_s init)
    * @brief Open the syslog session.
-   * @param ident Log identifier.
-   * @param option syslogs options.
-   * @param facility syslogs facility.
+   * @param init Log initializer.
    */
-  void log_init(const char* ident, int option, int facility);
+  void log_init(struct log_s init);
 
   /**
    * @fn void log_close()
