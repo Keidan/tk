@@ -244,14 +244,14 @@ int netutils_hostname_to_ip(const char *hostname, char* ip) {
 }
 
 /**
- * @fn void netutils_print_hex(FILE* std, __u8* buffer, int len, _Bool print_raw)
+ * @fn void netutils_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw)
  * @brief Print the packet in hexa (wireshark like).
  * @param std Output stream.
  * @param buffer Packet.
  * @param len Packet length.
  * @param print_raw Display in raw mode.
  */
-void netutils_print_hex(FILE* std, __u8* buffer, int len, _Bool print_raw) {
+void netutils_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw) {
   int i = 0, max = PRINT_HEX_MAX_PER_LINES, loop = len;
   __u8 *p = buffer;
   char line [max + 3]; /* spaces + \0 */
@@ -351,7 +351,7 @@ pcaprec_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
 }
 
 /**
- * @fn void netutils_write_pcap_packet(const FILE* output, const char* buffer, size_t a_length, size_t r_length, _Bool *first)
+ * @fn void netutils_write_pcap_packet(const FILE* output, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first)
  * @brief Writes all pcap headers and the packet buffer into the specified file.
  * Source: http://wiki.wireshark.org/Development/LibpcapFileFormat
  * Packet structure:
@@ -365,7 +365,7 @@ pcaprec_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
  * @param r_length Size after the call of the recvfrom function.
  * @param first Memorize if we need to write the first packet header.
  */
-void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, size_t a_length, size_t r_length, _Bool *first) {
+void netutils_write_pcap_packet(FILE* output, __u32 link, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first) {
   if(*first) {
     pcap_hdr_t ghdr = netutils_pcap_global_hdr(link);
     fwrite(&ghdr, 1, sizeof(pcap_hdr_t), output);
@@ -378,7 +378,7 @@ void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, si
 }
 
 /**
- * @fn int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, bns_packet_convert_et convert)
+ * @fn int netutils_decode_buffer(const net_buffer_t buffer, __u32 length, struct netutils_headers_s *net, bns_packet_convert_et convert)
  * @brief Decode the packets in terms of the input buffer.
  * @param buffer The buffer datas.
  * @param length The buffer length.
@@ -386,7 +386,7 @@ void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, si
  * @param convert Convert required fields.
  * @return -1 on error else the payload length (can be equals to 0).
  */
-int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, netutils_convert_et convert) {
+int netutils_decode_buffer(const net_buffer_t buffer, __u32 length, struct netutils_headers_s *net, netutils_convert_et convert) {
   __u32 offset = sizeof(struct ethhdr);
   memset(net, 0, sizeof(struct netutils_headers_s));
   struct ethhdr *eth = (struct ethhdr *)buffer;

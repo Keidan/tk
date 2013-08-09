@@ -147,8 +147,10 @@
 
   typedef enum { NETUTILS_CONVERT_NONE, NETUTILS_CONVERT_HOST2NET, NETUTILS_CONVERT_NET2HOST} netutils_convert_et;
 
+  typedef __u8* net_buffer_t;
+
  /**
-   * @fn int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, bns_packet_convert_et convert)
+   * @fn int netutils_decode_buffer(const net_buffer_t buffer, __u32 length, struct netutils_headers_s *net, bns_packet_convert_et convert)
    * @brief Decode the packets in terms of the input buffer.
    * @param buffer The buffer datas.
    * @param length The buffer length.
@@ -156,7 +158,7 @@
    * @param convert Convert required fields.
    * @return -1 on error else the payload length (can be equals to 0).
    */
-  int netutils_decode_buffer(const char* buffer, __u32 length, struct netutils_headers_s *net, netutils_convert_et convert);
+  int netutils_decode_buffer(const net_buffer_t buffer, __u32 length, struct netutils_headers_s *net, netutils_convert_et convert);
 
   /**
    * @fn void netutils_release_buffer(struct netutils_headers_s *net)
@@ -209,14 +211,14 @@
   __u32 netutils_datas_available(int fd);
 
   /**
-   * @fn void netutils_print_hex(FILE* std, __u8* buffer, int len, _Bool print_raw)
+   * @fn void netutils_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw)
    * @brief Print the packet in hexa (wireshark like).
    * @param std Output stream.
    * @param buffer Packet.
    * @param len Packet length.
    * @param print_raw Display in raw mode.
    */
-  void netutils_print_hex(FILE* std, __u8* buffer, int len, _Bool print_raw);
+  void netutils_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw);
 
   /**
    * @fn int netutils_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE])
@@ -279,7 +281,7 @@
   pcaprec_hdr_t netutils_pcap_packet_hdr(__u32 incl_len, __u32 ori_len);
 
   /**
-   * @fn void netutils_write_pcap_packet(const FILE* output, const char* buffer, size_t a_length, size_t r_length, _Bool *first)
+   * @fn void netutils_write_pcap_packet(const FILE* output, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first)
    * @brief Writes all pcap headers and the packet buffer into the specified file.
    * Source: http://wiki.wireshark.org/Development/LibpcapFileFormat
    * Packet structure:
@@ -293,7 +295,7 @@
    * @param r_length Size after the call of the recvfrom function.
    * @param first Memorize if we need to write the first packet header.
    */
-  void netutils_write_pcap_packet(FILE* output, __u32 link, const char* buffer, size_t a_length, size_t r_length, _Bool *first);
+  void netutils_write_pcap_packet(FILE* output, __u32 link, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first);
 
   /**
    * @fn void netutils_mac2str(mac_t mac, smac_t m)
