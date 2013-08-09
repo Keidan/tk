@@ -30,13 +30,13 @@
   #define NETPRINT_SET_NSET(cond) (cond ? "Set" : "Not Set")
 
   /**
-   * @fn void netprint_print_headers(const char* buffer, __u32 length, struct bns_network_s net)
+   * @fn void netprint_print_headers(const net_buffer_t buffer, __u32 length, struct bns_network_s net)
    * @brief Print all headers.
    * @param buffer Buffer datas.
    * @param length Buffer length.
    * @param net Headers.
    */
-  void netprint_print_headers(const char* buffer, __u32 length, struct netutils_headers_s net);
+  void netprint_print_headers(const net_buffer_t buffer, __u32 length, struct netutils_headers_s net);
 
   /**
    * @fn void netprint_print_eth(struct ethhdr *eth)
