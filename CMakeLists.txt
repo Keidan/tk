@@ -72,7 +72,7 @@ elseif("${CMAKE_BUILD_TYPE}" MATCHES "xscale")
 
   set(TK_LIB_DIR ${CMAKE_SOURCE_DIR}/lib/${DISTRIBUTION}/xscale)
   set(LIBRARY_OUTPUT_PATH ${TK_LIB_DIR})
-  file(MAKE_DIRECTORY ${TK_BINARY_DIR})
+  file(MAKE_DIRECTORY ${TK_LIB_DIR})
 
 else()
   message(FATAL_ERROR "Invalid usage please use: cmake -DCMAKE_BUILD_TYPE=[x86|x86_64|xscale]")
