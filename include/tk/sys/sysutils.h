@@ -24,6 +24,8 @@
   #define __SYSUTILS_H__
 
   #include <stdio.h>
+  #include <stdint.h>
+  #include <tk/sys/log.h>
 
 
   /**
@@ -57,16 +59,92 @@
 
   typedef enum { SYSUTILS_UNIT_BYTE, SYSUTILS_UNIT_KBYTES, SYSUTILS_UNIT_MBYTES, SYSUTILS_UNIT_GBYTES} sysutils_unit_et;
 
+  /**
+   * @typedef void (*signal_catch_fct)(void)
+   * @brief signal catch callback.
+   */
+  typedef void (*signal_catch_fct)(void);
+
+  /**
+   * @fn void sysutils_exit_action(const struct log_s *linit, signal_catch_fct signal_catch)
+   * @brief Add exit callback action (SIGINT & SIGTERM) and start the syslog managment.
+   * @param linit Start syslog (if not NULL)
+   * @param signal_catch The signal callback.
+   */
+  void sysutils_exit_action(const struct log_s *linit, signal_catch_fct signal_catch);
+
+  /**
+   * @fn void sysutils_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file)
+   * @brief add /proc/the pid parameters/the file parameter into filename.
+   * @param filename The result file name.
+   * @param pid The process pid.
+   * @param file The file we need.
+   */
   void sysutils_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file);
 
+  /**
+   * @fn long sysutils_get_page_size()
+   * @brief Get the page size
+   * @return long
+   */
   long sysutils_get_page_size();
+
+  /**
+   * @fn double sysutils_get_page_size_in(sysutils_unit_et unit)
+   * @brief Get the page size in a specific format.
+   * @param unit The conversion unit.
+   * @return double
+   */
   double sysutils_get_page_size_in(sysutils_unit_et unit);
+
+  /**
+   * @fn long sysutils_get_phy_pages()
+   * @brief The number of pages of physical memory. Note that it is possible for the product of this value and the value of _SC_PAGESIZE to overflow.
+   * @return long
+   */
   long sysutils_get_phy_pages();
+
+  /**
+   * @fn long sysutils_get_available_phy_pages()
+   * @brief The number of currently available pages of physical memory.
+   * @return long
+   */
   long sysutils_get_available_phy_pages();
+
+  /**
+   * @fn long sysutils_get_nprocessors_configured()
+   * @brief The number of processors configured.
+   * @return long
+   */
   long sysutils_get_nprocessors_configured();
+
+  /**
+   * @fn long sysutils_get_nprocessors_online()
+   * @brief The number of processors currently online (available).
+   * @return long
+   */
   long sysutils_get_nprocessors_online();
+
+  /**
+   * @fn  unsigned long sysutils_get_phy_memory_size()
+   * @brief Get the pysical memory size
+   * @return unsigned long
+   */
   unsigned long sysutils_get_phy_memory_size();
+
+  /**
+   * @fn double sysutils_get_phy_memory_size_in(sysutils_unit_et unit)
+   * @brief Get the pysical memory size in a specific format.
+   * @param unit The conversion unit.
+   * @return double
+   */
   double sysutils_get_phy_memory_size_in(sysutils_unit_et unit);
+
+  /**
+   * @fn long long sysutils_jiffies_to_microsecond(long long jiffies)
+   * @brief Convert jiffies to microsecond
+   * @return long long
+   */
   long long sysutils_jiffies_to_microsecond(long long jiffies);
 
   /**
@@ -76,7 +154,6 @@
    * @return Long.
    */
   long sysutils_fsize(FILE* file);
-
 
   /**
    * @fn void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE])
