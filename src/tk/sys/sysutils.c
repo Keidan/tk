@@ -34,8 +34,15 @@
 #define USEC_PER_SEC         1000000UL
 static signal_catch_fct      g_signal_catch;
 static _Bool                 elog = 0;
-static void sysutils_sig(int sig) { exit(0); }
-static void sysutils_atexit(void) { if(g_signal_catch) g_signal_catch(); if(elog) log_close(); }
+
+static void sysutils_sig(int sig) { 
+  if(sig == SIGINT) printf("\n"); /* skip the ^C on the console... */
+  exit(0); 
+}
+static void sysutils_atexit(void) { 
+  if(g_signal_catch) g_signal_catch(); 
+  if(elog) log_close();
+}
 
 
 /**
