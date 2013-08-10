@@ -186,9 +186,9 @@ int stringbuffer_append(stringbuffer_t buffer, const char* str) {
     }
     bzero(b->str, b->alength);
     strncpy(b->str, str, b->length);
-  } else if(slen <= b->alength) {
+  } else if((strlen(b->str) + slen) <= b->alength) {
     b->length += slen;
-    strncat(b->str, str, b->alength);
+    strncat(b->str, str, b->length);
   } else {
     diff = abs(slen - b->alength) + 3;
     b->alength += diff;
