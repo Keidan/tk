@@ -27,7 +27,6 @@
   #include <stdbool.h>
   #include <stdarg.h>
   #include <ncurses.h>
-  #include <tk/text/stringbuffer.h>
 
 
   #ifndef __SHELL_TERM_DEFAULT_BACKGROUND__
@@ -222,10 +221,11 @@
   void shell_term_set_invis(shell_term_t term, _Bool b);
 
   /**
-   * @fn void shell_term_print(shell_term_t term, stringbuffer_t buffer)
+   * @fn void shell_term_printf(shell_term_t term, const char* fmt, ...)
    * @brief Print a string into the terminal.
    * @param term The terminal pointer
-   * @param buffer The string
+   * @param fmt The string format
+   * @param ... The arguments
    */
-  void shell_term_print(shell_term_t term, stringbuffer_t buffer);
+  void shell_term_printf(shell_term_t term, const char* fmt, ...);
 #endif /* __SHELL_TERM_H__ */

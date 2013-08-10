@@ -27,6 +27,7 @@
 #include <semaphore.h>
 #include <string.h>
 #include <pthread.h>
+#include <stdarg.h>
 
 struct shell_term_s {
     WINDOW*        win;
@@ -143,15 +144,19 @@ void shell_term_delete(shell_term_t term) {
 }
 
 /**
- * @fn void shell_term_print(shell_term_t term, stringbuffer_t buffer)
+ * @fn void shell_term_printf(shell_term_t term, const char* fmt, ...)
  * @brief Print a string into the terminal.
  * @param term The terminal pointer
- * @param buffer The string
+ * @param fmt The string format
+ * @param ... The arguments
  */
-void shell_term_print(shell_term_t term, stringbuffer_t buffer) {
+void shell_term_printf(shell_term_t term, const char* fmt, ...) {
   if(!term) return;
   struct shell_term_s *t = (struct shell_term_s*)term;
-  wprintw(t->win, "%s", stringbuffer_to_str(buffer));
+  va_list pa; 
+  va_start(pa, fmt);
+  vwprintw(t->win, fmt, pa);
+  va_end(pa);
   refresh();
 }
 

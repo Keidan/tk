@@ -53,6 +53,8 @@ stringbuffer_t stringbuffer_new() {
   memset(b, 0, sizeof(struct stringbuffer_s));
   b->smagic = SMAGIC;
   b->emagic = EMAGIC;
+  stringbuffer_set_capacity(b, 1);
+  b->str[0] = 0;
   return b;
 }
 
