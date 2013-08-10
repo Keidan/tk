@@ -669,19 +669,19 @@ static int sr_baud(uint32_t baud, struct termios *res) {
 static int sr_dbits(sr_dbits_et dbit, unsigned int *res) {
   switch(dbit) {
     case SR_DBITS_5: 
-      *res &= ~CSIZE;
+      //*res &= ~CSIZE;
       *res |= CS5;
       break;
     case SR_DBITS_6:
-      *res &= ~CSIZE;
+      //*res &= ~CSIZE;
       *res |= CS6;
       break;
     case SR_DBITS_7:
-      *res &= ~CSIZE;
+      //*res &= ~CSIZE;
       *res |= CS7;
       break;
     case SR_DBITS_8:
-      *res &= ~CSIZE;
+      //*res &= ~CSIZE;
       *res |= CS8;
       break;
     default :
@@ -701,7 +701,7 @@ static int sr_dbits(sr_dbits_et dbit, unsigned int *res) {
  */
 static int sr_sbits(sr_sbits_et sbit, unsigned int *res) {
   switch(sbit) {
-    case SR_SBITS_1: *res &= ~CSTOPB; break;
+    case SR_SBITS_1: /**res &= ~CSTOPB;*/ break;
     case SR_SBITS_2: *res |= CSTOPB; break;
     default :
       logger(LOG_ERR, "%s: Stop bits not supported %d.", __func__, sbit);
@@ -720,7 +720,7 @@ static int sr_sbits(sr_sbits_et sbit, unsigned int *res) {
 static int sr_parity(sr_parity_et parity, unsigned int *res) {
   switch(parity) {
     case SR_PARITY_NONE: 
-      *res &= ~PARENB;
+      //*res &= ~PARENB;
       break;
     case SR_PARITY_ODD:  
       *res |= PARENB;
@@ -728,7 +728,7 @@ static int sr_parity(sr_parity_et parity, unsigned int *res) {
       break;
     case SR_PARITY_EVEN: 
       *res |= PARENB;
-      *res &= ~PARODD;
+      //*res &= ~PARODD;
       break;
     default :
       logger(LOG_ERR, "%s: Parity not supported %d.", __func__, parity);
@@ -747,8 +747,8 @@ static int sr_parity(sr_parity_et parity, unsigned int *res) {
 static int sr_cflow(sr_cflow_et cflow, unsigned int *res) {
   switch(cflow) {
     case SR_CFLOW_NONE:
-      if((*res & CRTSCTS)) *res &= ~CRTSCTS;
-      if((*res & (IXON|IXOFF|IXANY))) *res &= ~(IXON|IXOFF|IXANY);
+      //if((*res & CRTSCTS)) *res &= ~CRTSCTS;
+      //if((*res & (IXON|IXOFF|IXANY))) *res &= ~(IXON|IXOFF|IXANY);
       break;
     case SR_CFLOW_XONXOFF:
       if(!(*res & (IXON|IXOFF|IXANY))) *res |= (IXON|IXOFF|IXANY);
