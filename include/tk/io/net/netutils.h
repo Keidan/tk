@@ -23,7 +23,7 @@
 #ifndef __NETUTILS_H__
   #define __NETUTILS_H__
 
-
+  #include <asm/types.h>
   #include <net/if.h>
   #include <linux/if_ether.h>
   #include <netinet/ip.h>
