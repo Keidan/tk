@@ -24,7 +24,6 @@
 #include <tk/sys/log.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 #include <tk/text/string.h>
@@ -319,14 +318,29 @@ int stringbuffer_insert(stringbuffer_t buffer, uint32_t index, char* str) {
  * @return -1 on error else 0.
  */
 int stringbuffer_printf(stringbuffer_t buffer, const char* fmt, ...) {
+  int ret;
+  va_list pa;
+  va_start(pa, fmt);
+  ret = stringbuffer_vprintf(buffer, fmt, pa);
+  va_end(pa);
+  return ret;
+}
+
+/**
+ * @fn int stringbuffer_vprintf(stringbuffer_t buffer, const char* fmt, va_list pa)
+ * @brief Simple printf into the stringbuffer.
+ * @param buffer The buffer.
+ * @param fmt The format.
+ * @param pa The arguments.
+ * @return -1 on error else 0.
+ */
+int stringbuffer_vprintf(stringbuffer_t buffer, const char* fmt, va_list pa) {
   struct stringbuffer_s *b = (struct stringbuffer_s*) buffer;
   if(!b) return -1;
   uint32_t ltmp = 40;
   char *p, c, tmp[ltmp];
   int i, count, idx;
-  va_list pa;
   stringbuffer_clear(b);
-  va_start(pa, fmt);
   p = (char*)fmt;
   while(*p != '\0') {
     if(*p == '%') {
@@ -391,6 +405,5 @@ int stringbuffer_printf(stringbuffer_t buffer, const char* fmt, ...) {
     }
     p++;
   }
-  va_end(pa);
   return 0;
 }

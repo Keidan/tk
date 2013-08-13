@@ -24,6 +24,7 @@
   #define __STRINGBUFFER_H__
 
   #include <stdint.h>
+  #include <stdarg.h>
 
   typedef void* stringbuffer_t;
 
@@ -164,4 +165,13 @@
    */
   int stringbuffer_printf(stringbuffer_t buffer, const char* fmt, ...);
 
+  /**
+   * @fn int stringbuffer_vprintf(stringbuffer_t buffer, const char* fmt, va_list pa)
+   * @brief Simple printf into the stringbuffer.
+   * @param buffer The buffer.
+   * @param fmt The format.
+   * @param pa The arguments.
+   * @return -1 on error else 0.
+   */
+int stringbuffer_vprintf(stringbuffer_t buffer, const char* fmt, va_list pa);
 #endif /* __STRINGBUFFER_H__ */
