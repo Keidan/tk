@@ -87,6 +87,18 @@ else()
 endif()
 link_directories("${TK_LIB_DIR}")
 
-add_subdirectory(${ZLIB_SRC_DIR})
+#check for includes
+include(CheckIncludeFile)
+check_include_file(zlib.h HAVE_ZLIB_H)
+check_include_file(termios.h HAVE_TERMIOS_H)
+check_include_file(ncurses.h HAVE_NCURSES_H)
+
+# update the file
+configure_file(${CMAKE_SOURCE_DIR}/cmake/config-cmake.h.in ${CMAKE_SOURCE_DIR}/include/tk/config.h)
+
+# add minizp if zlib is found
+if(HAVE_ZLIB_H)
+  add_subdirectory(${ZLIB_SRC_DIR})
+endif()
 add_subdirectory(${TK_SRC_DIR})
 add_subdirectory(${TEST_SRC_DIR})
