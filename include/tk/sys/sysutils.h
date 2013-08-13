@@ -27,6 +27,10 @@
   #include <stdint.h>
   #include <tk/sys/log.h>
 
+  #define wicked_cast(TYPE, VALUE) \
+    (((union { __typeof__(VALUE) src; TYPE dest; }){ .src = VALUE }).dest)
+  #define is_little_endian() wicked_cast(unsigned char, 1u)
+  #define is_big_endian() !wicked_cast(unsigned char, 1u)
 
   /**
    * @def SYSUTILS_1KO
