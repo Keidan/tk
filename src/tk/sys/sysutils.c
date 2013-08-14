@@ -32,35 +32,6 @@
 #include <signal.h>
 
 #define USEC_PER_SEC         1000000UL
-static signal_catch_fct      g_signal_catch;
-static _Bool                 elog = 0;
-
-static void sysutils_sig(int sig) { 
-  if(sig == SIGINT) printf("\n"); /* skip the ^C on the console... */
-  exit(0); 
-}
-static void sysutils_atexit(void) { 
-  if(g_signal_catch) g_signal_catch(); 
-  if(elog) log_close();
-}
-
-
-/**
- * @fn void sysutils_exit_action(const struct log_s *linit, signal_catch_fct signal_catch)
- * @brief Add exit callback action (SIGINT & SIGTERM) and start the syslog managment.
- * @param linit Start syslog (if not NULL)
- * @param signal_catch The signal callback.
- */
-void sysutils_exit_action(const struct log_s *linit, signal_catch_fct signal_catch){
-  g_signal_catch = signal_catch;
-  if(linit) log_init(*linit), elog = 1;
-  struct sigaction sa;
-  atexit(sysutils_atexit);
-  memset(&sa, 0, sizeof(struct sigaction));
-  sa.sa_handler = sysutils_sig;
-  (void)sigaction(SIGINT, &sa, NULL);
-  (void)sigaction(SIGTERM, &sa, NULL);
-}
 
 /**
  * @fn long sysutils_fsize(FILE* file)

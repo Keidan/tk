@@ -64,20 +64,6 @@
   typedef enum { SYSUTILS_UNIT_BYTE, SYSUTILS_UNIT_KBYTES, SYSUTILS_UNIT_MBYTES, SYSUTILS_UNIT_GBYTES} sysutils_unit_et;
 
   /**
-   * @typedef void (*signal_catch_fct)(void)
-   * @brief signal catch callback.
-   */
-  typedef void (*signal_catch_fct)(void);
-
-  /**
-   * @fn void sysutils_exit_action(const struct log_s *linit, signal_catch_fct signal_catch)
-   * @brief Add exit callback action (SIGINT & SIGTERM) and start the syslog managment.
-   * @param linit Start syslog (if not NULL)
-   * @param signal_catch The signal callback.
-   */
-  void sysutils_exit_action(const struct log_s *linit, signal_catch_fct signal_catch);
-
-  /**
    * @fn void sysutils_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file)
    * @brief add /proc/the pid parameters/the file parameter into filename.
    * @param filename The result file name.
