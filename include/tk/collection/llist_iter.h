@@ -1,3 +1,25 @@
+/**
+ *******************************************************************************
+ * @file llist_iter.h
+ * @author Keidan
+ * @date 01/01/2013
+ * @par Project
+ * tk
+ *
+ * @par Copyright
+ * Copyright 2011-2013 Keidan, all right reserved
+ *
+ * This software is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY.
+ *
+ * Licence summary : 
+ *    You can modify and redistribute the sources code and binaries.
+ *    You can send me the bug-fix
+ *
+ * Term of the licence in in the file licence.txt.
+ *
+ *******************************************************************************
+ */
 #ifndef __LLIST_ITER_H__
   
   #define __LLIST_ITER_H__

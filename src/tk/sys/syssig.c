@@ -21,7 +21,8 @@
 *******************************************************************************
 */
 #include <tk/sys/syssig.h>
-#include <tk/collection/fifo.h>
+#include <tk/collection/htable.h>
+#include <tk/text/string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,36 +32,24 @@ struct sigctx_s {
     syssig_exit_fct       exit;
     _Bool                 log;
     struct sigaction      sa;
-    fifo_t                fifo;
-};
-struct sigentry_s {
-    int                   signal;
-    syssig_signal_fct     fct;
+    htable_t              table;
 };
 
 static struct sigctx_s g_sigctx;
 
-static void syssig_fifo_loop(void* data, void* user) {
-  int sig = *(int*)user;
-  struct sigentry_s* e = (struct sigentry_s*)data;
-  if(e && e->signal == sig && e->fct) e->fct(sig);
-}
-
 static void syssig_sig(int sig) {
-  fifo_foreach(g_sigctx.fifo, syssig_fifo_loop, &sig);
+  syssig_signal_fct signal_catch = htable_lookup(g_sigctx.table, (char*)string_convert(sig, 10));
+  if(signal_catch) signal_catch(sig);
 }
 
 static void syssig_atexit(void) { 
   if(g_sigctx.exit) g_sigctx.exit();
   if(g_sigctx.log) log_close();
-  if(g_sigctx.fifo) {
-    while(!fifo_empty(g_sigctx.fifo))
-      free(fifo_pop(g_sigctx.fifo));
-    fifo_free(g_sigctx.fifo);
-  }
+  if(g_sigctx.table) 
+    htable_clear(g_sigctx.table);
   g_sigctx.exit = NULL;
   g_sigctx.log = 0;
-  g_sigctx.fifo = NULL;
+  g_sigctx.table = NULL;
 }
 
 
@@ -71,7 +60,7 @@ static void syssig_atexit(void) {
  * @param exit_catch The signal callback.
  */
 void syssig_init(const struct log_s *linit, syssig_exit_fct exit_catch){
-  g_sigctx.fifo = fifo_alloc();
+  g_sigctx.table = htable_new();
   g_sigctx.exit = exit_catch;
   g_sigctx.log = 0;
   if(linit) log_init(*linit), g_sigctx.log = 1;
@@ -90,11 +79,18 @@ void syssig_init(const struct log_s *linit, syssig_exit_fct exit_catch){
  * @param signal_catch The callback.
  */
 void syssig_add_signal(int signal, syssig_signal_fct signal_catch) {
-  if(!g_sigctx.fifo) return;
-  struct sigentry_s *e = (struct sigentry_s*)malloc(sizeof(struct sigentry_s));
-  if(!e) return;
-  e->signal = signal;
-  e->fct = signal_catch;
-  fifo_push(g_sigctx.fifo, e);
+  if(!g_sigctx.table) return;
+  htable_add(g_sigctx.table, (char*)string_convert(signal, 10), &signal_catch, sizeof(syssig_signal_fct));
   (void)sigaction(signal, &g_sigctx.sa, NULL);
+}
+
+/**
+ * @fn void syssig_remove_signal(int signal)
+ * @brief Remove an added signal callback.
+ * @param signal The signal to remove
+ */
+void syssig_remove_signal(int signal) {
+  if(!g_sigctx.table) return;
+  if(!htable_remove(g_sigctx.table, (char*)string_convert(signal, 10)))
+     (void)sigaction(signal, NULL, NULL);
 }

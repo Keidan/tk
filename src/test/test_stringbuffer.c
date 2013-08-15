@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <tk/sys/log.h>
 #include <tk/text/stringbuffer.h>
-#include <tk/sys/sysutils.h>
+#include <tk/sys/syssig.h>
 #include <unistd.h>
 
 
 int main(int argc, char** argv) {
-  sysutils_exit_action(log_init_cast("test_stringbuffer", LOG_PID, LOG_USER), NULL);
+  syssig_init(log_init_cast_user("test_stringbuffer", LOG_PID), NULL);
 
   stringbuffer_t b = stringbuffer_new();
   stringbuffer_append(b, "azerty");

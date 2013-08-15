@@ -56,4 +56,11 @@
    */
   void syssig_add_signal(int signal, syssig_signal_fct signal_catch);
 
+  /**
+   * @fn void syssig_remove_signal(int signal)
+   * @brief Remove an added signal callback.
+   * @param signal The signal to remove
+   */
+  void syssig_remove_signal(int signal);
+
 #endif /* __SYSSIG_H__ */

@@ -36,6 +36,7 @@
   #define logger(prio, fmt, ...)      __TMP_LOG__(prio, "[%s::%s(%d) -> " fmt, __LOG_FILE__, __func__, __LINE__, ##__VA_ARGS__)
 
   #define log_init_cast(i, o, f) (&((struct log_s){i, o, f}))
+  #define log_init_cast_user(i, o) (&((struct log_s){i, o, LOG_USER}))
   struct log_s {
       char* ident;
       int option;
