@@ -21,7 +21,6 @@
 *******************************************************************************
 */
 #include <tk/sys/syssig.h>
-#include <tk/collection/htable.h>
 #include <tk/text/string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,24 +31,26 @@ struct sigctx_s {
     syssig_exit_fct       exit;
     _Bool                 log;
     struct sigaction      sa;
-    htable_t              table;
+    syssig_signal_fct     signals[SYSSIG_MAX_SIGNALS];
 };
 
 static struct sigctx_s g_sigctx;
 
 static void syssig_sig(int sig) {
-  syssig_signal_fct signal_catch = htable_lookup(g_sigctx.table, (char*)string_convert(sig, 10));
-  if(signal_catch) signal_catch(sig);
+  if(sig < 0 || sig > SYSSIG_MAX_SIGNALS) {
+    fprintf(stderr, "Invalid signal value (%d)!!!\n", sig);
+    return;
+  }
+  if(g_sigctx.signals[sig])
+    g_sigctx.signals[sig](sig);
 }
 
 static void syssig_atexit(void) { 
   if(g_sigctx.exit) g_sigctx.exit();
   if(g_sigctx.log) log_close();
-  if(g_sigctx.table) 
-    htable_clear(g_sigctx.table);
+  memset(g_sigctx.signals, 0, sizeof(syssig_signal_fct)*SYSSIG_MAX_SIGNALS);
   g_sigctx.exit = NULL;
   g_sigctx.log = 0;
-  g_sigctx.table = NULL;
 }
 
 
@@ -60,7 +61,7 @@ static void syssig_atexit(void) {
  * @param exit_catch The signal callback.
  */
 void syssig_init(const struct log_s *linit, syssig_exit_fct exit_catch){
-  g_sigctx.table = htable_new();
+  memset(g_sigctx.signals, 0, sizeof(syssig_signal_fct)*SYSSIG_MAX_SIGNALS);
   g_sigctx.exit = exit_catch;
   g_sigctx.log = 0;
   if(linit) log_init(*linit), g_sigctx.log = 1;
@@ -79,8 +80,8 @@ void syssig_init(const struct log_s *linit, syssig_exit_fct exit_catch){
  * @param signal_catch The callback.
  */
 void syssig_add_signal(int signal, syssig_signal_fct signal_catch) {
-  if(!g_sigctx.table) return;
-  htable_add(g_sigctx.table, (char*)string_convert(signal, 10), &signal_catch, sizeof(syssig_signal_fct));
+  if(signal < 0 || signal > SYSSIG_MAX_SIGNALS) return;
+  g_sigctx.signals[signal] = signal_catch;
   (void)sigaction(signal, &g_sigctx.sa, NULL);
 }
 
@@ -90,7 +91,6 @@ void syssig_add_signal(int signal, syssig_signal_fct signal_catch) {
  * @param signal The signal to remove
  */
 void syssig_remove_signal(int signal) {
-  if(!g_sigctx.table) return;
-  if(!htable_remove(g_sigctx.table, (char*)string_convert(signal, 10)))
-     (void)sigaction(signal, NULL, NULL);
+  if(signal < 0 || signal > SYSSIG_MAX_SIGNALS) return;
+  g_sigctx.signals[signal] = NULL;
 }

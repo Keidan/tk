@@ -26,6 +26,10 @@
   #include <tk/sys/log.h>
   #include <signal.h>
 
+  #ifndef SYSSIG_MAX_SIGNALS
+    #define SYSSIG_MAX_SIGNALS 50
+  #endif /* SYSSIG_MAX_SIGNALS */
+
   /**
    * @typedef void (*syssig_signal_fct)(int sig)
    * @brief signal catch callback.
