@@ -522,7 +522,7 @@ int sr_parse_config_from_string(struct sr_cfg_s *cfg, const char* string) {
   }
   memset(cfg, 0, sizeof(struct sr_cfg_s));
   tok = stringtoken_init(string, ":");
-  if(stringtoken_count(tok) != SR_SET_NB) {
+  if(stringtoken_count(tok) < SR_SET_NB) {
     stringtoken_release(tok);
     logger(LOG_ERR, "Invalid parameters numbers!");
     return -1;
