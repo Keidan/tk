@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * @file syssig.h
+ * @file ssig.h
  * @author Keidan
  * @date 14/08/2013
  * @par Project
@@ -20,51 +20,51 @@
  *
  *******************************************************************************
  */
-#ifndef __SYSSIG_H__
-  #define __SYSSIG_H__
+#ifndef __SSIG_H__
+  #define __SSIG_H__
 
   #include <tk/sys/log.h>
   #include <signal.h>
 
-  #ifndef SYSSIG_MAX_SIGNALS
-    #define SYSSIG_MAX_SIGNALS 50
-  #endif /* SYSSIG_MAX_SIGNALS */
+  #ifndef SSIG_MAX_SIGNALS
+    #define SSIG_MAX_SIGNALS 50
+  #endif /* SSIG_MAX_SIGNALS */
 
   /**
-   * @typedef void (*syssig_signal_fct)(int sig)
+   * @typedef void (*ssig_signal_fct)(int sig)
    * @brief signal catch callback.
    * @param sig The signal
    */
-  typedef void (*syssig_signal_fct)(int sig);
+  typedef void (*ssig_signal_fct)(int sig);
 
   /**
-   * @typedef void (*syssig_exit_fct)(void)
+   * @typedef void (*ssig_exit_fct)(void)
    * @brief Exit callback.
    * @param sig The signal
    */
-  typedef void (*syssig_exit_fct)(void);
+  typedef void (*ssig_exit_fct)(void);
 
   /**
-   * @fn void syssig_init(const struct log_s *linit, syssig_exit_fct exit_catch)
+   * @fn void ssig_init(const struct log_s *linit, ssig_exit_fct exit_catch)
    * @brief Add exit callback action and start the syslog managment.
    * @param linit Start syslog (if not NULL)
    * @param exit_catch The signal callback.
    */
-  void syssig_init(const struct log_s *linit, syssig_exit_fct exit_catch);
+  void ssig_init(const struct log_s *linit, ssig_exit_fct exit_catch);
 
   /**
-   * @fn void syssig_add_signal(int signal, syssig_signal_fct signal_catch)
+   * @fn void ssig_add_signal(int signal, ssig_signal_fct signal_catch)
    * @brief Add a new signal callback.
    * @param signal The signal to add.
    * @param signal_catch The callback.
    */
-  void syssig_add_signal(int signal, syssig_signal_fct signal_catch);
+  void ssig_add_signal(int signal, ssig_signal_fct signal_catch);
 
   /**
-   * @fn void syssig_remove_signal(int signal)
+   * @fn void ssig_remove_signal(int signal)
    * @brief Remove an added signal callback.
    * @param signal The signal to remove
    */
-  void syssig_remove_signal(int signal);
+  void ssig_remove_signal(int signal);
 
-#endif /* __SYSSIG_H__ */
+#endif /* __SSIG_H__ */

@@ -23,8 +23,8 @@
 #ifndef __NET_H__
   #define __NET_H__
 
-  #include <tk/io/net/netutils.h>
-  #include <tk/io/net/netprint.h>
+  #include <tk/io/net/ntools.h>
+  #include <tk/io/net/nprint.h>
 
 
 #endif /* __NET_H__ */

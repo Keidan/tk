@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * @file sysutils.h
+ * @file stools.h
  * @author Keidan
  * @date 03/04/2013
  * @par Project
@@ -20,8 +20,8 @@
  *
  *******************************************************************************
  */
-#ifndef __SYSUTILS_H__
-  #define __SYSUTILS_H__
+#ifndef __STOOLS_H__
+  #define __STOOLS_H__
 
   #include <stdio.h>
   #include <stdint.h>
@@ -33,123 +33,123 @@
   #define is_big_endian() !wicked_cast(unsigned char, 1u)
 
   /**
-   * @def SYSUTILS_1KO
+   * @def STOOLS_1KO
    * @brief Value of 1 Kb in octets
    * @see bns_utils_size_to_string
    */
-  #define SYSUTILS_1KB   0x400
+  #define STOOLS_1KB   0x400
 
   /**
-   * @def SYSUTILS_1MO
+   * @def STOOLS_1MO
    * @brief Value of 1 Mb in octets
    * @see bns_utils_size_to_string
    */
-  #define SYSUTILS_1MB   0x100000
+  #define STOOLS_1MB   0x100000
 
   /**
-   * @def SYSUTILS_1GO
+   * @def STOOLS_1GO
    * @brief Value of 1 Gb in octets
    * @see bns_utils_size_to_string
    */
-  #define SYSUTILS_1GB   0x40000000
+  #define STOOLS_1GB   0x40000000
 
 
   /**
-   * @def SYSUTILS_MAX_SSIZE
-   * @brief Maximum size of the string used by the "sysutils_size_to_string" function.
-   * @see sysutils_size_to_string
+   * @def STOOLS_MAX_SSIZE
+   * @brief Maximum size of the string used by the "stools_size_to_string" function.
+   * @see stools_size_to_string
    */
-  #define SYSUTILS_MAX_SSIZE 15
+  #define STOOLS_MAX_SSIZE 15
 
-  typedef enum { SYSUTILS_UNIT_BYTE, SYSUTILS_UNIT_KBYTES, SYSUTILS_UNIT_MBYTES, SYSUTILS_UNIT_GBYTES} sysutils_unit_et;
+  typedef enum { STOOLS_UNIT_BYTE, STOOLS_UNIT_KBYTES, STOOLS_UNIT_MBYTES, STOOLS_UNIT_GBYTES} stools_unit_et;
 
   /**
-   * @fn void sysutils_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file)
+   * @fn void stools_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file)
    * @brief add /proc/the pid parameters/the file parameter into filename.
    * @param filename The result file name.
    * @param pid The process pid.
    * @param file The file we need.
    */
-  void sysutils_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file);
+  void stools_get_proc_filename(char filename[FILENAME_MAX], int pid, const char* file);
 
   /**
-   * @fn long sysutils_get_page_size()
+   * @fn long stools_get_page_size()
    * @brief Get the page size
    * @return long
    */
-  long sysutils_get_page_size();
+  long stools_get_page_size();
 
   /**
-   * @fn double sysutils_get_page_size_in(sysutils_unit_et unit)
+   * @fn double stools_get_page_size_in(stools_unit_et unit)
    * @brief Get the page size in a specific format.
    * @param unit The conversion unit.
    * @return double
    */
-  double sysutils_get_page_size_in(sysutils_unit_et unit);
+  double stools_get_page_size_in(stools_unit_et unit);
 
   /**
-   * @fn long sysutils_get_phy_pages()
+   * @fn long stools_get_phy_pages()
    * @brief The number of pages of physical memory. Note that it is possible for the product of this value and the value of _SC_PAGESIZE to overflow.
    * @return long
    */
-  long sysutils_get_phy_pages();
+  long stools_get_phy_pages();
 
   /**
-   * @fn long sysutils_get_available_phy_pages()
+   * @fn long stools_get_available_phy_pages()
    * @brief The number of currently available pages of physical memory.
    * @return long
    */
-  long sysutils_get_available_phy_pages();
+  long stools_get_available_phy_pages();
 
   /**
-   * @fn long sysutils_get_nprocessors_configured()
+   * @fn long stools_get_nprocessors_configured()
    * @brief The number of processors configured.
    * @return long
    */
-  long sysutils_get_nprocessors_configured();
+  long stools_get_nprocessors_configured();
 
   /**
-   * @fn long sysutils_get_nprocessors_online()
+   * @fn long stools_get_nprocessors_online()
    * @brief The number of processors currently online (available).
    * @return long
    */
-  long sysutils_get_nprocessors_online();
+  long stools_get_nprocessors_online();
 
   /**
-   * @fn  unsigned long sysutils_get_phy_memory_size()
+   * @fn  unsigned long stools_get_phy_memory_size()
    * @brief Get the pysical memory size
    * @return unsigned long
    */
-  unsigned long sysutils_get_phy_memory_size();
+  unsigned long stools_get_phy_memory_size();
 
   /**
-   * @fn double sysutils_get_phy_memory_size_in(sysutils_unit_et unit)
+   * @fn double stools_get_phy_memory_size_in(stools_unit_et unit)
    * @brief Get the pysical memory size in a specific format.
    * @param unit The conversion unit.
    * @return double
    */
-  double sysutils_get_phy_memory_size_in(sysutils_unit_et unit);
+  double stools_get_phy_memory_size_in(stools_unit_et unit);
 
   /**
-   * @fn long long sysutils_jiffies_to_microsecond(long long jiffies)
+   * @fn long long stools_jiffies_to_microsecond(long long jiffies)
    * @brief Convert jiffies to microsecond
    * @return long long
    */
-  long long sysutils_jiffies_to_microsecond(long long jiffies);
+  long long stools_jiffies_to_microsecond(long long jiffies);
 
   /**
-   * @fn long sysutils_fsize(FILE* file)
+   * @fn long stools_fsize(FILE* file)
    * @brief Getting the file size.
    * @param file The file.
    * @return Long.
    */
-  long sysutils_fsize(FILE* file);
+  long stools_fsize(FILE* file);
 
   /**
-   * @fn void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE])
+   * @fn void stools_size_to_string(long size, char ssize[STOOLS_MAX_SSIZE])
    * @brief Convert a size into a string (with unit).
    * @param size Size.
    * @param ssize Output
    */
-  void sysutils_size_to_string(long size, char ssize[SYSUTILS_MAX_SSIZE]);
-#endif /* __SYSUTILS_H__ */
+  void stools_size_to_string(long size, char ssize[STOOLS_MAX_SSIZE]);
+#endif /* __STOOLS_H__ */

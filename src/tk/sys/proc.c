@@ -32,7 +32,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <tk/sys/proc.h>
-#include <tk/sys/sysutils.h>
+#include <tk/sys/stools.h>
 #include <tk/sys/log.h>
 
 int proc_stat(struct proc_stat_s *stat, i_t pid) {
@@ -41,7 +41,7 @@ int proc_stat(struct proc_stat_s *stat, i_t pid) {
   char filename[FILENAME_MAX];
   char *buffer = 0;
   /* build the file name */
-  sysutils_get_proc_filename(filename, pid, "stat");
+  stools_get_proc_filename(filename, pid, "stat");
 
   /* open the file */
   if((file = fopen(filename, "r")) == NULL) {

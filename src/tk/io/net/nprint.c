@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * @file netprint.c
+ * @file nprint.c
  * @author Keidan
  * @date 19/05/2013
  * @par Project
@@ -23,12 +23,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <tk/io/net/netprint.h>
-#include <tk/io/net/netutils.h>
+#include <tk/io/net/nprint.h>
+#include <tk/io/net/ntools.h>
 #include <tk/sys/log.h>
 
 
-#define SET_NSET(cond) (!!(cond)), NETPRINT_SET_NSET(cond)
+#define SET_NSET(cond) (!!(cond)), NPRINT_SET_NSET(cond)
 
 /** 
  * Pour eviter les pb de support et surtout de compilation la structure est 
@@ -55,42 +55,42 @@ struct ipv6hdr {
 };
 
   /**
-   * @fn void netprint_print_headers(const net_buffer_t buffer, __u32 length, struct bns_network_s net)
+   * @fn void nprint_print_headers(const net_buffer_t buffer, __u32 length, struct bns_network_s net)
    * @brief Print all headers.
    * @param buffer Buffer datas.
    * @param length Buffer length.
    * @param net Headers.
    */
-void netprint_print_headers(const net_buffer_t buffer, __u32 length, struct netutils_headers_s net) {
+void nprint_print_headers(const net_buffer_t buffer, __u32 length, struct ntools_headers_s net) {
   /* print the ethernet header */
-  netprint_print_eth(net.eth);
+  nprint_print_eth(net.eth);
   /* If the packet contains an IP v4/v6 header */
   if(net.ipv4) {
     /* printf the IP header */
-    netprint_print_ip(net.ipv4);
+    nprint_print_ip(net.ipv4);
     if(net.tcp) {
       /* print the TCP header */
-      netprint_print_tcp(net.tcp);
+      nprint_print_tcp(net.tcp);
     } else if(net.udp) {
       /* printf the UDP header */
-      netprint_print_upd(net.udp);
+      nprint_print_upd(net.udp);
     }
     /* If the packet contains an ARP header */
   } else if(net.arp) {
     /* print the ARP header */
-    netprint_print_arp(net.arp);
+    nprint_print_arp(net.arp);
   } 
   printf("\n");/* layout */
   /* print the buffer */
-  netutils_print_hex(stdout, (__u8*)buffer, length, 0);
+  ntools_print_hex(stdout, (__u8*)buffer, length, 0);
 }
 
   /**
-   * @fn void netprint_print_eth(struct ethhdr *eth)
+   * @fn void nprint_print_eth(struct ethhdr *eth)
    * @brief Print the ethernet header.
    * @param eth Ethernet header.
    */
-void netprint_print_eth(struct ethhdr *eth) {
+void nprint_print_eth(struct ethhdr *eth) {
   printf("Ethernet:\n");
   printf("\tSource: %02x:%02x:%02x:%02x:%02x:%02x\n\tDestination: %02x:%02x:%02x:%02x:%02x:%02x\n\tType:0x%04x\n",
 	 eth->h_source[0], eth->h_source[1], eth->h_source[2], eth->h_source[3], eth->h_source[4], eth->h_source[5],
@@ -99,11 +99,11 @@ void netprint_print_eth(struct ethhdr *eth) {
 }
 
   /**
-   * @fn void netprint_print_arp(struct arphdrs *arpp)
+   * @fn void nprint_print_arp(struct arphdrs *arpp)
    * @brief Print the ARP header.
    * @param arpp ARP header
    */
-void netprint_print_arp(struct arphdrs *arpp) {
+void nprint_print_arp(struct arphdrs *arpp) {
   struct arphdr *arp = arpp->arp1;
   struct arphdr2 *p2 = arpp->arp2;
   printf("Adress Resolution Protocol:\n");
@@ -130,11 +130,11 @@ void netprint_print_arp(struct arphdrs *arpp) {
 }
 
   /**
-   * @fn void netprint_print_ip(struct iphdr* ipv4)
+   * @fn void nprint_print_ip(struct iphdr* ipv4)
    * @brief Print the IP v4 header.
    * @param ipv4 IPv4 header.
    */
-void netprint_print_ip(struct iphdr* ipv4) {
+void nprint_print_ip(struct iphdr* ipv4) {
   if(ipv4->version == 4) {
     char src [INET_ADDRSTRLEN], dst [INET_ADDRSTRLEN];
     memset(dst, 0, sizeof(dst));
@@ -175,11 +175,11 @@ void netprint_print_ip(struct iphdr* ipv4) {
 }
 
   /**
-   * @fn void netprint_print_upd(struct udphdr *udp)
+   * @fn void nprint_print_upd(struct udphdr *udp)
    * @brief Print the UDP header.
    * @param udp UDP header
    */
-void netprint_print_upd(struct udphdr *udp) {
+void nprint_print_upd(struct udphdr *udp) {
   /* Affichage de l'entete UDP */
   printf("User Datagram Protocol:\n");
   printf("\tSource port: %d\t\n\tDestination port: %d\n", udp->source, udp->dest);
@@ -187,11 +187,11 @@ void netprint_print_upd(struct udphdr *udp) {
 }
 
   /**
-   * @fn void netprint_print_tcp(struct tcphdr *tcp)
+   * @fn void nprint_print_tcp(struct tcphdr *tcp)
    * @brief Print the TCP header
    * @param tcp TCP header.
    */
-void netprint_print_tcp(struct tcphdr *tcp) { 
+void nprint_print_tcp(struct tcphdr *tcp) { 
   /* Affichage de l'entete TCP */
   printf("Transmission Control Protocol:\n");
   printf("\tSource port: %d\n\tDestination port: %d\n", tcp->source, tcp->dest);
