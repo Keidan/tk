@@ -41,16 +41,14 @@
       unz_file_info info;
       char          *content;              /* Uncompressed file content */
   };
-
   
-  struct z_ctx_s {
-      int magic;
-      char filename [FILENAME_MAX];        /* Zip file name */
-      char dir_delimiter;
+  typedef void* z_t;
+
+  struct z_uc_s {
       unzFile ctx;                         /* Internale zip context */
       unz_global_info ginfo;               /* Global informations about the zip file */
   };
-  typedef struct z_ctx_s *z_t;
+  typedef struct z_uc_s *z_uc_t;
 
   typedef enum {
     Z_C_STORE=0,
@@ -66,7 +64,7 @@
       _Bool exclude_path;
   };
 
-  typedef void (*z_file_content_fct)(z_t z, struct zentry_s entry);
+typedef void (*z_uncompress_callback_fct)(z_t z, struct zentry_s entry);
 
 
   /**
@@ -77,60 +75,69 @@
   z_t z_new(void);
 
   /**
-   * @fn void z_delete(z_t z)
+   * @fn void z_delete(z_t zip)
    * @brief Delete the ZIP context.
-   * @param z The pointer to release.
+   * @param zip The pointer to release.
    */
-  void z_delete(z_t z);
+  void z_delete(z_t zip);
   
   /**
-   * @fn int z_open(z_t z, const char filename[FILENAME_MAX])
+   * @fn int z_open(z_t zip, const char filename[FILENAME_MAX])
    * @brief Open a new ZIP file.
-   * @param z The ZIP context.
+   * @param zip The ZIP context.
    * @param filename ZIP file name.
-   * @return 0 on success else -1.
+   * @return -1 on error else 0.
    */
-  int z_open(z_t z, const char filename[FILENAME_MAX]);
+  int z_open(z_t zip, const char filename[FILENAME_MAX]);
 
   /**
-   * @fn void z_close(z_t z)
+   * @fn void z_close(z_t zip)
    * @brief Close the zip context.
-   * @param z ZIP context.
+   * @param zip ZIP context.
    */
-  void z_close(z_t z);
+  void z_close(z_t zip);
 
   /**
-   * @fn _Bool z_is_dir(z_t z, char* path)
+   * @fn _Bool z_is_dir(z_t zip, char* path)
    * @brief Test if the input path os a directry.
-   * @param z ZIP context.
+   * @param zip ZIP context.
    * @param path Path to test.
    * @return 1 if the current path is a directory else 0.
    */
-  _Bool z_is_dir(z_t z, char* path);
+  _Bool z_is_dir(z_t zip, char* path);
 
   /**
-   * @fn int z_get_contents(z_t z, z_file_content_fct z_file_content)
+   * @fn int z_uncompress(z_t zip, z_uncompress_callback_fct callback)
    * @brief Unzip the ZIP files.
-   * @param z ZIP context.
-   * @param z_file_content Callback to received the uncompressed file datas.
+   * @param zip ZIP context.
+   * @param callback Callback to received the uncompressed file datas.
    * @return -1 on failure else 0.
    */
-  int z_get_contents(z_t z, z_file_content_fct z_file_content);
+  int z_uncompress(z_t zip, z_uncompress_callback_fct callback);
 
   /**
-   * @fn void z_set_dir_delimiter(z_t z, char delimiter)
+   * @fn int z_get_global_zinfo(z_t zip, unz_global_info *ginfo)
+   * @brief Get the global zip info (open must be all).
+   * @param zip ZIP context.
+   * @param ginfo The result infos.
+   * @return -1 on error else 0.
+   */
+  int z_get_global_zinfo(z_t zip, unz_global_info *ginfo);
+
+  /**
+   * @fn void z_set_dir_delimiter(z_t zip, char delimiter)
    * @brief Change the directory delimiter.
-   * @param z ZIP context.
+   * @param zip ZIP context.
    * @param delimiter The new deimiter.
    */
-  void z_set_dir_delimiter(z_t z, char delimiter);
+  void z_set_dir_delimiter(z_t zip, char delimiter);
 
 
   /**
-   * @fn char z_get_dir_delimiter(z_t z)
+   * @fn char z_get_dir_delimiter(z_t zip)
    * @brief Get the current directory delimiter.
-   * @param z ZIP context.
+   * @param zip ZIP context.
    * @return The deimiter.
    */
-  char z_get_dir_delimiter(z_t z);
+  char z_get_dir_delimiter(z_t zip);
 #endif /* __Z_H__ */
