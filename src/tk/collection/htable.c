@@ -153,7 +153,7 @@ int htable_add(htable_st *table, char *key, void *value, size_t vlen) {
   size_t internal_key_length = klen+1;
   size_t internal_value_length = vlen+1;
     
-  size_t hash = htable_hash(key, klen);
+  size_t hash = htable_hash(key, table->knum);
   htable_el_st *element = htable_el_new();
   if (!element)
     return -1; // No Memory
@@ -176,6 +176,7 @@ int htable_add(htable_st *table, char *key, void *value, size_t vlen) {
   }
  
   element->vlen = vlen;
+  element->klen = klen;
   element->next = NULL;
   if(klen > table->mklen) table->mklen = klen;
   // find the key position for chaining
@@ -217,7 +218,7 @@ int htable_remove(htable_st *table, char *key) {
     htable_resize(table, table->knum/2);
 
   size_t klen = strlen(key);
-  size_t hash = htable_hash(key, klen);
+  size_t hash = htable_hash(key, table->knum);
   if (!table->house[hash])
     return -1; // key not found
   htable_el_st *temp = table->house[hash];
@@ -255,7 +256,7 @@ int htable_remove(htable_st *table, char *key) {
  */
 void* htable_lookup(htable_st *table, char *key) {
   size_t klen = strlen(key);
-  size_t hash = htable_hash(key, klen);
+  size_t hash = htable_hash(key, table->knum);
   if (!table->house[hash])
     return NULL; // key not found
   htable_el_st *temp = table->house[hash];
