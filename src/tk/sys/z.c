@@ -24,6 +24,8 @@
 #include <tk/sys/log.h>
 
 #define Z_MAGIC         0xC001214
+#define Z_VALID(z)      (z && z->magic == Z_MAGIC)
+#define Z_VALID_OPEN(z) (Z_VALID(z) && z->ctx)
 
 #define zlogger(...) ({			\
     logger(LOG_ERR, __VA_ARGS__);		\
@@ -31,45 +33,58 @@
   })
 
 /**
- * @fn z_t z_open(const char filename[FILENAME_MAX])
- * @brief Open a new ZIP file.
- * @param filename ZIP file name.
+ * @fn z_t z_new(void)
+ * @brief Alloc a new z context.
  * @return The ZIP context else NULL on error.
  */
-z_t z_open(const char filename[FILENAME_MAX]) {
+z_t z_new(void) {
   z_t z = NULL;
   if(!(z = (z_t)malloc(sizeof(struct z_ctx_s)))) {
-    zlogger("Unable to alloc a memory for the zip file '%s'\n", filename);
+    zlogger("Unable to alloc a memory for the zip context\n");
     return NULL;
   }
   memset(z, 0, sizeof(struct z_ctx_s));
   z->magic = Z_MAGIC;
   z->dir_delimiter = Z_DIR_DELIMITER;
+  return z;
+}
+
+/**
+ * @fn void z_delete(z_t z)
+ * @brief Delete the ZIP context.
+ * @param z The pointer to release.
+ */
+void z_delete(z_t z) {
+  if(!Z_VALID(z)) return;
+  z_close(z);
+  z->magic = 0;
+  free(z);
+}
+
+/**
+ * @fn int z_open(z_t z, const char filename[FILENAME_MAX])
+ * @brief Open a new ZIP file.
+ * @param z The ZIP context.
+ * @param filename ZIP file name.
+ * @return 0 on success else -1.
+ */
+int z_open(z_t z, const char filename[FILENAME_MAX]) {
+  if(!Z_VALID(z)) return -1;
   strcpy(z->filename, filename);
   /* Open the zip file */
   z->ctx = unzOpen(z->filename);
   if(!z->ctx) {
     zlogger("Unable to open the zip file '%s'\n", z->filename);
     z_close(z);
-    return NULL;
+    return -1;
   }
   /* Get info about the zip file */
   if(unzGetGlobalInfo(z->ctx, &z->ginfo) != UNZ_OK) {
     zlogger("Unable to read the global info related to the '%s' zip file\n", z->filename);
     z_close(z);
-    return NULL;
+    return -1;
   }
-  return z;
-}
-
-/**
- * @fn _Bool z_is_valid(z_t z)
- * @brief Check if the inut pointer is valid.
- * @param z Pointer to test.
- * @return 1 the pointer is valid else 0.
- */
-_Bool z_is_valid(z_t z) {
-  return z && z->magic == Z_MAGIC && z->ctx;
+  return 0;
 }
 
 /**
@@ -78,12 +93,23 @@ _Bool z_is_valid(z_t z) {
  * @param z ZIP context.
  */
 void z_close(z_t z) {
-  if(z_is_valid(z)) {
+  if(Z_VALID(z))
     if(z->ctx) unzClose(z->ctx), z->ctx = NULL;
-    z->magic = 0;
-    free(z);
-  }
 }
+
+
+/**
+ * @fn int z_compress(z_t z, struct z_compress_s init, fifo_t files)
+ * @brief Creation of a new ZIP file.
+ * @param z The ZIP context.
+ * @param init The init structure.
+ * @param The file list.
+ * @retunr 0 on success else -1.
+ */
+int z_compress(z_t z, struct z_compress_s init, fifo_t files) {
+  return 0;
+}
+
 
 /**
  * @fn _Bool z_is_dir(z_t z, char* path)
@@ -108,7 +134,7 @@ int z_get_contents(z_t z, z_file_content_fct z_file_content) {
   uLong i;
   struct zentry_s entry;
   int ret = 0;
-  if(!z_is_valid(z)) {
+  if(!Z_VALID_OPEN(z)) {
     zlogger("Invalid zip pointer!\n");
     return -1;
   }
@@ -177,7 +203,7 @@ int z_get_contents(z_t z, z_file_content_fct z_file_content) {
  * @param delimiter The new deimiter.
  */
 void z_set_dir_delimiter(z_t z, char delimiter) {
-  if(!z_is_valid(z)) {
+  if(!Z_VALID(z)) {
     zlogger("Invalid zip pointer!\n");
     return;
   }
@@ -192,7 +218,7 @@ void z_set_dir_delimiter(z_t z, char delimiter) {
  * @return The deimiter.
  */
 char z_get_dir_delimiter(z_t z) {
-  if(!z_is_valid(z)) {
+  if(!Z_VALID(z)) {
     zlogger("Invalid zip pointer!\n");
     return 0;
   }

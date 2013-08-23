@@ -26,6 +26,7 @@
   #include <stdlib.h>
   #include <stdbool.h>
   #include <zlib-minizip/unzip.h>
+  #include <tk/collection/fifo.h>
   #include <string.h>
 
 
@@ -51,23 +52,45 @@
   };
   typedef struct z_ctx_s *z_t;
 
+  typedef enum {
+    Z_C_STORE=0,
+    Z_C_FASTER=1,
+    Z_C_BETTER=9
+  } z_clevel_et;
+
+  struct z_compress_s {
+      char zame[FILENAME_MAX];
+      char zpassword[FILENAME_MAX];
+      _Bool append;
+      z_clevel_et level;
+      _Bool exclude_path;
+  };
+
   typedef void (*z_file_content_fct)(z_t z, struct zentry_s entry);
 
-  /**
-   * @fn z_t z_open(const char filename[FILENAME_MAX])
-   * @brief Open a new ZIP file.
-   * @param filename ZIP file name.
-   * @return The ZIP context else NULL on error.
-   */
-  z_t z_open(const char filename[FILENAME_MAX]);
 
   /**
-   * @fn _Bool z_is_valid(z_t z)
-   * @brief Check if the inut pointer is valid.
-   * @param z Pointer to test.
-   * @return 1 the pointer is valid else 0.
+   * @fn z_t z_new(void)
+   * @brief Alloc a new z context.
+   * @return The ZIP context else NULL on error.
    */
-  _Bool z_is_valid(z_t z);
+  z_t z_new(void);
+
+  /**
+   * @fn void z_delete(z_t z)
+   * @brief Delete the ZIP context.
+   * @param z The pointer to release.
+   */
+  void z_delete(z_t z);
+  
+  /**
+   * @fn int z_open(z_t z, const char filename[FILENAME_MAX])
+   * @brief Open a new ZIP file.
+   * @param z The ZIP context.
+   * @param filename ZIP file name.
+   * @return 0 on success else -1.
+   */
+  int z_open(z_t z, const char filename[FILENAME_MAX]);
 
   /**
    * @fn void z_close(z_t z)
