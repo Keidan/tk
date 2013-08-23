@@ -34,23 +34,6 @@
 #define USEC_PER_SEC         1000000UL
 
 /**
- * @fn long stools_fsize(FILE* file)
- * @brief Getting the file size.
- * @param file The file.
- * @return Long.
- */
-long stools_fsize(FILE* file) {
-  long size = 0L, old = 0L;
-  if (file) {
-    old = ftell(file);
-    fseek(file, 0L, SEEK_END);
-    size = ftell(file);
-    fseek(file, old, SEEK_SET);
-  }
-  return size;
-}
-
-/**
  * @fn void stools_size_to_string(long size, char ssize[STOOLS_MAX_SSIZE])
  * @brief Convert a size into a string (with unit).
  * @param size Size.

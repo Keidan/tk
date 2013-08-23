@@ -138,14 +138,6 @@
   long long stools_jiffies_to_microsecond(long long jiffies);
 
   /**
-   * @fn long stools_fsize(FILE* file)
-   * @brief Getting the file size.
-   * @param file The file.
-   * @return Long.
-   */
-  long stools_fsize(FILE* file);
-
-  /**
    * @fn void stools_size_to_string(long size, char ssize[STOOLS_MAX_SSIZE])
    * @brief Convert a size into a string (with unit).
    * @param size Size.

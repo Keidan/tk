@@ -12,6 +12,7 @@ set(lib_src
   ${TK_SRC_DIR}/sys/ssig.c 
   ${TK_SRC_DIR}/sys/stools.c 
   ${TK_SRC_DIR}/sys/proc.c
+  ${TK_SRC_DIR}/io/file.c
   ${TK_SRC_DIR}/io/net/ntools.c
   ${TK_SRC_DIR}/io/net/nprint.c
 )
