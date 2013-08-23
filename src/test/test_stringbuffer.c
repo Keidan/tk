@@ -31,6 +31,8 @@ int main(int argc, char** argv) {
   printf("Buffer after copy: '%s'\n", stringbuffer_to_str(b));
   stringbuffer_copy(b, "AZERTYUIOPQSDFGHJKLMWXCVBN1234567890987654321");
   printf("Buffer after copy: '%s'\n", stringbuffer_to_str(b));
+  stringbuffer_clear(b);
+  printf("Buffer after clear: '%s'\n", stringbuffer_to_str(b));
   stringbuffer_copy(b, "AZ12345");
   printf("Buffer after copy: '%s'\n", stringbuffer_to_str(b));
   stringbuffer_insert(b, 2, "ERTY");

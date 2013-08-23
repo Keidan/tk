@@ -191,7 +191,7 @@ int stringbuffer_append(stringbuffer_t buffer, const char* str) {
     b->length += slen;
     strncat(b->str, str, b->length);
   } else {
-    diff = abs(slen - b->alength) + 3;
+    diff = abs(b->alength - (strlen(b->str) + slen)) + 1;
     b->alength += diff;
     b->length = strlen(b->str) + slen;
     tmp = (char*)realloc(b->str, b->alength);
