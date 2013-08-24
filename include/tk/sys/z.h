@@ -23,9 +23,11 @@
 #ifndef __Z_H__
   #define __Z_H__
 
+  #include <tk/io/file.h>
   #include <stdlib.h>
   #include <stdbool.h>
   #include <zlib-minizip/unzip.h>
+  #include <zlib-minizip/zip.h>
   #include <tk/collection/fifo.h>
   #include <string.h>
 
@@ -35,20 +37,16 @@
     #define Z_DIR_DELIMITER '/'
   #endif
 
+  typedef char z_file_t[FILE_MAXNAME];
+
   struct zentry_s {
-      char          name[FILENAME_MAX];
-      _Bool         isdir;
-      unz_file_info info;
-      char          *content;              /* Uncompressed file content */
+      z_file_t        name;
+      _Bool           isdir;
+      unz_file_info64 info;
+      char            *content;              /* Uncompressed file content */
   };
   
   typedef void* z_t;
-
-  struct z_uc_s {
-      unzFile ctx;                         /* Internale zip context */
-      unz_global_info ginfo;               /* Global informations about the zip file */
-  };
-  typedef struct z_uc_s *z_uc_t;
 
   typedef enum {
     Z_C_STORE=0,
@@ -56,15 +54,7 @@
     Z_C_BETTER=9
   } z_clevel_et;
 
-  struct z_compress_s {
-      char zame[FILENAME_MAX];
-      char zpassword[FILENAME_MAX];
-      _Bool append;
-      z_clevel_et level;
-      _Bool exclude_path;
-  };
-
-typedef void (*z_uncompress_callback_fct)(z_t z, struct zentry_s entry);
+  typedef void (*z_uncompress_callback_fct)(z_t z, struct zentry_s entry);
 
 
   /**
@@ -82,13 +72,13 @@ typedef void (*z_uncompress_callback_fct)(z_t z, struct zentry_s entry);
   void z_delete(z_t zip);
   
   /**
-   * @fn int z_open(z_t zip, const char filename[FILENAME_MAX])
+   * @fn int z_open(z_t zip, const z_file_t filename)
    * @brief Open a new ZIP file.
    * @param zip The ZIP context.
    * @param filename ZIP file name.
    * @return -1 on error else 0.
    */
-  int z_open(z_t zip, const char filename[FILENAME_MAX]);
+  int z_open(z_t zip, const z_file_t filename);
 
   /**
    * @fn void z_close(z_t zip)
@@ -107,13 +97,28 @@ typedef void (*z_uncompress_callback_fct)(z_t z, struct zentry_s entry);
   _Bool z_is_dir(z_t zip, char* path);
 
   /**
-   * @fn int z_uncompress(z_t zip, z_uncompress_callback_fct callback)
+   * @fn int z_uncompress(z_t zip, const char* password, z_uncompress_callback_fct callback)
    * @brief Unzip the ZIP files.
    * @param zip ZIP context.
+   * @param password The zip password else NULL or empty.
    * @param callback Callback to received the uncompressed file datas.
    * @return -1 on failure else 0.
    */
-  int z_uncompress(z_t zip, z_uncompress_callback_fct callback);
+  int z_uncompress(z_t zip, const char* password, z_uncompress_callback_fct callback);
+
+  /**
+   * @fn int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files)
+   * @brief Creation of a new ZIP file.
+   * @param zip The ZIP context.
+   * @param zname The zip file name.
+   * @param password the zip password else NULL or empty.
+   * @param level The compression level.
+   * @param append Append mode.
+   * @param exclude_path Exclude the file path.
+   * @param files The file list.
+   * @retunr 0 on success else -1.
+   */
+  int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files);
 
   /**
    * @fn int z_get_global_zinfo(z_t zip, unz_global_info *ginfo)
@@ -131,7 +136,6 @@ typedef void (*z_uncompress_callback_fct)(z_t z, struct zentry_s entry);
    * @param delimiter The new deimiter.
    */
   void z_set_dir_delimiter(z_t zip, char delimiter);
-
 
   /**
    * @fn char z_get_dir_delimiter(z_t zip)

@@ -39,18 +39,18 @@
   typedef void (*fifo_foreach_fct_t)(void* value, void* user);
 
   /**
-   * @fn fifo_t fifo_alloc()
+   * @fn fifo_t fifo_new()
    * @brief Alloc new fifo.
    * @return The fifo else NULL on error.
    */
-  fifo_t fifo_alloc();
+  fifo_t fifo_new();
 
   /**
-   * @fn void fifo_free(fifo_t fifo)
+   * @fn void fifo_delete(fifo_t fifo)
    * @brief Delete a fifo.
    * @param fifo The fifo.
    */
-  void fifo_free(fifo_t fifo);
+  void fifo_delete(fifo_t fifo);
 
   /**
    * @fn void fifo_clear(fifo_t fifo)

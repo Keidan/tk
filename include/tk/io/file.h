@@ -82,13 +82,13 @@
   off64_t file_size64(const char* filename);
 
   /**
-   * @fn int file_time(char* fname, struct tm* t)
+   * @fn int file_time(const char* fname, struct tm* t)
    * @brief Getting the file time.
    * @param fname name of file to get info on
    * @param t return value: access, modific. and creation times
    * @return 0 if the time is available else -1.
    */
-  int file_time(char* fname, struct tm* t);
+  int file_time(const char* fname, struct tm* t);
 
   /**
    * @fn _Bool file_is_large_file(const char* filename)

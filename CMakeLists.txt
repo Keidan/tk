@@ -91,6 +91,8 @@ include(cmake/tk_config.cmake)
 # update the file
 configure_file(${CMAKE_SOURCE_DIR}/cmake/config-cmake.h.in ${CMAKE_SOURCE_DIR}/include/tk/config.h)
 
+
+
 # add minizp if zlib is found
 if(HAVE_ZLIB_H)
   add_subdirectory(${ZLIB_SRC_DIR})

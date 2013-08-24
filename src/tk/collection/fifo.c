@@ -25,11 +25,11 @@
 #include <stdlib.h>
 
 /**
- * @fn fifo_t fifo_alloc()
+ * @fn fifo_t fifo_new()
  * @brief Alloc new fifo.
  * @return The fifo else NULL on error.
  */
-fifo_t fifo_alloc() {
+fifo_t fifo_new() {
   fifo_t fifo = (fifo_t)malloc(sizeof(struct fifo_list_s));
   if(!fifo) {
     logger(LOG_ERR, "alloc failed!");
@@ -41,11 +41,11 @@ fifo_t fifo_alloc() {
 }
 
 /**
- * @fn void fifo_free(fifo_t fifo)
+ * @fn void fifo_delete(fifo_t fifo)
  * @brief Delete a fifo.
  * @param fifo The fifo.
  */
-void fifo_free(fifo_t fifo) {
+void fifo_delete(fifo_t fifo) {
   if (fifo && fifo->first) {
     fifo_clear(fifo);
     free(fifo);
