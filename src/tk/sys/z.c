@@ -205,7 +205,7 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
 				NULL, 0, NULL, 0, NULL /* comment*/,
 				(level != 0) ? Z_DEFLATED : 0, level,0,
 				-MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY,
-				password, crc_file, zip64) != ZIP_OK) {
+				(password != NULL && strlen(password)) ? password : NULL, crc_file, zip64) != ZIP_OK) {
 	 zipClose(zf, NULL);
 	 free(buf);
 	 logger(LOG_ERR, "Error in opening %s in zipfile\n", filenameinzip);
