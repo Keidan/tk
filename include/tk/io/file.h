@@ -38,8 +38,10 @@
 
   #include <time.h>
   #include <stdio.h>
+  #include <tk/collection/fifo.h>
 
   #define FILE_MAXNAME 256
+  typedef char file_name_t [FILE_MAXNAME];
 
   /**
    * @fn _Bool file_exists(const char* filename)
@@ -97,5 +99,14 @@
    * @return 1 if the file is a large file else 0.
    */
   _Bool file_is_large_file(const char* filename);
+
+  /**
+   * @fn int file_list_dir(const char* directory, fifo_t files)
+   * @brief List all files into a directory.
+   * @param directory The root dir.
+   * @param files The file list (value release required).
+   * @return -1 on error else 0.
+   */
+  int file_list_dir(const char* directory, fifo_t files);
 
 #endif /* __FILE_H__ */

@@ -21,13 +21,15 @@
 *******************************************************************************
 */
 #include <tk/io/file.h>
+#include <tk/sys/log.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-
+#include <errno.h>
+#include <dirent.h>
 
 /**
  * @fn long file_fsize(FILE* file)
@@ -162,4 +164,53 @@ _Bool file_is_large_file(const char* filename) {
     fclose(f);
   }
   return large;
+}
+
+/**
+ * @fn int file_list_dir(const char* directory, fifo_t files)
+ * @brief List all files into a directory.
+ * @param directory The root dir.
+ * @param files The file list (value release required).
+ * @return -1 on error else 0.
+ */
+int file_list_dir(const char* directory, fifo_t files) {
+  DIR *d;
+  struct dirent *dir;
+  file_name_t full;
+  char* alloc;
+  strncpy(full, directory, sizeof(file_name_t));
+  int ll, l = strlen(full);
+  if(full[l - 1] != '/') {
+    strncat(full, "/", sizeof(file_name_t));
+    l++;
+  }
+  d = opendir(full);
+  if (d) {
+    while ((dir = readdir(d)) != NULL) {
+      if(!strcmp(dir->d_name, ".") || 
+	 !strcmp(dir->d_name, "..")) {
+	continue;
+      } else if(dir->d_type == DT_DIR) {
+	strncat(full, dir->d_name, sizeof(file_name_t));
+	file_list_dir(full, files);
+	continue;
+      }
+      strncat(full, dir->d_name, sizeof(file_name_t));
+      ll = strlen(full);
+      alloc = malloc(ll + 1);
+      if(!alloc) {
+	logger(LOG_ERR, "Unable to alloc the memory for the file name '%s'\n",full);
+	continue;
+      }
+      strcpy(alloc, full);
+      alloc[ll + 1] = 0;
+      fifo_push(files, alloc);
+      memset(full + l, 0, abs(l - ll));
+    }
+    closedir(d);
+  } else {
+    logger(LOG_ERR, "Unable to open directory '%s': (%d) %s\n", directory, errno, strerror(errno));
+    return -1;
+  }
+  return 0;
 }
