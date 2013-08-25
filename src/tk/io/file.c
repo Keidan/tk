@@ -204,7 +204,7 @@ int file_list_dir(const char* directory, fifo_t files) {
 	continue;
       }
       strcpy(alloc, full);
-      alloc[ll + 1] = 0;
+      alloc[ll] = 0;
       fifo_push(files, alloc);
       memset(full + l, 0, abs(l - ll));
     }
