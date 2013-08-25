@@ -164,6 +164,7 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
   
   while(!fifo_empty(files)) {
      char* filenameinzip = fifo_pop(files);
+     logger(LOG_DEBUG, "Trying to add file '%s'\n", filenameinzip);
      FILE * fin;
      int size_read;
      const char *savefilenameinzip;
@@ -241,6 +242,7 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
      if(fin) fclose(fin);
      if(zipCloseFileInZip(zf) != ZIP_OK) {
        logger(LOG_ERR, "Error in closing %s in the zipfile\n", filenameinzip);
+       if(free_file_entry) free(filenameinzip);
        break;
      }
      if(free_file_entry) free(filenameinzip);
