@@ -109,4 +109,20 @@
    */
   int file_list_dir(const char* directory, fifo_t files);
 
+  /**
+   * @fn int file_mkdir(const char* dirname)
+   * @brief Create a directory.
+   * @param dirname The directory.
+   * @return 0 on success else -1
+   */
+  int file_mkdir(const char* dirname);
+
+  /**
+   * @fn int file_mkdirs(char* path)
+   * @brief Create a directory tree.
+   * @param path The directory tree.
+   * @return 0 on success else -1
+   */
+  int file_mkdirs(char *path);
+
 #endif /* __FILE_H__ */

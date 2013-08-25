@@ -215,3 +215,57 @@ int file_list_dir(const char* directory, fifo_t files) {
   }
   return 0;
 }
+
+/**
+ * @fn int file_mkdir(const char* dirname)
+ * @brief Create a directory.
+ * @param dirname The directory.
+ * @return 0 on success else -1
+ */
+int file_mkdir(const char* dirname) {
+  /* Test if the temporary forlder exists */
+  DIR* dir = opendir(dirname);
+  if (dir) {
+    /* Directory exists. */
+    closedir(dir);
+  } else if (ENOENT == errno) {
+    /* Directory does not exist. */
+    if(mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
+      logger(LOG_ERR, "%s: (%d) %s.", __func__, errno, strerror(errno));
+      return -1;
+    }
+  } else {
+    /* opendir() failed for some other reason. */
+    logger(LOG_ERR, "%s: (%d) %s.", __func__, errno, strerror(errno));
+    return -1;
+  }
+  return 0;
+}
+
+/**
+ * @fn int file_mkdirs(char* path)
+ * @brief Create a directory tree.
+ * @param path The directory tree.
+ * @return 0 on success else -1
+ */
+int file_mkdirs(char *path) {
+  int retval;
+  /* Test if the temporary forlder exists */
+  DIR* dir = opendir(path);
+  if (dir) {
+    /* Directory exists. */
+    closedir(dir);
+  } else if (ENOENT == errno) {
+    while (0 != (retval = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))) {
+      char subpath[FILENAME_MAX] = "", *delim;
+      if (!(delim = strrchr(path, '/'))) return retval;
+      strncat(subpath, path, delim - path);     /* Appends NUL    */
+      file_mkdirs(subpath);
+    }
+  } else {
+    /* opendir() failed for some other reason. */
+    logger(LOG_ERR, "%s: (%d) %s.", __func__, errno, strerror(errno));
+    return -1;
+  }
+  return 0;
+}
