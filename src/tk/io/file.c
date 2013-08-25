@@ -23,6 +23,7 @@
 #include <tk/io/file.h>
 #include <tk/sys/log.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
