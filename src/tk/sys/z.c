@@ -123,7 +123,7 @@ void z_close(z_t zip){
 
 
 /**
- * @fn int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files)
+ * @fn int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files, _Bool free_file_entry)
  * @brief Creation of a new ZIP file.
  * @param zip The ZIP context.
  * @param zname The zip file name.
@@ -132,9 +132,10 @@ void z_close(z_t zip){
  * @param append Append mode.
  * @param exclude_path Exclude the file path.
  * @param files The file list.
+ * @param free_file_entry Call free after each file entries?.
  * @retunr 0 on success else -1.
  */
-int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files) {
+int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files, _Bool free_file_entry) {
   struct z_s* z = Z_CAST(zip);
   char filename_try[FILE_MAXNAME+16];
   int size_buf = 0;
@@ -162,7 +163,7 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
     logger(LOG_DEBUG, "Creating %s\n", filename_try);
   
   while(!fifo_empty(files)) {
-     const char* filenameinzip = fifo_pop(files);
+     char* filenameinzip = fifo_pop(files);
      FILE * fin;
      int size_read;
      const char *savefilenameinzip;
@@ -177,6 +178,7 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
 	 zipClose(zf, NULL);
 	 free(buf);
 	 logger(LOG_ERR, "Error getting the crc for the file %s\n", filenameinzip);
+	 if(free_file_entry) free(filenameinzip);
 	 return -1;
        }
 
@@ -207,6 +209,8 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
 	 zipClose(zf, NULL);
 	 free(buf);
 	 logger(LOG_ERR, "Error in opening %s in zipfile\n", filenameinzip);
+	 if(free_file_entry) free(filenameinzip);
+	 return -1;
      }
 
      fin = fopen64(filenameinzip, "rb");
@@ -215,6 +219,8 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
        zipClose(zf, NULL);
        free(buf);
        logger(LOG_ERR, "Error in opening %s for reading\n", filenameinzip);
+       if(free_file_entry) free(filenameinzip);
+       return -1;
      }
      do {
        size_read = (int)fread(buf,1,size_buf,fin);
@@ -237,6 +243,7 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
        logger(LOG_ERR, "Error in closing %s in the zipfile\n", filenameinzip);
        break;
      }
+     if(free_file_entry) free(filenameinzip);
   }
   if(zipClose(zf, NULL) != ZIP_OK)
     logger(LOG_ERR, "Error in closing %s\n",filename_try);
