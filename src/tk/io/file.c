@@ -128,12 +128,12 @@ int file_time(const char* fname, struct tm* t) {
   time_t tt = 0;
 
   if(strcmp(fname, "-")) {
-    char name[FILE_MAXNAME+1];
+    file_name_t name;
     int len = strlen(fname);
-    if (len > FILE_MAXNAME) len = FILE_MAXNAME;
+    if (len >= sizeof(file_name_t)) len = sizeof(file_name_t) - 1;
 
-    strncpy(name, fname, FILE_MAXNAME-1);
-    name[FILE_MAXNAME] = 0;
+    strncpy(name, fname, len);
+    name[len + 1] = 0;
 
     if(name[len - 1] == '/') name[len - 1] = '\0';
 
@@ -177,8 +177,7 @@ _Bool file_is_large_file(const char* filename) {
 int file_list_dir(const char* directory, fifo_t files) {
   DIR *d;
   struct dirent *dir;
-  file_name_t full;
-  char* alloc;
+  file_name_t full, current;
   strncpy(full, directory, sizeof(file_name_t));
   int ll, l = strlen(full);
   if(full[l - 1] != '/') {
@@ -198,14 +197,9 @@ int file_list_dir(const char* directory, fifo_t files) {
       }
       strncat(full, dir->d_name, sizeof(file_name_t));
       ll = strlen(full);
-      alloc = malloc(ll + 1);
-      if(!alloc) {
-	logger(LOG_ERR, "Unable to alloc the memory for the file name '%s'\n",full);
-	continue;
-      }
-      strcpy(alloc, full);
-      alloc[ll] = 0;
-      fifo_push(files, alloc);
+      bzero(current, sizeof(file_name_t));
+      strcpy(current, full);
+      fifo_push(files, current, sizeof(file_name_t));
       memset(full + l, 0, abs(l - ll));
     }
     closedir(d);

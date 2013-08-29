@@ -37,7 +37,7 @@
     #define Z_DIR_DELIMITER '/'
   #endif
 
-  typedef char z_file_t[FILE_MAXNAME];
+  typedef file_name_t z_file_t;
 
   struct zentry_s {
       z_file_t        name;
@@ -107,7 +107,7 @@
   int z_uncompress(z_t zip, const char* password, z_uncompress_callback_fct callback);
 
   /**
-   * @fn int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files, _Bool free_file_entry)
+   * @fn int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files)
    * @brief Creation of a new ZIP file.
    * @param zip The ZIP context.
    * @param zname The zip file name.
@@ -116,10 +116,9 @@
    * @param append Append mode.
    * @param exclude_path Exclude the file path.
    * @param files The file list.
-   * @param free_file_entry Call free after each file entries?.
    * @retunr 0 on success else -1.
    */
-  int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files, _Bool free_file_entry);
+  int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files);
 
   /**
    * @fn int z_get_global_zinfo(z_t zip, unz_global_info *ginfo)

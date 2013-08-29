@@ -40,8 +40,7 @@
   #include <stdio.h>
   #include <tk/collection/fifo.h>
 
-  #define FILE_MAXNAME 256
-  typedef char file_name_t [FILE_MAXNAME];
+  typedef char file_name_t [FILENAME_MAX];
 
   /**
    * @fn _Bool file_exists(const char* filename)

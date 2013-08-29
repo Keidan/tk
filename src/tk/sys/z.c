@@ -32,10 +32,10 @@
 
 struct z_s {
     int magic;
-    char filename [FILENAME_MAX];        /* Zip file name */
+    z_file_t filename;                   /* Zip file name */
     char dir_delimiter;
     unzFile ctx;                         /* Internale zip context */
-    unz_global_info64 ginfo;               /* Global informations about the zip file */
+    unz_global_info64 ginfo;             /* Global informations about the zip file */
 };
 
 /**
@@ -123,7 +123,7 @@ void z_close(z_t zip){
 
 
 /**
- * @fn int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files, _Bool free_file_entry)
+ * @fn int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files)
  * @brief Creation of a new ZIP file.
  * @param zip The ZIP context.
  * @param zname The zip file name.
@@ -132,12 +132,11 @@ void z_close(z_t zip){
  * @param append Append mode.
  * @param exclude_path Exclude the file path.
  * @param files The file list.
- * @param free_file_entry Call free after each file entries?.
  * @retunr 0 on success else -1.
  */
-int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files, _Bool free_file_entry) {
+int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et level, _Bool append, _Bool exclude_path, fifo_t files) {
   struct z_s* z = Z_CAST(zip);
-  char filename_try[FILE_MAXNAME+16];
+  z_file_t filename_try;
   int size_buf = 0;
   void* buf = NULL;
   zipFile zf;
@@ -148,9 +147,8 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
     logger(LOG_ERR, "Error allocating memory\n");
     return -1;
   }
-
-  strncpy(filename_try, zname, sizeof(z_file_t)-1);
-  filename_try[sizeof(z_file_t)] = 0;
+  bzero(filename_try, sizeof(z_file_t));
+  strcpy(filename_try, zname);
   if(!string_indexof(filename_try, ".") == -1)
     strcat(filename_try, ".zip");
 
@@ -163,7 +161,7 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
     logger(LOG_DEBUG, "Creating %s\n", filename_try);
   
   while(!fifo_empty(files)) {
-     char* filenameinzip = fifo_pop(files);
+     const char* filenameinzip = fifo_pop(files);
      logger(LOG_DEBUG, "Trying to add file '%s'\n", filenameinzip);
      FILE * fin;
      int size_read;
@@ -179,7 +177,6 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
 	 zipClose(zf, NULL);
 	 free(buf);
 	 logger(LOG_ERR, "Error getting the crc for the file %s\n", filenameinzip);
-	 if(free_file_entry) free(filenameinzip);
 	 return -1;
        }
 
@@ -210,7 +207,6 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
 	 zipClose(zf, NULL);
 	 free(buf);
 	 logger(LOG_ERR, "Error in opening %s in zipfile\n", filenameinzip);
-	 if(free_file_entry) free(filenameinzip);
 	 return -1;
      }
 
@@ -220,7 +216,6 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
        zipClose(zf, NULL);
        free(buf);
        logger(LOG_ERR, "Error in opening %s for reading\n", filenameinzip);
-       if(free_file_entry) free(filenameinzip);
        return -1;
      }
      do {
@@ -242,10 +237,8 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
      if(fin) fclose(fin);
      if(zipCloseFileInZip(zf) != ZIP_OK) {
        logger(LOG_ERR, "Error in closing %s in the zipfile\n", filenameinzip);
-       if(free_file_entry) free(filenameinzip);
        break;
      }
-     if(free_file_entry) free(filenameinzip);
   }
   if(zipClose(zf, NULL) != ZIP_OK)
     logger(LOG_ERR, "Error in closing %s\n",filename_try);
