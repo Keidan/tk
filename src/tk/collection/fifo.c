@@ -23,13 +23,15 @@
 #include <tk/collection/fifo.h>
 #include <tk/sys/log.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * @fn fifo_t fifo_new()
  * @brief Alloc new fifo.
+ * @param alloc Alloc the vaue.
  * @return The fifo else NULL on error.
  */
-fifo_t fifo_new() {
+fifo_t fifo_new(_Bool alloc) {
   fifo_t fifo = (fifo_t)malloc(sizeof(struct fifo_list_s));
   if(!fifo) {
     logger(LOG_ERR, "alloc failed!");
@@ -37,6 +39,7 @@ fifo_t fifo_new() {
   }
   fifo->first = NULL;
   fifo->last = NULL;
+  fifo->alloc = alloc;
   return fifo;
 }
 
@@ -60,9 +63,14 @@ void fifo_delete(fifo_t fifo) {
 void fifo_clear(fifo_t fifo) {
   struct fifo_element_s* p;
   if (fifo && fifo->first) {
-    for (p = fifo->first->next; p != NULL; p = p->next) 
+    for (p = fifo->first->next; p != NULL; p = p->next)  {
+      if(fifo->alloc && p->previous->value) free(p->previous->value), p->previous->value = NULL;
       free(p->previous);
-    free(fifo->first);
+    }
+    if(fifo->first) {
+      if(fifo->alloc && fifo->first->value) free(fifo->first->value), fifo->first->value = NULL;
+      free(fifo->first);
+    }
     fifo->last = fifo->first = NULL;
   }
 }
@@ -109,15 +117,20 @@ unsigned long fifo_size(fifo_t fifo) {
 }
 
 /**
- * @fn void fifo_push(fifo_t fifo, void* value)
+ * @fn void fifo_push(fifo_t fifo, void* value, uint32_t length)
  * @brief Push a new value in the fifo.
  * @param fifo The fifo.
  * @param value The value.
+ * @param length The value length
  */
-void fifo_push(fifo_t fifo, void* value) {
+void fifo_push(fifo_t fifo, void* value, uint32_t length) {
   if(!fifo) return;
   struct fifo_element_s* p = (struct fifo_element_s*)malloc(sizeof(struct fifo_element_s));
-  p->value = value;
+  if(fifo->alloc) {
+    p->value = malloc(length);
+    memcpy(p->value, value, length);
+  } else
+    p->value = value;
   if(!fifo->first) {
     p->previous = NULL;
     p->next = NULL;
@@ -135,12 +148,14 @@ void fifo_push(fifo_t fifo, void* value) {
  * @fn void* fifo_pop(fifo_t fifo)
  * @brief Pop a value from the fifo
  * @param fifo The fifo.
- * @return The value.
+ * @return The value (free required).
  */
 void* fifo_pop(fifo_t fifo) {
   void * value = NULL;
   if(!fifo || !fifo->first) return NULL;
   value = fifo->first->value;
+  if(fifo->alloc)
+    fifo->first->value = NULL;
   if (fifo->first->next) {
     fifo->first = fifo->first->next;
     free(fifo->first->previous);

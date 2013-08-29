@@ -24,26 +24,31 @@
 
   #define __FIFO_H__
 
+  #include <stdint.h>
+
+
   struct fifo_element_s{
-    void* value;
-    struct fifo_element_s *previous;
-    struct fifo_element_s *next;
+      void* value;
+      struct fifo_element_s *previous;
+      struct fifo_element_s *next;
   };
 
   struct fifo_list_s{
-    struct fifo_element_s *first;
-    struct fifo_element_s *last;
+      struct fifo_element_s *first;
+      struct fifo_element_s *last;
+      _Bool alloc;
   };
   typedef struct fifo_list_s *fifo_t;
 
   typedef void (*fifo_foreach_fct_t)(void* value, void* user);
 
   /**
-   * @fn fifo_t fifo_new()
+   * @fn fifo_t fifo_new(_Bool alloc)
    * @brief Alloc new fifo.
+   * @param alloc Alloc the vaue.
    * @return The fifo else NULL on error.
    */
-  fifo_t fifo_new();
+  fifo_t fifo_new(_Bool alloc);
 
   /**
    * @fn void fifo_delete(fifo_t fifo)
@@ -76,18 +81,19 @@
   unsigned long fifo_size(fifo_t fifo);
 
   /**
-   * @fn void fifo_push(fifo_t fifo, void* value)
+   * @fn void fifo_push(fifo_t fifo, void* value, uint32_t length)
    * @brief Push a new value in the fifo.
    * @param fifo The fifo.
    * @param value The value.
+   * @param length The value length
    */
-  void fifo_push(fifo_t fifo, void* value);
+  void fifo_push(fifo_t fifo, void* value, uint32_t length);
 
   /**
    * @fn void* fifo_pop(fifo_t fifo)
    * @brief Pop a value from the fifo
    * @param fifo The fifo.
-   * @return The value.
+   * @return The value  (free required).
    */
   void* fifo_pop(fifo_t fifo);
 
