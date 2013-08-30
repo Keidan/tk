@@ -301,3 +301,26 @@ int file_mkdirs(char *path) {
   }
   return 0;
 }
+
+
+/**
+ * @fn void file_basename(file_name_t path, file_name_t res)
+ * @brief Get the base file name of a path (see man 3 basename).
+ * @param path The path.
+ * @param res The base file name.
+ */
+void file_basename(file_name_t path, file_name_t res){
+  strcpy(res, path);
+  strcpy(res, basename(res));
+}
+
+/**
+ * @fn void file_dirname(file_name_t path, file_name_t res)
+ * @brief Get the diname of a path (see man 3 dirname).
+ * @param path The path.
+ * @param res The dir name.
+ */
+void file_dirname(file_name_t path, file_name_t res){
+  strcpy(res, path);
+  strcpy(res, dirname(res));
+}
