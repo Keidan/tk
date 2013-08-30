@@ -162,7 +162,6 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
   
   while(!fifo_empty(files)) {
      const char* filenameinzip = fifo_pop(files);
-     logger(LOG_DEBUG, "Trying to add file '%s'\n", filenameinzip);
      FILE * fin;
      int size_read;
      const char *savefilenameinzip;
@@ -170,6 +169,12 @@ int z_compress(z_t zip, const z_file_t zname, const char* password, z_clevel_et 
      unsigned long crc_file = 0;
      int zip64 = 0;
      memset(&zi, 0, sizeof(zip_fileinfo));
+     if(file_is_dir(filenameinzip)) {
+       ((char*)filenameinzip)[strlen(filenameinzip)] = z->dir_delimiter;
+       strncat((char*)filenameinzip, ".empty", sizeof(file_name_t));
+       file_touch(filenameinzip);
+     }
+     logger(LOG_DEBUG, "Trying to add file '%s'\n", filenameinzip);
      file_time(filenameinzip, (struct tm*)&zi.tmz_date);
 
      if(password != NULL && strlen(password))
