@@ -115,6 +115,19 @@ _Bool file_exists(const char* filename) {
 }
 
 /**
+ * @fn int file_touch(const char* filename)
+ * @brief touch file.
+ * @param filename The file name.
+ * @return -1 on error else 0
+ */
+int file_touch(const char* filename) {
+  FILE* f = fopen(filename, "w+");
+  if(!f) return -1;
+  fclose(f);
+  return 0;
+}
+
+/**
  * @fn int file_time(const char* fname, struct tm* t)
  * @brief Getting the file time.
  * @param fname name of file to get info on
@@ -168,6 +181,20 @@ _Bool file_is_large_file(const char* filename) {
 }
 
 /**
+ * @fn _Bool file_is_dir(const char *dir)
+ * @brief Test if current path is a directory.
+ * @param dir The directory name.
+ * @return 1 if is a directory else 0.
+ */
+_Bool file_is_dir(const char *dir) {
+  DIR *d;
+  d = opendir(dir);
+  if(!d) return 0;
+  closedir(d);
+  return 1;
+}
+
+/**
  * @fn int file_list_dir(const char* directory, fifo_t files)
  * @brief List all files into a directory.
  * @param directory The root dir.
@@ -180,6 +207,7 @@ int file_list_dir(const char* directory, fifo_t files) {
   file_name_t full, current;
   strncpy(full, directory, sizeof(file_name_t));
   int ll, l = strlen(full);
+  uint32_t c1, c2;
   if(full[l - 1] != '/') {
     strncat(full, "/", sizeof(file_name_t));
     l++;
@@ -191,8 +219,18 @@ int file_list_dir(const char* directory, fifo_t files) {
 	 !strcmp(dir->d_name, "..")) {
 	continue;
       } else if(dir->d_type == DT_DIR) {
+	ll = strlen(full);
+	c1 = fifo_size(files);
 	strncat(full, dir->d_name, sizeof(file_name_t));
+	ll = strlen(full);
 	file_list_dir(full, files);
+	c2 = fifo_size(files);
+	if(c1 == c2) {
+	  bzero(current, sizeof(file_name_t));
+	  strcpy(current, full);
+	  fifo_push(files, current, sizeof(file_name_t));
+	}
+	memset(full + l, 0, abs(l - ll));
 	continue;
       }
       strncat(full, dir->d_name, sizeof(file_name_t));

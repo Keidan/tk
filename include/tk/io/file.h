@@ -50,6 +50,23 @@
    */
   _Bool file_exists(const char* filename);
 
+
+  /**
+   * @fn _Bool file_is_dir(const char *dir)
+   * @brief Test if current path is a directory.
+   * @param dir The directory name.
+   * @return 1 if is a directory else 0.
+   */
+  _Bool file_is_dir(const char *dir);
+
+  /**
+   * @fn int file_touch(const char* filename)
+   * @brief touch file.
+   * @param filename The file name.
+   * @return -1 on error else 0
+   */
+  int file_touch(const char* filename);
+
   /**
    * @fn long file_fsize(FILE* file)
    * @brief Getting the file size.
