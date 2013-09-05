@@ -126,6 +126,21 @@ int string_parse_int(char* str, int def) {
 }
 
 /**
+ * @fn long long int string_parse_long(char* str, long long int def)
+ * @brief Convert a string int to int value.
+ * @param str Src string.
+ * @param def the default value on error
+ * @return the int value.
+ */
+long long int string_parse_long(char* str, long long int def) {
+  int n = strtoll(str, NULL, 10);
+  if((errno == ERANGE) || (errno == EINVAL)) {
+    return def;
+  }
+  return n;
+}
+
+/**
  * @fn _Bool string_match(const char* str, const char* regex)
  * @brief Test if the regex match with the input string.
  * @param str The string to test.
@@ -175,4 +190,28 @@ const char* string_convert(unsigned long num, int base) {
     num /= base;
   } while(num != 0);
   return (const char*)ptr;
+}
+
+/**
+ * @fn const char* const string_hex2bin(const char* numstr)
+ * @brief Convert and hexa string in binary value.
+ * @param hexstr The hex string.
+ * @return The binary representation.
+ */
+const char* const string_hex2bin(const char* hexstr) {
+  static char str[132];
+  static char hex[] = "0123456789ABCDEF";
+  static char *quad [] = { "0000", "0001", "0010", "0011", "0100", "0101",
+                           "0110", "0111", "1000", "1001", "1010", "1011",
+                           "1100", "1101", "1110", "1111" };
+  if(hexstr[0] == '0' && hexstr[1] == 'x')
+    hexstr+=2;
+  bzero(str, 132);
+  int i = 0;
+  while(*hexstr) {
+    strcpy(str+i, quad[strchr(hex, *hexstr)-hex]);
+    i+=4;
+    hexstr++;
+  }
+  return str;
 }

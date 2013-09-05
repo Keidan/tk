@@ -91,6 +91,15 @@
   int string_parse_int(char* str, int def);
 
   /**
+   * @fn long long int string_parse_long(char* str, long long int def)
+   * @brief Convert a string int to int value.
+   * @param str Src string.
+   * @param def the default value on error
+   * @return the int value.
+   */
+  long long int string_parse_long(char* str, long long int def);
+
+  /**
    * @fn _Bool string_match(const char* str, const char* regex)
    * @brief Test if the regex match with the input string.
    * @param str The string to test.
@@ -107,5 +116,13 @@
    * @return The string.
    */
   const char* string_convert(unsigned long num, int base);
+
+  /**
+   * @fn const char* const string_hex2bin(const char* numstr)
+   * @brief Convert and hexa string in binary value.
+   * @param hexstr The hex string.
+   * @return The binary representation.
+   */
+  const char* const string_hex2bin(const char* hexstr);
 
 #endif /* __STRING_H__ */
