@@ -20,9 +20,9 @@
 *
 *******************************************************************************
 */
-#include <tk/sys/z.h>
+#include <tk/utils/z.h>
 #include <tk/sys/log.h>
-#include <tk/text/string.h>
+#include <tk/utils/string.h>
 
 #define Z_MAGIC               0xC001214
 #define Z_VALID(z)            (z && z->magic == Z_MAGIC)

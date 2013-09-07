@@ -1,13 +1,13 @@
-#include <tk/sys/z.h>
+#include <tk/utils/z.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <tk/sys/log.h>
-#include <tk/sys/ssig.h>
+#include <tk/sys/syssig.h>
 #include <unistd.h>
 
 
 int main(int argc, char** argv) {
-  ssig_init(log_init_cast_user("test_z", LOG_PID|LOG_CONS|LOG_PERROR), NULL);
+  syssig_init(log_init_cast_user("test_z", LOG_PID|LOG_CONS|LOG_PERROR), NULL);
   z_t z = z_new();
   fifo_t files = fifo_new(1);
   file_list_dir("plop", files);

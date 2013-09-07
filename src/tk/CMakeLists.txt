@@ -1,20 +1,20 @@
 
 # add generic sources
 set(lib_src 
-  ${TK_SRC_DIR}/text/string.c 
-  ${TK_SRC_DIR}/text/stringtoken.c
-  ${TK_SRC_DIR}/text/stringbuffer.c 
-  ${TK_SRC_DIR}/collection/htable.c 
-  ${TK_SRC_DIR}/collection/llist.c 
-  ${TK_SRC_DIR}/collection/llist_iter.c 
-  ${TK_SRC_DIR}/collection/fifo.c
+  ${TK_SRC_DIR}/utils/string.c 
+  ${TK_SRC_DIR}/utils/stringtoken.c
+  ${TK_SRC_DIR}/utils/stringbuffer.c 
+  ${TK_SRC_DIR}/utils/htable.c 
+  ${TK_SRC_DIR}/utils/llist.c 
+  ${TK_SRC_DIR}/utils/llist_iter.c 
+  ${TK_SRC_DIR}/utils/fifo.c
   ${TK_SRC_DIR}/sys/log.c 
-  ${TK_SRC_DIR}/sys/ssig.c 
-  ${TK_SRC_DIR}/sys/stools.c 
+  ${TK_SRC_DIR}/sys/syssig.c 
+  ${TK_SRC_DIR}/sys/systools.c 
   ${TK_SRC_DIR}/sys/proc.c
   ${TK_SRC_DIR}/io/file.c
-  ${TK_SRC_DIR}/io/net/ntools.c
-  ${TK_SRC_DIR}/io/net/nprint.c
+  ${TK_SRC_DIR}/io/net/nettools.c
+  ${TK_SRC_DIR}/io/net/netprint.c
 )
 # generic link
 set(link m pthread)
@@ -37,7 +37,7 @@ endif(HAVE_NCURSES_H)
 if(HAVE_ZLIB_H)
   set(link ${link} zlib-minizip)
   set(lib_src ${lib_src} 
-    ${TK_SRC_DIR}/sys/z.c
+    ${TK_SRC_DIR}/utils/z.c
   )
 endif(HAVE_ZLIB_H)
 

@@ -1,6 +1,6 @@
-/**
+ /**
  *******************************************************************************
- * @file nprint.h
+ * @file netprint.h
  * @author Keidan
  * @date 19/05/2013
  * @par Project
@@ -21,56 +21,56 @@
  *******************************************************************************
  */
 
-#ifndef __NPRINT_H__
-  #define __NPRINT_H__
+#ifndef __NETPRINT_H__
+  #define __NETPRINT_H__
 
-  #include <tk/io/net/ntools.h>
+  #include <tk/io/net/nettools.h>
   #include <limits.h>
 
-  #define NPRINT_SET_NSET(cond) (cond ? "Set" : "Not Set")
+  #define NETPRINT_SET_NSET(cond) (cond ? "Set" : "Not Set")
 
   /**
-   * @fn void nprint_print_headers(const net_buffer_t buffer, __u32 length, struct ntools_headers_s  net)
+   * @fn void netprint_print_headers(const net_buffer_t buffer, __u32 length, struct nettools_headers_s  net)
    * @brief Print all headers.
    * @param buffer Buffer datas.
    * @param length Buffer length.
    * @param net Headers.
    */
-  void nprint_print_headers(const net_buffer_t buffer, __u32 length, struct ntools_headers_s net);
+  void netprint_print_headers(const net_buffer_t buffer, __u32 length, struct nettools_headers_s net);
 
   /**
-   * @fn void nprint_print_eth(struct ethhdr *eth)
+   * @fn void netprint_print_eth(struct ethhdr *eth)
    * @brief Print the ethernet header.
    * @param eth Ethernet header.
    */
-  void nprint_print_eth(struct ethhdr *eth);
+  void netprint_print_eth(struct ethhdr *eth);
 
   /**
-   * @fn void nprint_print_arp(struct arphdrs *arpp)
+   * @fn void netprint_print_arp(struct arphdrs *arpp)
    * @brief Print the ARP header.
    * @param arpp ARP header
    */
-  void nprint_print_arp(struct arphdrs *arpp);
+  void netprint_print_arp(struct arphdrs *arpp);
 
   /**
-   * @fn void nprint_print_ip(struct iphdr* ipv4)
+   * @fn void netprint_print_ip(struct iphdr* ipv4)
    * @brief Print the IP v4 header.
    * @param ipv4 IPv4 header.
    */
-  void nprint_print_ip(struct iphdr* ipv4);
+  void netprint_print_ip(struct iphdr* ipv4);
 
   /**
-   * @fn void nprint_print_upd(struct udphdr *udp)
+   * @fn void netprint_print_upd(struct udphdr *udp)
    * @brief Print the UDP header.
    * @param udp UDP header
    */
-  void nprint_print_upd(struct udphdr *udp);
+  void netprint_print_upd(struct udphdr *udp);
 
   /**
-   * @fn void nprint_print_tcp(struct tcphdr *tcp)
+   * @fn void netprint_print_tcp(struct tcphdr *tcp)
    * @brief Print the TCP header
    * @param tcp TCP header.
    */
-  void nprint_print_tcp(struct tcphdr *tcp);
+  void netprint_print_tcp(struct tcphdr *tcp);
 
-#endif /* __NPRINT_H__ */
+#endif /* __NETPRINT_H__ */

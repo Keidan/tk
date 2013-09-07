@@ -38,7 +38,7 @@
 
   #include <time.h>
   #include <stdio.h>
-  #include <tk/collection/fifo.h>
+  #include <tk/utils/fifo.h>
 
   typedef char file_name_t [FILENAME_MAX];
 

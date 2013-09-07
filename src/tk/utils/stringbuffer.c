@@ -20,13 +20,13 @@
  *
  *******************************************************************************
  */
-#include <tk/text/stringbuffer.h>
+#include <tk/utils/stringbuffer.h>
 #include <tk/sys/log.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <tk/text/string.h>
+#include <tk/utils/string.h>
 
 #define SMAGIC 0x8001
 #define EMAGIC 0x1337

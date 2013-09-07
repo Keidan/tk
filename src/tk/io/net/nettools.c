@@ -1,6 +1,6 @@
 /**
 *******************************************************************************
-* @file ntools.c
+* @file nettools.c
 * @author Keidan
 * @date 03/01/2013
 * @par Project
@@ -35,13 +35,13 @@
 #include <time.h>
 #include <math.h>
 #include <regex.h>
-#include <tk/io/net/ntools.h>
-#include <tk/text/string.h>
+#include <tk/io/net/nettools.h>
+#include <tk/utils/string.h>
 #include <tk/sys/log.h>
 
 
 /**
- * @fn int ntools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE])
+ * @fn int nettools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE])
  * @brief List all network interfaces, configures and adds into the list (CAUTION: after the call of this function a socket is opened).
  * @param ifaces Interfaces list.
  * @param maxfd Used by select function.
@@ -49,7 +49,7 @@
  * @param iname The interface name.
  * @return -1 on error else 0.
  */
-int ntools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE]) {
+int nettools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE]) {
   int i;
   struct ifreq ifr;
   struct sockaddr_ll sll;
@@ -87,7 +87,7 @@ int ntools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, cons
     }
 
     /* Continue if the iface is not up */
-    if(!ntools_device_is_up(fd, name)) {
+    if(!nettools_device_is_up(fd, name)) {
       close(fd);
       continue;
     }
@@ -123,7 +123,7 @@ int ntools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, cons
     }
 
     /* add the iface */
-    ntools_add_iface(ifaces, name, ifr.ifr_ifindex, fd, family);
+    nettools_add_iface(ifaces, name, ifr.ifr_ifindex, fd, family);
   }
 
   /* Release the pointer */
@@ -132,7 +132,7 @@ int ntools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, cons
 }
 
 /**
- * @fn void ntools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family)
+ * @fn void nettools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family)
  * @brief Add an interface into the list.
  * @param list Interfaces list.
  * @param name Interface name.
@@ -140,7 +140,7 @@ int ntools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, cons
  * @param fd Socket FD.
  * @param family Interface family.
  */
-void ntools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family) {
+void nettools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family) {
   struct iface_s* node;
   node = (struct iface_s*)malloc(sizeof(struct iface_s));
   if(!node) {
@@ -156,11 +156,11 @@ void ntools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, i
 }
 
 /**
- * @fn void ntools_clear_ifaces(struct iface_s* ifaces)
+ * @fn void nettools_clear_ifaces(struct iface_s* ifaces)
  * @brief Clear the interfaces list.
  * @param ifaces List to clear.
  */
-void ntools_clear_ifaces(struct iface_s* ifaces) {
+void nettools_clear_ifaces(struct iface_s* ifaces) {
   struct iface_s* iter;
   while(!list_empty(&ifaces->list) ) {
     iter = list_entry(ifaces->list.next, struct iface_s, list);
@@ -171,13 +171,13 @@ void ntools_clear_ifaces(struct iface_s* ifaces) {
 }
 
 /**
- * @fn _Bool ntools_device_is_up(int fd, char name[IF_NAMESIZE])
+ * @fn _Bool nettools_device_is_up(int fd, char name[IF_NAMESIZE])
  * @brief Test if the current device is up.
  * @param fd Device FD.
  * @param name Device name.
  * @return 1 if up else 0..
  */
-_Bool ntools_device_is_up(int fd, char name[IF_NAMESIZE]) {
+_Bool nettools_device_is_up(int fd, char name[IF_NAMESIZE]) {
   struct ifreq ifr;
   memset(&ifr, 0, sizeof(ifr));
   strncpy((char *)ifr.ifr_name, name, IF_NAMESIZE);
@@ -190,12 +190,12 @@ _Bool ntools_device_is_up(int fd, char name[IF_NAMESIZE]) {
 }
 
 /**
- * @fn __u32 ntools_datas_available(int fd)
+ * @fn __u32 nettools_datas_available(int fd)
  * @brief Get the number of available datas to be read.
  * @param fd Socket FD.
  * @return Available datas.
  */
-__u32 ntools_datas_available(int fd) {
+__u32 nettools_datas_available(int fd) {
   __u32 available = 0;
   int ret = ioctl(fd, FIONREAD, &available);
   if (ret == -1) {
@@ -206,12 +206,12 @@ __u32 ntools_datas_available(int fd) {
 }
 
 /**
- * @fn int ntools_is_ipv4(const char* ip)
+ * @fn int nettools_is_ipv4(const char* ip)
  * @brief Test if the input string is an ipv4.
  * @param ip IP address.
  * @return -1 on error, 0 not match, 1 match.
  */
-int ntools_is_ipv4(const char* ip) {    
+int nettools_is_ipv4(const char* ip) {    
   struct in_addr i_addr;
   int ret = 0;
   ret = inet_pton(AF_INET, ip, &i_addr);
@@ -221,13 +221,13 @@ int ntools_is_ipv4(const char* ip) {
 }
  
 /**
- * @fn int ntools_hostname_to_ip(const char *hostname, char* ip)
+ * @fn int nettools_hostname_to_ip(const char *hostname, char* ip)
  * @brief Convert a hostname to an ip.
  * @param hostname Name of the host.
  * @param ip IP address.
  * @return -1 on error else 0.
  */
-int ntools_hostname_to_ip(const char *hostname, char* ip) {
+int nettools_hostname_to_ip(const char *hostname, char* ip) {
   struct hostent *he;
   struct in_addr **addr_list;
   int i;
@@ -244,14 +244,14 @@ int ntools_hostname_to_ip(const char *hostname, char* ip) {
 }
 
 /**
- * @fn void ntools_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw)
+ * @fn void nettools_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw)
  * @brief Print the packet in hexa (wireshark like).
  * @param std Output stream.
  * @param buffer Packet.
  * @param len Packet length.
  * @param print_raw Display in raw mode.
  */
-void ntools_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw) {
+void nettools_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw) {
   int i = 0, max = PRINT_HEX_MAX_PER_LINES, loop = len;
   __u8 *p = buffer;
   char line [max + 3]; /* spaces + \0 */
@@ -291,24 +291,24 @@ void ntools_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw) 
 }
 
 /**
- * @fn const char* ntools_long_to_ip(unsigned int v)
+ * @fn const char* nettools_long_to_ip(unsigned int v)
  * @brief Convert a long value to an IP address.
  * @param v Long value.
  * @return IP addr.
  */
-const char* ntools_long_to_ip(unsigned int v)  {
+const char* nettools_long_to_ip(unsigned int v)  {
   struct in_addr x;
   x.s_addr = htonl(v);
   return inet_ntoa(x);
 }
 
 /**
- * @fn unsigned int ntools_ip_to_long(const char* s)
+ * @fn unsigned int nettools_ip_to_long(const char* s)
  * @brief Convert an IP address to a long value.
  * @param s IP address
  * @return Long value.
  */
-unsigned int ntools_ip_to_long(const char* s) {
+unsigned int nettools_ip_to_long(const char* s) {
   struct sockaddr_in n;
   inet_aton(s,&n.sin_addr);
   return ntohl(n.sin_addr.s_addr);
@@ -316,30 +316,30 @@ unsigned int ntools_ip_to_long(const char* s) {
 
 
 /**
- * @fn pcap_hdr_t ntools_pcap_global_hdr(void)
+ * @fn pcap_hdr_t nettools_pcap_global_hdr(void)
  * @brief Build the main header of the pcap file.
  * @param link Data link type.
  * @return pcap_hdr_t
  */
-pcap_hdr_t ntools_pcap_global_hdr(__u32 link) {
+pcap_hdr_t nettools_pcap_global_hdr(__u32 link) {
   pcap_hdr_t hdr;
   memset(&hdr, 0, sizeof(pcap_hdr_t));
-  hdr.magic_number = NTOOLS_PCAP_MAGIC_NATIVE;
-  hdr.version_major = NTOOLS_PCAP_VERSION_MAJOR;
-  hdr.version_minor = NTOOLS_PCAP_VERSION_MINOR;  
+  hdr.magic_number = NETTOOLS_PCAP_MAGIC_NATIVE;
+  hdr.version_major = NETTOOLS_PCAP_VERSION_MAJOR;
+  hdr.version_minor = NETTOOLS_PCAP_VERSION_MINOR;  
   tzset(); /* reload the timezone field */
   hdr.thiszone = timezone;
   hdr.sigfigs = 0;
-  hdr.snaplen = NTOOLS_PCAP_SNAPLEN;
+  hdr.snaplen = NETTOOLS_PCAP_SNAPLEN;
   hdr.network = link;
   return hdr;
 }
 /**
- * @fn pcap_hdr_t ntools_pcap_packet_hdr(__u32 incl_len, __u32 ori_len)
+ * @fn pcap_hdr_t nettools_pcap_packet_hdr(__u32 incl_len, __u32 ori_len)
  * @brief Build the packet header of the pcap file.
  * @return pcaprec_hdr_t.
  */
-pcaprec_hdr_t ntools_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
+pcaprec_hdr_t nettools_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
   pcaprec_hdr_t hdr;
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -351,7 +351,7 @@ pcaprec_hdr_t ntools_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
 }
 
 /**
- * @fn void ntools_write_pcap_packet(const FILE* output, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first)
+ * @fn void nettools_write_pcap_packet(const FILE* output, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first)
  * @brief Writes all pcap headers and the packet buffer into the specified file.
  * Source: http://wiki.wireshark.org/Development/LibpcapFileFormat
  * Packet structure:
@@ -365,20 +365,20 @@ pcaprec_hdr_t ntools_pcap_packet_hdr(__u32 incl_len, __u32 ori_len) {
  * @param r_length Size after the call of the recvfrom function.
  * @param first Memorize if we need to write the first packet header.
  */
-void ntools_write_pcap_packet(FILE* output, __u32 link, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first) {
+void nettools_write_pcap_packet(FILE* output, __u32 link, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first) {
   if(*first) {
-    pcap_hdr_t ghdr = ntools_pcap_global_hdr(link);
+    pcap_hdr_t ghdr = nettools_pcap_global_hdr(link);
     fwrite(&ghdr, 1, sizeof(pcap_hdr_t), output);
     *first = 0;
   }
-  pcaprec_hdr_t phdr = ntools_pcap_packet_hdr(r_length, a_length);
+  pcaprec_hdr_t phdr = nettools_pcap_packet_hdr(r_length, a_length);
   fwrite(&phdr, 1, sizeof(pcaprec_hdr_t), output);
   fwrite(buffer, 1, r_length, output);
   fflush(output);
 }
 
 /**
- * @fn int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_headers_s *net, bns_packet_convert_et convert)
+ * @fn int nettools_decode_buffer(const net_buffer_t buffer, __u32 length, struct nettools_headers_s *net, bns_packet_convert_et convert)
  * @brief Decode the packets in terms of the input buffer.
  * @param buffer The buffer datas.
  * @param length The buffer length.
@@ -386,9 +386,9 @@ void ntools_write_pcap_packet(FILE* output, __u32 link, const net_buffer_t buffe
  * @param convert Convert required fields.
  * @return -1 on error else the payload length (can be equals to 0).
  */
-int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_headers_s *net, ntools_convert_et convert) {
+int nettools_decode_buffer(const net_buffer_t buffer, __u32 length, struct nettools_headers_s *net, nettools_convert_et convert) {
   __u32 offset = sizeof(struct ethhdr);
-  memset(net, 0, sizeof(struct ntools_headers_s));
+  memset(net, 0, sizeof(struct nettools_headers_s));
   struct ethhdr *eth = (struct ethhdr *)buffer;
   net->eth = (struct ethhdr *)malloc(sizeof(struct ethhdr));
   if(!net->eth) {
@@ -396,9 +396,9 @@ int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_
     return -1;
   }
   memcpy(net->eth, eth, sizeof(struct ethhdr));
-  if(convert == NTOOLS_CONVERT_NET2HOST)
+  if(convert == NETTOOLS_CONVERT_NET2HOST)
     net->eth->h_proto = ntohs(net->eth->h_proto);
-  else if(convert == NTOOLS_CONVERT_HOST2NET)
+  else if(convert == NETTOOLS_CONVERT_HOST2NET)
     net->eth->h_proto = htons(net->eth->h_proto);
   if(net->eth->h_proto == ETH_P_IP || net->eth->h_proto == ETH_P_IPV6) {
     struct iphdr *ip4 = (struct iphdr*)(buffer + offset);
@@ -407,18 +407,18 @@ int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_
     if(ip4->version == 4) {
       net->ipv4 = (struct iphdr *)malloc(sizeof(struct iphdr));
       if(!net->ipv4) {
-	ntools_release_buffer(net);
+	nettools_release_buffer(net);
 	logger(LOG_ERR, "Unable to alloc memory for ipv4 header!\n");
 	return -1;
       }
       memcpy(net->ipv4, ip4, sizeof(struct iphdr));
       offset += sizeof(struct iphdr);
-      if(convert == NTOOLS_CONVERT_NET2HOST) {
+      if(convert == NETTOOLS_CONVERT_NET2HOST) {
         net->ipv4->tot_len = ntohs(ip4->tot_len);
         net->ipv4->tos = ntohs(ip4->tos); /* pas certains */
         //net->ipv4->ihl = /*ntohl(*/ip4->ihl/*)*/;
         net->ipv4->frag_off = ntohs(ip4->frag_off);
-      } else if(convert == NTOOLS_CONVERT_HOST2NET) {
+      } else if(convert == NETTOOLS_CONVERT_HOST2NET) {
         net->ipv4->tot_len = htons(ip4->tot_len);
         net->ipv4->tos = htons(ip4->tos); /* pas certains */
         //net->ipv4->ihl = /*htonl(*/ip4->ihl/*)*/;
@@ -431,19 +431,19 @@ int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_
       struct tcphdr *tcp = &utcp->hdr;     
       net->tcp = (struct tcphdr *)malloc(sizeof(struct tcphdr));
       if(!net->tcp) {
-	ntools_release_buffer(net);
+	nettools_release_buffer(net);
 	logger(LOG_ERR, "Unable to alloc memory for tcp header!\n");
 	return -1;
       }
       memcpy(net->tcp, tcp, sizeof(struct tcphdr));
       offset += sizeof(union tcp_word_hdr);
-      if(convert == NTOOLS_CONVERT_NET2HOST) {
+      if(convert == NETTOOLS_CONVERT_NET2HOST) {
         net->tcp->source = ntohs(net->tcp->source);
         net->tcp->dest = ntohs(net->tcp->dest);
         net->tcp->seq = ntohs(net->tcp->seq);
         net->tcp->ack_seq = ntohs(net->tcp->ack_seq);
         net->tcp->check = ntohs(net->tcp->check);
-      } else if(convert == NTOOLS_CONVERT_HOST2NET) {
+      } else if(convert == NETTOOLS_CONVERT_HOST2NET) {
         net->tcp->source = htons(net->tcp->source);
         net->tcp->dest = htons(net->tcp->dest);
         net->tcp->seq = htons(net->tcp->seq);
@@ -458,18 +458,18 @@ int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_
       struct udphdr *udp = (struct udphdr*)(buffer + offset);
       net->udp = (struct udphdr *)malloc(sizeof(struct udphdr));
       if(!net->udp) {
-	ntools_release_buffer(net);
+	nettools_release_buffer(net);
 	logger(LOG_ERR, "Unable to alloc memory for udp header!\n");
 	return -1;
       }
       memcpy(net->udp, udp, sizeof(struct udphdr));
       offset += sizeof(struct udphdr);
-      if(convert == NTOOLS_CONVERT_NET2HOST) {
+      if(convert == NETTOOLS_CONVERT_NET2HOST) {
         net->udp->source = ntohs(net->udp->source);
         net->udp->dest = ntohs(net->udp->dest);
         net->udp->check = ntohs(net->udp->check);
         net->udp->len = ntohs(net->udp->len);
-      } else if(convert == NTOOLS_CONVERT_HOST2NET) {
+      } else if(convert == NETTOOLS_CONVERT_HOST2NET) {
         net->udp->source = htons(net->udp->source);
         net->udp->dest = htons(net->udp->dest);
         net->udp->check = htons(net->udp->check);
@@ -484,23 +484,23 @@ int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_
     struct arphdr *arp = (struct arphdr*)(buffer + offset);
     net->arp = (struct arphdrs *)malloc(sizeof(struct arphdrs));
     if(!net->arp) {
-      ntools_release_buffer(net);
+      nettools_release_buffer(net);
       logger(LOG_ERR, "Unable to alloc memory for arp header!\n");
       return -1;
     }
     memset(net->arp, 0, sizeof(struct arphdrs));
     net->arp->arp1 = (struct arphdr *)malloc(sizeof(struct arphdr));
     if(!net->arp->arp1) {
-      ntools_release_buffer(net);
+      nettools_release_buffer(net);
       logger(LOG_ERR, "Unable to alloc memory for arp1 header!\n");
       return -1;
     }
     memcpy(net->arp->arp1, arp, sizeof(struct arphdr));
     offset += sizeof(struct arphdr);  
-    if(convert == NTOOLS_CONVERT_NET2HOST) {
+    if(convert == NETTOOLS_CONVERT_NET2HOST) {
       net->arp->arp1->ar_op = ntohs(net->arp->arp1->ar_op);
       net->arp->arp1->ar_hrd = ntohs(net->arp->arp1->ar_hrd);
-    } else if(convert == NTOOLS_CONVERT_HOST2NET) {
+    } else if(convert == NETTOOLS_CONVERT_HOST2NET) {
       net->arp->arp1->ar_op = htons(net->arp->arp1->ar_op);
       net->arp->arp1->ar_hrd = htons(net->arp->arp1->ar_hrd);
     }  
@@ -509,7 +509,7 @@ int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_
       struct arphdr2 *p2 = (struct arphdr2*)(buffer + offset);
       net->arp->arp2 = (struct arphdr2 *)malloc(sizeof(struct arphdr2));   
       if(!net->arp->arp2) {
-	ntools_release_buffer(net);
+	nettools_release_buffer(net);
 	logger(LOG_ERR, "Unable to alloc memory for arp2 header!\n");
 	return -1;
       }
@@ -525,11 +525,11 @@ int ntools_decode_buffer(const net_buffer_t buffer, __u32 length, struct ntools_
 }
 
 /**
- * @fn void ntools_release_buffer(struct ntools_headers_s *net)
+ * @fn void nettools_release_buffer(struct nettools_headers_s *net)
  * @brief Release the resources allocated by the decoder function.
  * @param net The headers pointer.
  */
-void ntools_release_buffer(struct ntools_headers_s *net) {
+void nettools_release_buffer(struct nettools_headers_s *net) {
   if(net->eth) free(net->eth), net->eth = NULL;
   if(net->arp) {
     if(net->arp->arp1) free(net->arp->arp1), net->arp->arp1 = NULL;
@@ -542,51 +542,51 @@ void ntools_release_buffer(struct ntools_headers_s *net) {
 }
 
 /**
- * @fn _Bool ntools_valid_mac(smac_t mac)
+ * @fn _Bool nettools_valid_mac(smac_t mac)
  * @brief Test if the MAC is valid.
  * @param mac MAC address to test.
  * @return 1 if valid else 0.
  */
-_Bool ntools_valid_mac(smac_t mac) {
+_Bool nettools_valid_mac(smac_t mac) {
   const char *str_regex = "(([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2})|(([0-9A-Fa-f]{4}.){2}[0-9A-Fa-f]{4})";
   return string_match(mac, str_regex);
 }
 
 /**
- * @fn void ntools_mac2str(mac_t mac, smac_t m)
+ * @fn void nettools_mac2str(mac_t mac, smac_t m)
  * @brief Convert a MAC array into a string.
  * @param mac MAC to convert.
  * @param m MAC in string.
  */
-void ntools_mac2str(mac_t mac, smac_t m) {
+void nettools_mac2str(mac_t mac, smac_t m) {
   sprintf(m, "%02x:%02x:%02x:%02x:%02x:%02x", 
 	  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 /**
- * @fn void ntools_str2mac(smac_t mac, mac_t m)
+ * @fn void nettools_str2mac(smac_t mac, mac_t m)
  * @brief Convert a MAC string into a MAC array.
  * @param mac MAC to convert
  * @param m MAC in array.
  */
-void ntools_str2mac(smac_t mac, mac_t m) {
+void nettools_str2mac(smac_t mac, mac_t m) {
   sscanf(mac, "%x:%x:%x:%x:%x:%x", 
 	 (__u32*)&m[0], (__u32*)&m[1], (__u32*)&m[2], (__u32*)&m[3], (__u32*)&m[4], (__u32*)&m[5]);
 }
 
 
 /**
- * @fn _Bool ntools_match_from_simple_filter(struct ntools_header_s *net, struct ntools_filter_s filter)
+ * @fn _Bool nettools_match_from_simple_filter(struct nettools_header_s *net, struct nettools_filter_s filter)
  * @brief Check if the input rule match.
  * @param net Headers.
  * @param filter Filter to test.
  * @return 1 if the rule match.
  */
-_Bool ntools_match_from_simple_filter(struct ntools_headers_s *net, struct ntools_filter_s filter) {
+_Bool nettools_match_from_simple_filter(struct nettools_headers_s *net, struct nettools_filter_s filter) {
   _Bool ip_found = 0, port_found = 0, mac_found = 0;
-  if(ntools_valid_mac(filter.mac)) {
+  if(nettools_valid_mac(filter.mac)) {
     mac_t m;
-    ntools_str2mac(filter.mac, m);
+    nettools_str2mac(filter.mac, m);
     if(memcmp(net->eth->h_source, m, ETH_ALEN) == 0)
       mac_found = 1;
     else if(memcmp(net->eth->h_dest, m, ETH_ALEN) == 0)
@@ -601,9 +601,9 @@ _Bool ntools_match_from_simple_filter(struct ntools_headers_s *net, struct ntool
 	memset(src, 0, sizeof(src));
 	inet_ntop(AF_INET, &net->ipv4->saddr, src, INET_ADDRSTRLEN);
 	inet_ntop(AF_INET, &net->ipv4->daddr, dst, INET_ADDRSTRLEN);
-	if(filter.ip == ntools_ip_to_long(src))
+	if(filter.ip == nettools_ip_to_long(src))
 	  ip_found = 1;
-	else if(filter.ip == ntools_ip_to_long(dst))
+	else if(filter.ip == nettools_ip_to_long(dst))
 	  ip_found = 1;
 	if(!ip_found) return 0;
       } else ip_found = 1;
@@ -627,12 +627,12 @@ _Bool ntools_match_from_simple_filter(struct ntools_headers_s *net, struct ntool
 	bzero(ip, 17);
 	sprintf(ip, "%03d.%03d.%03d.%03d", net->arp->arp2->sip[0], net->arp->arp2->sip[1], net->arp->arp2->sip[2], net->arp->arp2->sip[3]);
 	
-	if(filter.ip == ntools_ip_to_long(ip))
+	if(filter.ip == nettools_ip_to_long(ip))
 	  port_found = ip_found = 1;
 	else {
 	  bzero(ip, 17);
 	  sprintf(ip, "%03d.%03d.%03d.%03d", net->arp->arp2->tip[0], net->arp->arp2->tip[1], net->arp->arp2->tip[2], net->arp->arp2->tip[3]);	
-	  if(filter.ip == ntools_ip_to_long(ip))
+	  if(filter.ip == nettools_ip_to_long(ip))
 	    port_found = ip_found = 1;
 	}
       } else port_found = ip_found = 1;

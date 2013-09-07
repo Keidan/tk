@@ -20,7 +20,7 @@
  *
  *******************************************************************************
  */
-#include <tk/collection/fifo.h>
+#include <tk/utils/fifo.h>
 #include <tk/sys/log.h>
 #include <stdlib.h>
 #include <string.h>

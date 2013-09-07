@@ -11,7 +11,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
-#include <tk/text/stringtoken.h>
+#include <tk/utils/stringtoken.h>
 
 #define SR_MAGIC     0x532141
 #define SCAST(sr)    ((struct sr_s*)sr)

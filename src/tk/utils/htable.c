@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
-#include <tk/collection/htable.h>
+#include <tk/utils/htable.h>
 
 
 #define DEFAULT_KNUM     65536

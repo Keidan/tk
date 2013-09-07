@@ -28,7 +28,7 @@
   #include <stdbool.h>
   #include <zlib-minizip/unzip.h>
   #include <zlib-minizip/zip.h>
-  #include <tk/collection/fifo.h>
+  #include <tk/utils/fifo.h>
   #include <string.h>
 
 

@@ -24,7 +24,7 @@
   #define __SR_H__
 
   #include <stdint.h>
-  #include <tk/text/string.h>
+  #include <tk/utils/string.h>
 
   #define SR_DEVICE_NAME_LENGTH      0x10
   #define SR_PRINTF_BUF_LEN          0xFF

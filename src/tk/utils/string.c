@@ -20,7 +20,7 @@
 *
 *******************************************************************************
 */
-#include <tk/text/string.h>
+#include <tk/utils/string.h>
 #include <tk/sys/log.h>
 #include <stdio.h>
 #include <stdlib.h>
