@@ -285,7 +285,7 @@ void nettools_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw
   /* align 'line'*/
   if(i != 0 && (i < max || i <= len) && !print_raw) {
     while(i++ <= max) fprintf(std, "   "); /* 3 spaces ex: "00 " */
-    fprintf(std, "  %s\n", line);
+    fprintf(std, "%s\n", line);
   }
   fprintf(std, "\n");
 }
