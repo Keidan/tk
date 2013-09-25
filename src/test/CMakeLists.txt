@@ -22,3 +22,11 @@ if(HAVE_ZLIB_H)
   add_executable(test_z ${bin_src})
   target_link_libraries(test_z tk)
 endif(HAVE_ZLIB_H)
+
+
+#iface case
+set(bin_src 
+  ${TEST_SRC_DIR}/test_iface.c 
+)
+add_executable(test_iface ${bin_src})
+target_link_libraries(test_iface tk)
