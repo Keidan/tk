@@ -25,6 +25,7 @@
 
   #include <net/if.h>
   #include <net/if_arp.h>
+  #include <net/ethernet.h>
   #include <tk/utils/htable.h>
 
   #define IFACE_IS_PROMISC(flags)           (flags & IFF_PROMISC)
@@ -64,6 +65,7 @@
   typedef char netiface_name_t[IF_NAMESIZE];
   typedef char netiface_ip4_t[15];
   typedef char netiface_mac_t[17];
+  typedef __u8 netiface_bmac_t[ETH_ALEN];
 
   typedef void* netiface_t;
 
@@ -119,6 +121,24 @@
   int netiface_bind(netiface_t iface);
 
   /**
+   * @fn int netiface_get_index(netiface_t iface, int *index)
+   * @brief Get the internal iface index.
+   * @param iface The iface.
+   * @param index The result index.
+   * @return 0 on success else -1.
+   */
+  int netiface_get_index(netiface_t iface, int *index);
+
+  /**
+   * @fn int netiface_get_fd(netiface_t iface, int *fd)
+   * @brief Get the internal iface fd.
+   * @param iface The iface.
+   * @param fd The result fd.
+   * @return 0 on success else -1.
+   */
+  int netiface_get_fd(netiface_t iface, int *fd);
+
+  /**
    * @fn int netiface_read(const netiface_t iface, netiface_info_t info)
    * @brief Read some informations from the iface.
    * @param iface The iface handle.
@@ -135,5 +155,22 @@
    * @return -1 on error or if the iface is not found else 0 on success.
    */
   int netiface_write(const netiface_t iface, const netiface_info_t info);
+
+
+  /**
+   * @fn _Bool netiface_device_is_up(const netiface_t iface)
+   * @brief Test if the current device is up.
+   * @param fd Device FD.
+   * @return 1 if up else 0..
+   */
+  _Bool netiface_device_is_up(const netiface_t iface);
+
+  /**
+   * @fn __u32 netiface_datas_available(int fd)
+   * @brief Get the number of available datas to be read.
+   * @param fd Socket FD.
+   * @return Available datas.
+   */
+  __u32 netiface_datas_available(const netiface_t iface);
 
 #endif  /* __NETIFACE_H__ */

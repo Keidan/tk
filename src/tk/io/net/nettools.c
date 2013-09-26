@@ -41,133 +41,29 @@
 
 
 /**
- * @fn int nettools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE])
+ * @fn int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const netiface_name_t iname)
  * @brief List all network interfaces, configures and adds into the list (CAUTION: after the call of this function a socket is opened).
- * @param ifaces Interfaces list.
+ * @param ifaces Interfaces list (the list key == fd).
  * @param maxfd Used by select function.
  * @param rset fd_set Used by select function.
  * @param iname The interface name.
  * @return -1 on error else 0.
  */
-int nettools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE]) {
-  int i;
-  struct ifreq ifr;
-  struct sockaddr_ll sll;
-  char *name;
-  int fd, family;
-
-  memset(&sll, 0, sizeof(sll));
-  memset(&ifr, 0, sizeof(ifr));
-
-  /* Liste toutes les cartes reseaux du PC */
-  struct if_nameindex *nameindex = if_nameindex();
-  if(nameindex == NULL){
-    logger(LOG_ERR, "if_nameindex: (%d) %s.\n", errno, strerror(errno));
-    return -1;
-  }
-
-  /* init the list */
-  INIT_LIST_HEAD(&(ifaces->list));
-
-  /* loop for each interfaces */
-  i = 0; /* init */
-  while(1){
-    if(!nameindex[i].if_name) break;
-    /* Get the iface name */
-    name = nameindex[i++].if_name;
-    if(iname[0] && strncmp(iname, name, IF_NAMESIZE) != 0) continue;
-
-    /* Create a socket*/
-    /* Socket raw */
-    fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-    if(fd < 0) {
-      if_freenameindex(nameindex);
-      logger(LOG_ERR, "socket failed: (%d) %s.\n", errno, strerror(errno));
-      return -1;
-    }
-
-    /* Continue if the iface is not up */
-    if(!nettools_device_is_up(fd, name)) {
-      close(fd);
-      continue;
-    }
-      
+int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const netiface_name_t iname) {
+  
+  char** keys;
+  int i, count, fd;
+  netiface_t iface;
+  *ifaces = netiface_list_new(NETIFACE_LVL_RAW, NETIFACE_KEY_FD);
+  count = htable_get_keys(*ifaces, &keys);
+  for(i = 0; i < count; i++) {
+    iface = htable_lookup(*ifaces, keys[i]);
+    if(netiface_get_fd(iface, &fd) == -1) return -1;
     if(fd > *maxfd) *maxfd = fd;
     FD_SET(fd, rset);
-
-    /* Get the iface index */
-    strncpy((char *)ifr.ifr_name, name, IF_NAMESIZE);
-    if((ioctl(fd, SIOCGIFINDEX, &ifr)) == -1) {
-      if_freenameindex(nameindex);
-      close(fd);
-      logger(LOG_ERR, "get index failed: (%d) %s.\n", errno, strerror(errno));
-      return -1;
-    }
-
-    sll.sll_family = PF_PACKET;
-    sll.sll_ifindex = ifr.ifr_ifindex;
-    sll.sll_protocol = htons(ETH_P_ALL); /* listen all packets */
-
-    /* Get the iface index */
-    if(ioctl(fd, SIOCGIFHWADDR, &ifr) == 0) {
-      family = ifr.ifr_hwaddr.sa_family;
-    } else
-      family = -1;
-
-    /* Bind*/
-    if((bind(fd, (struct sockaddr *)&sll, sizeof(sll))) == -1) {
-      if_freenameindex(nameindex);
-      close(fd);
-      logger(LOG_ERR, "bind failed: (%d) %s.\n", errno, strerror(errno));
-      return -1;
-    }
-
-    /* add the iface */
-    nettools_add_iface(ifaces, name, ifr.ifr_ifindex, fd, family);
+    if(netiface_bind(iface) == -1) return -1;
   }
-
-  /* Release the pointer */
-  if_freenameindex(nameindex);
   return 0;
-}
-
-/**
- * @fn void nettools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family)
- * @brief Add an interface into the list.
- * @param list Interfaces list.
- * @param name Interface name.
- * @param index Interface index.
- * @param fd Socket FD.
- * @param family Interface family.
- */
-void nettools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family) {
-  struct iface_s* node;
-  node = (struct iface_s*)malloc(sizeof(struct iface_s));
-  if(!node) {
-    logger(LOG_ERR, "if_nameindex: (%d) %s.\n", errno, strerror(errno));
-    return;
-  }
-  /* init + add */
-  strncpy(node->name, name, IF_NAMESIZE);
-  node->fd = fd;
-  node->index = index;
-  node->family = family;
-  list_add_tail(&(node->list), &(list->list));
-}
-
-/**
- * @fn void nettools_clear_ifaces(struct iface_s* ifaces)
- * @brief Clear the interfaces list.
- * @param ifaces List to clear.
- */
-void nettools_clear_ifaces(struct iface_s* ifaces) {
-  struct iface_s* iter;
-  while(!list_empty(&ifaces->list) ) {
-    iter = list_entry(ifaces->list.next, struct iface_s, list);
-    close(iter->fd); 
-    list_del(&iter->list);
-    free(iter);
-  }
 }
 
 /**
@@ -542,34 +438,34 @@ void nettools_release_buffer(struct nettools_headers_s *net) {
 }
 
 /**
- * @fn _Bool nettools_valid_mac(smac_t mac)
+ * @fn _Bool nettools_valid_mac(netiface_mac_t mac)
  * @brief Test if the MAC is valid.
  * @param mac MAC address to test.
  * @return 1 if valid else 0.
  */
-_Bool nettools_valid_mac(smac_t mac) {
+_Bool nettools_valid_mac(netiface_mac_t mac) {
   const char *str_regex = "(([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2})|(([0-9A-Fa-f]{4}.){2}[0-9A-Fa-f]{4})";
   return string_match(mac, str_regex);
 }
 
 /**
- * @fn void nettools_mac2str(mac_t mac, smac_t m)
+ * @fn void nettools_mac2str(netiface_bmac_t mac, netiface_mac_t m)
  * @brief Convert a MAC array into a string.
  * @param mac MAC to convert.
  * @param m MAC in string.
  */
-void nettools_mac2str(mac_t mac, smac_t m) {
+void nettools_mac2str(netiface_bmac_t mac, netiface_mac_t m) {
   sprintf(m, "%02x:%02x:%02x:%02x:%02x:%02x", 
 	  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 /**
- * @fn void nettools_str2mac(smac_t mac, mac_t m)
+ * @fn void nettools_str2mac(netiface_mac_t mac, netiface_bmac_t m)
  * @brief Convert a MAC string into a MAC array.
  * @param mac MAC to convert
  * @param m MAC in array.
  */
-void nettools_str2mac(smac_t mac, mac_t m) {
+void nettools_str2mac(netiface_mac_t mac, netiface_bmac_t m) {
   sscanf(mac, "%x:%x:%x:%x:%x:%x", 
 	 (__u32*)&m[0], (__u32*)&m[1], (__u32*)&m[2], (__u32*)&m[3], (__u32*)&m[4], (__u32*)&m[5]);
 }
@@ -585,7 +481,7 @@ void nettools_str2mac(smac_t mac, mac_t m) {
 _Bool nettools_match_from_simple_filter(struct nettools_headers_s *net, struct nettools_filter_s filter) {
   _Bool ip_found = 0, port_found = 0, mac_found = 0;
   if(nettools_valid_mac(filter.mac)) {
-    mac_t m;
+    netiface_bmac_t m;
     nettools_str2mac(filter.mac, m);
     if(memcmp(net->eth->h_source, m, ETH_ALEN) == 0)
       mac_found = 1;

@@ -23,6 +23,7 @@
 #ifndef __NETTOOLS_H__
   #define __NETTOOLS_H__
 
+  #include <tk/io/net/netiface.h>
   #include <asm/types.h>
   #include <net/if.h>
   #include <linux/if_ether.h>
@@ -32,21 +33,15 @@
   #include <net/if_arp.h>
   #include <arpa/inet.h>
   #include <sys/select.h>
-  #include <linux/list.h>
 
   /* nombre max de chars dans une ligne */
   #define PRINT_HEX_MAX_PER_LINES 16
 
-  #define NETTOOLS_SMAC_LEN 18
-
-  typedef char smac_t[NETTOOLS_SMAC_LEN];
-  typedef __u8 mac_t[ETH_ALEN];
-
   struct nettools_filter_s {
     __u32 ip;
     __u32 port;
-    char iface[IF_NAMESIZE];
-    smac_t mac;
+    netiface_name_t iface;
+    netiface_mac_t mac;
   };
 
 /* utilisee pour le decodage de la reponse/requete ARP */
@@ -68,14 +63,6 @@
       struct iphdr  *ipv4;
       struct udphdr *udp;
       struct tcphdr *tcp;
-  };
-
-  struct iface_s {
-    struct list_head list;              /**< Liste d'interfaces. */
-    char             name[IF_NAMESIZE]; /**< Nom de l'interface. */
-    int              index;             /**< Index de la carte. */
-    int              fd;                /**< FD du socket utilise pour les io's/bind/select. */
-    int              family;            /**< Famille de l'interface. */
   };
 
   /**
@@ -221,33 +208,15 @@
   void nettools_print_hex(FILE* std, net_buffer_t buffer, int len, _Bool print_raw);
 
   /**
-   * @fn int nettools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE])
+   * @fn int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const netiface_name_t iname)
    * @brief List all network interfaces, configures and adds into the list (CAUTION: after the call of this function a socket is opened).
-   * @param ifaces Interfaces list.
+   * @param ifaces Interfaces list (the list key == fd).
    * @param maxfd Used by select function.
    * @param rset fd_set Used by select function.
    * @param iname The interface name.
    * @return -1 on error else 0.
    */
-  int nettools_prepare_ifaces(struct iface_s *ifaces, int *maxfd, fd_set *rset, const char iname[IF_NAMESIZE]);
-
-  /**
-   * @fn void nettools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family)
-   * @brief Add an interface into the list.
-   * @param list Interfaces list.
-   * @param name Interface name.
-   * @param index Interface index.
-   * @param fd Socket FD.
-   * @param family Interface family.
-   */
-  void nettools_add_iface(struct iface_s* list, char name[IF_NAMESIZE], int index, int fd, int family);
-
-  /**
-   * @fn void nettools_clear_ifaces(struct iface_s* ifaces)
-   * @brief Clear the interfaces list.
-   * @param ifaces List to clear.
-   */
-  void nettools_clear_ifaces(struct iface_s* ifaces);
+  int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const netiface_name_t iname);
 
   /**
    * @fn const char* nettools_long_to_ip(unsigned int v)
@@ -298,27 +267,27 @@
   void nettools_write_pcap_packet(FILE* output, __u32 link, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first);
 
   /**
-   * @fn void nettools_mac2str(mac_t mac, smac_t m)
+   * @fn void nettools_mac2str(netiface_bmac_t mac, netiface_mac_t m)
    * @brief Convert a MAC array into a string.
    * @param mac MAC to convert.
    * @param m MAC in string.
    */
-  void nettools_mac2str(mac_t mac, smac_t m);
+  void nettools_mac2str(netiface_bmac_t mac, netiface_mac_t m);
 
   /**
-   * @fn void nettools_str2mac(smac_t mac, mac_t m)
+   * @fn void nettools_str2mac(netiface_mac_t mac, netiface_bmac_t m)
    * @brief Convert a MAC string into a MAC array.
    * @param mac MAC to convert
    * @param m MAC in array.
    */
-  void nettools_str2mac(smac_t mac, mac_t m);
+  void nettools_str2mac(netiface_mac_t mac, netiface_bmac_t m);
 
   /**
-   * @fn _Bool nettools_valid_mac(smac_t mac)
+   * @fn _Bool nettools_valid_mac(netiface_mac_t mac)
    * @brief Test if the MAC is valid.
    * @param mac MAC address to test.
    * @return 1 if valid else 0.
    */
-  _Bool nettools_valid_mac(smac_t mac);
+  _Bool nettools_valid_mac(netiface_mac_t mac);
 
 #endif /* __NETTOOLS_H__ */

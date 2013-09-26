@@ -137,6 +137,34 @@ void netiface_list_delete(htable_t table) {
   htable_delete(table);
 }
 
+/**
+ * @fn int netiface_get_index(netiface_t iface, int *index)
+ * @brief Get the internal iface index.
+ * @param iface The iface.
+ * @param index The result index.
+ * @return 0 on success else -1.
+ */
+int netiface_get_index(netiface_t iface, int *index) {
+  create_ptr(iff, iface);
+  if(!test_ptr(iff) || !index) return -1;
+  *index = iff->index;
+  return 0;
+}
+
+/**
+ * @fn int netiface_get_fd(netiface_t iface, int *fd)
+ * @brief Get the internal iface fd.
+ * @param iface The iface.
+ * @param fd The result fd.
+ * @return 0 on success else -1.
+ */
+int netiface_get_fd(netiface_t iface, int *fd) {
+  create_ptr(iff, iface);
+  if(!test_ptr(iff) || !fd) return -1;
+  *fd = iff->fd;
+  return 0;
+}
+
 
 /**
  * @fn int netiface_bind(netiface_t iface)
@@ -256,4 +284,43 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
   struct netiface_info_s local;
   if(netiface_read(iface, &local) == -1) return -1;
   return -1;
+}
+
+
+/**
+ * @fn _Bool netiface_device_is_up(const netiface_t iface)
+ * @brief Test if the current device is up.
+ * @param fd Device FD.
+ * @return 1 if up else 0..
+ */
+_Bool netiface_device_is_up(const netiface_t iface) {
+  struct ifreq ifr;
+  create_ptr(iff, iface);
+  if(!test_ptr(iff)) return -1;
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy((char *)ifr.ifr_name, iff->name, IF_NAMESIZE);
+  int ret = ioctl(iff->fd, SIOCGIFFLAGS, &ifr);
+  if (ret == -1) {
+    logger(LOG_ERR, "flags: (%d) %s.\n", errno, strerror(errno));
+    return ret;
+  }
+  return !!(ifr.ifr_flags & IFF_UP);
+}
+
+/**
+ * @fn __u32 netiface_datas_available(int fd)
+ * @brief Get the number of available datas to be read.
+ * @param fd Socket FD.
+ * @return Available datas.
+ */
+__u32 netiface_datas_available(const netiface_t iface) {
+  __u32 available = 0;
+  create_ptr(iff, iface);
+  if(!test_ptr(iff)) return 0;
+  int ret = ioctl(iff->fd, FIONREAD, &available);
+  if (ret == -1) {
+    logger(LOG_ERR, "available: (%d) %s.\n", errno, strerror(errno));
+    return 0;
+  }
+  return available;
 }
