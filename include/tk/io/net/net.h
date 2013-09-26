@@ -23,6 +23,7 @@
 #ifndef __NET_H__
   #define __NET_H__
 
+  #include <tk/io/net/netiface.h>
   #include <tk/io/net/nettools.h>
   #include <tk/io/net/netprint.h>
 
