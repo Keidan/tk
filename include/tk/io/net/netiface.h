@@ -27,6 +27,7 @@
   #include <net/if_arp.h>
   #include <net/ethernet.h>
   #include <tk/utils/htable.h>
+  #include <stdio.h>
 
   #define IFACE_IS_PROMISC(flags)           (flags & IFF_PROMISC)
   #define IFACE_IS_NOTRAILERS(flags)        (flags & IFF_NOTRAILERS)
@@ -69,6 +70,16 @@
 
   typedef void* netiface_t;
 
+  struct netiface_map_s {
+      unsigned char port;
+      unsigned char dma_channel;
+      unsigned char interrupt;
+      unsigned short int base_address;
+      unsigned long int memory_start;
+      unsigned long int memory_end;
+  };
+
+
   struct netiface_info_s {
       netiface_name_t name;
       netiface_ip4_t ip4;
@@ -79,6 +90,7 @@
       int metric;
       int mtu;
       int flags;
+      struct netiface_map_s map;
   };
   typedef struct netiface_info_s *netiface_info_t;
 
@@ -172,5 +184,14 @@
    * @return Available datas.
    */
   __u32 netiface_datas_available(const netiface_t iface);
+
+
+  /**
+   * @fn void netiface_print(FILE* out, struct netiface_info_s info)
+   * @brief Print iface informations.
+   * @param out The output stream.
+   * @param info Iface informations.
+   */
+  void netiface_print(FILE* out, struct netiface_info_s info);
 
 #endif  /* __NETIFACE_H__ */
