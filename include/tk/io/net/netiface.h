@@ -28,6 +28,7 @@
   #include <net/ethernet.h>
   #include <tk/utils/htable.h>
   #include <stdio.h>
+  #include <tk/io/net/netiface_status.h>
 
   #define IFACE_IS_PROMISC(flags)           (flags & IFF_PROMISC)
   #define IFACE_IS_NOTRAILERS(flags)        (flags & IFF_NOTRAILERS)
@@ -81,6 +82,7 @@
       int metric;
       int mtu;
       int flags;
+      struct iface_status_s status; /* read only */
   };
   typedef struct netiface_info_s *netiface_info_t;
 

@@ -21,6 +21,7 @@
 *******************************************************************************
 */
 #include <tk/io/net/netiface.h>
+#include <tk/sys/systools.h>
 #include <tk/sys/log.h>
 #include <tk/utils/string.h>
 #include <stdlib.h>
@@ -260,6 +261,10 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
     info->mtu = devea.ifr_mtu;
   else
     logger(LOG_ERR, "Unable to get the iface mtu: (%d) %s\n", errno, strerror(errno));
+
+  /* Get status */
+  netiface_status_load_wireless(iff->name, &info->status.wireless);
+  netiface_status_load_packets(iff->name, &info->status.packets);
 
   return 0;
 }
@@ -520,5 +525,60 @@ void netiface_print(FILE* out, const struct netiface_info_s *info) {
   fprintf(out, " MTU:%d ", info->mtu);
   fprintf(out, " Metric:%d ", info->metric);
   fprintf(out, "\n");
+
+  if(info->status.wireless.internal.wireless) {
+    fprintf(out, "\t");				
+    fprintf(out, "Wireless status:%d ", info->status.wireless.internal.status);
+    fprintf(out, " missed beacon:%d ", info->status.wireless.internal.missed_beacon);
+    if(info->status.wireless.internal.we21 >= 0)
+      fprintf(out, " WE21:%d ", info->status.wireless.internal.we21);
+    fprintf(out, "\n");
+    fprintf(out, "\t");
+    fprintf(out, "  Quality link:%d ", info->status.wireless.quality.link);
+    fprintf(out, " level:%d ", info->status.wireless.quality.level);
+    fprintf(out, " noise:%d ", info->status.wireless.quality.noise);
+    fprintf(out, "\n");
+    fprintf(out, "\t");
+    fprintf(out, "  Discarded packets nwid:%d ", info->status.wireless.discarded_packets.nwid);
+    fprintf(out, " crypt:%d ", info->status.wireless.discarded_packets.crypt);
+    fprintf(out, " frag:%d ", info->status.wireless.discarded_packets.frag);
+    fprintf(out, " retry:%d ", info->status.wireless.discarded_packets.retry);
+    fprintf(out, " misc:%d ", info->status.wireless.discarded_packets.misc);
+    fprintf(out, "\n");
+  }
+  if (info->status.packets.valid) {
+    char r_ext[5]="b";
+    char t_ext[5]="b";
+    unsigned long long rx, tx, short_rx, short_tx;
+					
+    fprintf(out, "\tRX packets:%lld errors:%ld dropped:%ld overruns:%ld frame:%ld\n",
+	    info->status.packets.rx.packets, info->status.packets.rx.errors, 
+	    info->status.packets.rx.dropped, info->status.packets.rx.fifo_errors, 
+	    info->status.packets.rx.frame_errors);
+    if(info->status.packets.rx.compressed)
+      fprintf(out, "\tcompressed:%ld\n", info->status.packets.rx.compressed);
+    rx = info->status.packets.rx.bytes;  
+    tx = info->status.packets.tx.bytes;
+    short_rx = rx * 10;  
+    short_tx = tx * 10;
+
+    if (rx > SYSTOOLS_1GB) { short_rx /= SYSTOOLS_1GB;  strcpy(r_ext, "Gb"); }
+    else if (rx > SYSTOOLS_1MB) { short_rx /= SYSTOOLS_1MB;  strcpy(r_ext, "Mb"); }
+    else if (rx > SYSTOOLS_1KB) { short_rx /= SYSTOOLS_1KB;  strcpy(r_ext, "Kb"); }
+    if (tx > SYSTOOLS_1GB) { short_tx /= SYSTOOLS_1GB;  strcpy(t_ext, "Gb"); }
+    else if (tx > SYSTOOLS_1MB) { short_tx /= SYSTOOLS_1MB;  strcpy(t_ext, "Mb"); }
+    else if (tx > SYSTOOLS_1KB) { short_tx /= SYSTOOLS_1KB;  strcpy(t_ext, "Kb"); }
+    fprintf(out, "\tTX packets:%lld errors:%ld dropped:%ld overruns:%ld carrier:%ld\n", 
+	    info->status.packets.tx.packets, info->status.packets.tx.errors, 
+	    info->status.packets.tx.dropped, info->status.packets.tx.fifo_errors, 
+	    info->status.packets.tx.carrier_errors);
+    if(info->status.packets.tx.collisions)
+      fprintf(out, "\tcollisions:%ld\n", info->status.packets.tx.collisions);
+    if(info->status.packets.tx.compressed)
+      fprintf(out, "\tcompressed:%ld\n", info->status.packets.tx.compressed);
+    fprintf(out, "\tRX bytes:%lld (%ld.%ld %s)  TX bytes:%lld (%ld.%ld %s)\n",
+	    rx, (unsigned long)(short_rx / 10), (unsigned long)(short_rx % 10), r_ext, 
+	    tx, (unsigned long)(short_tx / 10), (unsigned long)(short_tx % 10), t_ext);
+  }
   fprintf(out, "\n");
 }

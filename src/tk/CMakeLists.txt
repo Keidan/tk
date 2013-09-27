@@ -16,6 +16,7 @@ set(lib_src
   ${TK_SRC_DIR}/io/net/nettools.c
   ${TK_SRC_DIR}/io/net/netprint.c
   ${TK_SRC_DIR}/io/net/netiface.c
+  ${TK_SRC_DIR}/io/net/netiface_status.c
 )
 # generic link
 set(link m pthread)
