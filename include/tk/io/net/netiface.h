@@ -45,22 +45,22 @@
   #define IFACE_IS_POINTOPOINT(flags)       (flags & IFF_POINTOPOINT)
   #define IFACE_IS_NOARP(flags)             (flags & IFF_NOARP)
 
-  #define IFACE_SET_FLAG(flags, add, val)   (add ? flags |= val : flags &= ~val)
-  #define IFACE_SET_PROMISC(flags, add)     IFACE_SET_FLAG(flags, add, IFF_PROMISC)
-  #define IFACE_SET_NOTRAILERS(flags, add)  IFACE_SET_FLAG(flags, add, IFF_NOTRAILERS)
-  #define IFACE_SET_DEBUG(flags, add)       IFACE_SET_FLAG(flags, add, IFF_DEBUG)
-  #define IFACE_SET_LOOPBACK(flags, add)    IFACE_SET_FLAG(flags, add, IFF_LOOPBACK)
-  #define IFACE_SET_UP(flags, add)          IFACE_SET_FLAG(flags, add, IFF_UP)
-  #define IFACE_SET_BROADCAST(flags, add)   IFACE_SET_FLAG(flags, add, IFF_BROADCAST)
-  #define IFACE_SET_MULTICAST(flags, add)   IFACE_SET_FLAG(flags, add, IFF_MULTICAST)
-  #define IFACE_SET_MASTER(flags, add)      IFACE_SET_FLAG(flags, add, IFF_MASTER)
-  #define IFACE_SET_SLAVE(flags, add)       IFACE_SET_FLAG(flags, add, IFF_SLAVE)
-  #define IFACE_SET_PORTSEL(flags, add)     IFACE_SET_FLAG(flags, add, IFF_PORTSEL)
-  #define IFACE_SET_AUTOMEDIA(flags, add)   IFACE_SET_FLAG(flags, add, IFF_AUTOMEDIA)
-  #define IFACE_SET_DYNAMIC(flags, add)     IFACE_SET_FLAG(flags, add, IFF_DYNAMIC)
-  #define IFACE_SET_RUNNING(flags, add)     IFACE_SET_FLAG(flags, add, IFF_RUNNING)
-  #define IFACE_SET_POINTOPOINT(flags, add) IFACE_SET_FLAG(flags, add, IFF_POINTOPOINT)
-  #define IFACE_SET_NOARP(flags, add)       IFACE_SET_FLAG(flags, add, IFF_NOARP)
+
+  #define IFACE_SET_PROMISC(flags, add)     netiface_flags_update(&flags, dd, IFF_PROMISC)
+  #define IFACE_SET_NOTRAILERS(flags, add)  netiface_flags_update(&flags, add, IFF_NOTRAILERS)
+  #define IFACE_SET_DEBUG(flags, add)       netiface_flags_update(&flags, add, IFF_DEBUG)
+  #define IFACE_SET_LOOPBACK(flags, add)    netiface_flags_update(&flags, add, IFF_LOOPBACK)
+  #define IFACE_SET_UP(flags, add)          netiface_flags_update(&flags, add, IFF_UP)
+  #define IFACE_SET_BROADCAST(flags, add)   netiface_flags_update(&flags, add, IFF_BROADCAST)
+  #define IFACE_SET_MULTICAST(flags, add)   netiface_flags_update(&flags, add, IFF_MULTICAST)
+  #define IFACE_SET_MASTER(flags, add)      netiface_flags_update(&flags, add, IFF_MASTER)
+  #define IFACE_SET_SLAVE(flags, add)       netiface_flags_update(&flags, add, IFF_SLAVE)
+  #define IFACE_SET_PORTSEL(flags, add)     netiface_flags_update(&flags, add, IFF_PORTSEL)
+  #define IFACE_SET_AUTOMEDIA(flags, add)   netiface_flags_update(&flags, add, IFF_AUTOMEDIA)
+  #define IFACE_SET_DYNAMIC(flags, add)     netiface_flags_update(&flags, add, IFF_DYNAMIC)
+  #define IFACE_SET_RUNNING(flags, add)     netiface_flags_update(&flags, add, IFF_RUNNING)
+  #define IFACE_SET_POINTOPOINT(flags, add) netiface_flags_update(&flags, add, IFF_POINTOPOINT)
+  #define IFACE_SET_NOARP(flags, add)       netiface_flags_update(&flags, add, IFF_NOARP)
 
 
   typedef char netiface_name_t[IF_NAMESIZE];
@@ -69,15 +69,6 @@
   typedef __u8 netiface_bmac_t[ETH_ALEN];
 
   typedef void* netiface_t;
-
-  struct netiface_map_s {
-      unsigned char port;
-      unsigned char dma_channel;
-      unsigned char interrupt;
-      unsigned short int base_address;
-      unsigned long int memory_start;
-      unsigned long int memory_end;
-  };
 
 
   struct netiface_info_s {
@@ -90,7 +81,6 @@
       int metric;
       int mtu;
       int flags;
-      struct netiface_map_s map;
   };
   typedef struct netiface_info_s *netiface_info_t;
 
@@ -185,13 +175,20 @@
    */
   __u32 netiface_datas_available(const netiface_t iface);
 
-
   /**
-   * @fn void netiface_print(FILE* out, struct netiface_info_s info)
+   * @fn void netiface_print(FILE* out, const struct netiface_info_s *info)
    * @brief Print iface informations.
    * @param out The output stream.
    * @param info Iface informations.
    */
-  void netiface_print(FILE* out, struct netiface_info_s info);
+  void netiface_print(FILE* out, const struct netiface_info_s *info);
 
+  /**
+   * @fn void netiface_flags_update(int* flags, _Bool state, int flag)
+   * @brief utils, update the flags value.
+   * @param flags The flags list.
+   * @param state Add or remove.
+   * @param flag The flag to add or remove.
+   */
+  void netiface_flags_update(int* flags, _Bool state, int flag);
 #endif  /* __NETIFACE_H__ */

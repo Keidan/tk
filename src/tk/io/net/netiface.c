@@ -204,9 +204,9 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
   bzero(info, sizeof(struct netiface_info_s));
 
   strcpy(info->name, iff->name);
+  strcpy(devea.ifr_name, iff->name);
 
   // Get the IPv4 address
-  strcpy(devea.ifr_name, iff->name);
   if(ioctl(iff->fd, SIOCGIFADDR, &devea) == 0) {
     sa = (struct sockaddr_in *)&devea.ifr_addr;
     strcpy(info->ip4, inet_ntoa(sa->sin_addr));
@@ -215,7 +215,6 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
 
 
   // Get the sub netmask address
-  strcpy(devea.ifr_name, iff->name);
   if (ioctl(iff->fd, SIOCGIFNETMASK, &devea) == 0) {
     sa = (struct sockaddr_in*) &devea.ifr_netmask;
     strcpy(info->mask, inet_ntoa(sa->sin_addr));
@@ -223,7 +222,6 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
     logger(LOG_ERR, "Unable to get the netmask address: (%d) %s\n", errno, strerror(errno));
 
   // Get the broadcast address
-  strcpy(devea.ifr_name, iff->name);
   if (ioctl(iff->fd, SIOCGIFBRDADDR, &devea) == 0) {
     struct sockaddr_in *sbcast = (struct sockaddr_in *)&devea.ifr_broadaddr;
     strcpy(info->bcast, inet_ntoa(sbcast->sin_addr));
@@ -231,7 +229,6 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
     logger(LOG_ERR, "Unable to get the broad cast address: (%d) %s\n", errno, strerror(errno));
 
   // Get the mac address and familly
-  strcpy(devea.ifr_name, iff->name);
   if (ioctl(iff->fd, SIOCGIFHWADDR, &devea) == 0) {
     info->family = devea.ifr_hwaddr.sa_family;
     sprintf(info->mac, "%02x:%02x:%02x:%02x:%02x:%02x",
@@ -245,14 +242,12 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
     logger(LOG_ERR, "Unable to get the mac address: (%d) %s\n", errno, strerror(errno));
 					
   // Get the flags list
-  strcpy(devea.ifr_name, iff->name);
   if (ioctl(iff->fd, SIOCGIFFLAGS, &devea) == 0)
     info->flags = devea.ifr_flags;
   else
     logger(LOG_ERR, "Unable to get the iface flags: (%d) %s\n", errno, strerror(errno));
 
   // Get the metric
-  strcpy(devea.ifr_name, iff->name);
   if (ioctl(iff->fd, SIOCGIFMETRIC, &devea) == 0) {
     info->metric = devea.ifr_metric;
     if(!info->metric) info->metric++;
@@ -261,23 +256,10 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
     logger(LOG_ERR, "Unable to get the iface metric: (%d) %s\n", errno, strerror(errno));
 
   // Get the MTU
-  strcpy(devea.ifr_name, iff->name);
   if (ioctl(iff->fd, SIOCGIFMTU, &devea) == 0)
     info->mtu = devea.ifr_mtu;
   else
     logger(LOG_ERR, "Unable to get the iface mtu: (%d) %s\n", errno, strerror(errno));
-
-  // Get the IRQ MAP
-  strcpy(devea.ifr_name, iff->name);
-  if (ioctl(iff->fd, SIOCGIFMAP, &devea) == 0) {
-    struct ifmap m = devea.ifr_map;
-    info->map.dma_channel = m.dma;
-    info->map.interrupt = m.irq;
-    info->map.base_address = m.base_addr;
-    info->map.memory_end = m.mem_end;
-    info->map.memory_start = m.mem_start;
-    info->map.port = m.port;
-  }
 
   return 0;
 }
@@ -321,15 +303,130 @@ __u32 netiface_datas_available(const netiface_t iface) {
 }
 
 /**
- * @fn void netiface_print(FILE* out, struct netiface_info_s info)
+ * @fn void netiface_flags_update(int* flags, _Bool state, int flag)
+ * @brief utils, update the flags value.
+ * @param flags The flags list.
+ * @param state Add or remove.
+ * @param flag The flag to add or remove.
+ */
+void netiface_flags_update(int* flags, _Bool state, int flag) {
+  if(state) *flags |= flag;
+  else *flags &= ~flag;
+}
+
+/**
+ * @fn int netiface_write(const netiface_t iface, const netiface_info_t info)
+ * @brief Write some informations from the iface.
+ * @param iface The iface handle.
+ * @param info The iface informations.
+ * @return -1 on error or if the iface is not found else 0 on success.
+ */
+int netiface_write(const netiface_t iface, const netiface_info_t info) {
+  create_ptr(iff, iface);
+  if(!test_ptr(iff)) return -1;
+  struct netiface_info_s local;
+  if(netiface_read(iface, &local) == -1) return -1;
+  struct ifreq devea;
+
+
+  strcpy(devea.ifr_name, iff->name);
+  if(strlen(info->mac) && strcmp(local.mac, info->mac)) {
+    _Bool up = IFACE_IS_UP(local.flags);
+    if(up) {
+      IFACE_SET_UP(local.flags, 0);
+      devea.ifr_flags = local.flags;
+      if (ioctl(iff->fd, SIOCSIFFLAGS, &devea) < 0) {
+	logger(LOG_ERR, "Unable to update the iface flags: (%d) %s\n", errno, strerror(errno));
+	return -1;
+      }
+    }
+    int tmp [6], i;
+    sscanf(info->mac, "%x:%x:%x:%x:%x:%x", 
+	   (&tmp[0]), (&tmp[1]), (&tmp[2]),
+	   (&tmp[3]),(&tmp[4]), (&tmp[5]));
+    for(i = 0; i < 6; ++i) 
+      devea.ifr_hwaddr.sa_data[i] = (unsigned char) tmp[i];
+    devea.ifr_hwaddr.sa_family = info->family;
+    if (ioctl(iff->fd,SIOCSIFHWADDR, &devea) < 0) {
+      logger(LOG_ERR, "Unable to update the iface mac: (%d) %s\n", errno, strerror(errno));
+      return -1;
+    }
+    if(up) {
+      IFACE_SET_UP(local.flags, 1);
+      devea.ifr_flags = local.flags;
+      if (ioctl(iff->fd, SIOCSIFFLAGS, &devea) < 0) {
+	logger(LOG_ERR, "Unable to update the iface flags: (%d) %s\n", errno, strerror(errno));
+	return -1;
+      }
+    }
+  }
+					
+  if(local.flags != info->flags) {
+    devea.ifr_flags = info->flags;
+    if (ioctl(iff->fd, SIOCSIFFLAGS, &devea) < 0) {
+      logger(LOG_ERR, "Unable to update the iface flags: (%d) %s\n", errno, strerror(errno));
+      return -1;
+    }
+  }
+	
+  if(strlen(info->ip4) && strcmp(local.ip4, info->ip4)) {
+    struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_addr; 
+    sa->sin_family = AF_INET;
+    sa->sin_addr.s_addr = inet_addr(info->ip4);
+    if (ioctl(iff->fd, SIOCSIFADDR, &devea) < 0) {
+      logger(LOG_ERR, "Unable to update the iface ip: (%d) %s\n", errno, strerror(errno));
+      return -1;;
+    }
+  }
+
+  if(strlen(info->mask) && strcmp(local.mask, info->mask)) {
+    struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_netmask; 
+    sa->sin_family = AF_INET;
+    sa->sin_addr.s_addr = inet_addr(info->mask);
+    if (ioctl(iff->fd, SIOCSIFNETMASK, &devea) < 0) {
+      logger(LOG_ERR, "Unable to update the iface net mask: (%d) %s\n", errno, strerror(errno));
+      return -1;
+    }
+  }
+
+  if(strlen(info->bcast) && strcmp(local.bcast, info->bcast)) {
+    struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_broadaddr; 
+    sa->sin_family = AF_INET;
+    sa->sin_addr.s_addr = inet_addr(info->bcast);
+    if (ioctl(iff->fd, SIOCSIFBRDADDR, &devea) < 0) {
+      logger(LOG_ERR, "Unable to update the iface bcast address: (%d) %s\n", errno, strerror(errno));
+      return -1;
+    }
+  }
+
+  if(info->mtu != local.mtu) {
+    devea.ifr_mtu = info->mtu;
+    if (ioctl(iff->fd, SIOCSIFMTU, &devea) < 0) {
+      logger(LOG_ERR, "Unable to update the iface mtu: (%d) %s\n", errno, strerror(errno));
+      return -1;
+    }
+  }
+
+  if(info->metric != local.metric) {
+    devea.ifr_metric = info->metric;
+    if (ioctl(iff->fd, SIOCSIFMETRIC, &devea) < 0) {
+      logger(LOG_ERR, "Unable to update the iface metric: (%d) %s\n", errno, strerror(errno));
+      return -1;
+    }
+  }
+  return 0;
+}
+
+/**
+ * @fn void netiface_print(FILE* out, const struct netiface_info_s *info)
  * @brief Print iface informations.
  * @param out The output stream.
  * @param info Iface informations.
  */
-void netiface_print(FILE* out, struct netiface_info_s info) {
-  fprintf(out, "%s\t", info.name);
+void netiface_print(FILE* out, const struct netiface_info_s *info) {
+  fprintf(out, "%s\t", info->name);
   fprintf(out, "Link encap: ");
-  switch(info.family) {
+  switch(info->family) {
     case ARPHRD_NETROM:             fprintf(out, "NETROM ");             break;
     case ARPHRD_ETHER:              fprintf(out, "ETHER ");              break;
     case ARPHRD_EETHER:             fprintf(out, "EETHER ");             break;
@@ -389,170 +486,39 @@ void netiface_print(FILE* out, struct netiface_info_s info) {
       fprintf(out, "NONE ");               break;
       break;
   }
-  if(!IFACE_IS_LOOPBACK(info.flags))
-    fprintf(out, "HWaddr %s", info.mac);
+  if(!IFACE_IS_LOOPBACK(info->flags))
+    fprintf(out, "HWaddr %s", info->mac);
   fprintf(out, "\n");
-  if(IFACE_IS_UP(info.flags)) {
-    if(strlen(info.ip4) || strlen(info.bcast) || strlen(info.mask)) {
+  if(IFACE_IS_UP(info->flags)) {
+    if(strlen(info->ip4) || strlen(info->bcast) || strlen(info->mask)) {
       fprintf(out, "\t");
-      if(strlen(info.ip4))
-	fprintf(out, "inet adr:%s ", info.ip4);
-      if(strlen(info.bcast))
-	fprintf(out, "Bcast:%s ", info.bcast);
-      if(strlen(info.mask))
-	fprintf(out, "Mask:%s ", info.mask);
+      if(strlen(info->ip4))
+	fprintf(out, "inet adr:%s ", info->ip4);
+      if(!IFACE_IS_LOOPBACK(info->flags) && strlen(info->bcast))
+	fprintf(out, "Bcast:%s ", info->bcast);
+      if(strlen(info->mask))
+	fprintf(out, "Mask:%s ", info->mask);
       fprintf(out, "\n");
     }
   }
   fprintf(out, "\t");
-  fprintf(out, "%s", IFACE_IS_UP(info.flags) ? "UP " : "DOWN "); 
-  if(IFACE_IS_LOOPBACK(info.flags))    fprintf(out, "LOOPBACK ");
-  if(IFACE_IS_BROADCAST(info.flags))   fprintf(out, "BROADCAST ");
-  if(IFACE_IS_RUNNING(info.flags))     fprintf(out, "RUNNING ");
-  if(IFACE_IS_MULTICAST(info.flags))   fprintf(out, "MULTICAST ");
-  if(IFACE_IS_PROMISC(info.flags))     fprintf(out, "PROMISC ");
-  if(IFACE_IS_NOTRAILERS(info.flags))  fprintf(out, "NOTRAILERS ");
-  if(IFACE_IS_DEBUG(info.flags))       fprintf(out, "DEBUG ");
-  if(IFACE_IS_MASTER(info.flags))      fprintf(out, "MASTER ");
-  if(IFACE_IS_SLAVE(info.flags))       fprintf(out, "SLAVE ");
-  if(IFACE_IS_PORTSEL(info.flags))     fprintf(out, "PORTSEL ");
-  if(IFACE_IS_AUTOMEDIA(info.flags))   fprintf(out, "AUTOMEDIA ");
-  if(IFACE_IS_DYNAMIC(info.flags))     fprintf(out, "DYNAMIC ");
-  if(IFACE_IS_POINTOPOINT(info.flags)) fprintf(out, "POINTOPOINT ");
-  if(IFACE_IS_NOARP(info.flags))       fprintf(out, "NOARP ");
-  fprintf(out, " MTU:%d ", info.mtu);
-  fprintf(out, " Metric:%d ", info.metric);
+  fprintf(out, "%s", IFACE_IS_UP(info->flags) ? "UP " : "DOWN "); 
+  if(IFACE_IS_LOOPBACK(info->flags))    fprintf(out, "LOOPBACK ");
+  if(IFACE_IS_BROADCAST(info->flags))   fprintf(out, "BROADCAST ");
+  if(IFACE_IS_RUNNING(info->flags))     fprintf(out, "RUNNING ");
+  if(IFACE_IS_MULTICAST(info->flags))   fprintf(out, "MULTICAST ");
+  if(IFACE_IS_PROMISC(info->flags))     fprintf(out, "PROMISC ");
+  if(IFACE_IS_NOTRAILERS(info->flags))  fprintf(out, "NOTRAILERS ");
+  if(IFACE_IS_DEBUG(info->flags))       fprintf(out, "DEBUG ");
+  if(IFACE_IS_MASTER(info->flags))      fprintf(out, "MASTER ");
+  if(IFACE_IS_SLAVE(info->flags))       fprintf(out, "SLAVE ");
+  if(IFACE_IS_PORTSEL(info->flags))     fprintf(out, "PORTSEL ");
+  if(IFACE_IS_AUTOMEDIA(info->flags))   fprintf(out, "AUTOMEDIA ");
+  if(IFACE_IS_DYNAMIC(info->flags))     fprintf(out, "DYNAMIC ");
+  if(IFACE_IS_POINTOPOINT(info->flags)) fprintf(out, "POINTOPOINT ");
+  if(IFACE_IS_NOARP(info->flags))       fprintf(out, "NOARP ");
+  fprintf(out, " MTU:%d ", info->mtu);
+  fprintf(out, " Metric:%d ", info->metric);
   fprintf(out, "\n");
-  if(info.map.interrupt || info.map.base_address || info.map.memory_start || info.map.dma_channel) {
-    fprintf(out, "\t");
-    if (info.map.interrupt)
-      fprintf(out, "Interrupt:%d ", ((int)info.map.interrupt));
-    if (info.map.base_address >= 0x100)	// Only print devices using it for I/O maps
-      fprintf(out, "Base address:%#x ", info.map.base_address);
-    if (info.map.memory_start)
-      fprintf(out, "Memory:%x-%x ", (unsigned int)info.map.memory_start, (unsigned int)info.map.memory_end);
-    if (info.map.dma_channel)
-      fprintf(out, "DMA chan:%d ", info.map.dma_channel);
-    if (info.map.port)
-      fprintf(out, "Port:%d ", (int)info.map.port);
-    fprintf(out, "\n");
-  }
   fprintf(out, "\n");
-}
-
-
-/**
- * @fn int netiface_write(const netiface_t iface, const netiface_info_t info)
- * @brief Write some informations from the iface.
- * @param iface The iface handle.
- * @param info The iface informations.
- * @return -1 on error or if the iface is not found else 0 on success.
- */
-int netiface_write(const netiface_t iface, const netiface_info_t info) {
-  create_ptr(iff, iface);
-  if(!test_ptr(iff)) return -1;
-  struct netiface_info_s local;
-  if(netiface_read(iface, &local) == -1) return -1;
-  struct ifreq devea;
-
-
-  if(strlen(info->mac) && strcmp(local.mac, info->mac)) {
-    int tmp [6], i;
-    sscanf(info->mac, "%x:%x:%x:%x:%x:%x", 
-	   (&tmp[0]), (&tmp[1]), (&tmp[2]),
-	   (&tmp[3]),(&tmp[4]), (&tmp[5]));
-    for(i = 0; i < 6; ++i) 
-      devea.ifr_hwaddr.sa_data[i] = (unsigned char) tmp[i];
-    devea.ifr_hwaddr.sa_family = info->family;
-    if (ioctl(iff->fd,SIOCSIFHWADDR, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface mac: (%d) %s\n", errno, strerror(errno));
-      return -1;
-    }
-  }
-					
-  if(local.flags != info->flags) {
-    devea.ifr_flags = info->flags;
-    if (ioctl(iff->fd, SIOCSIFFLAGS, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface flags: (%d) %s\n", errno, strerror(errno));
-      return -1;
-    }
-  }
-	
-  if(strlen(info->ip4) && strcmp(local.ip4, info->ip4)) {
-    struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_addr; 
-    sa->sin_family = AF_INET;
-    sa->sin_addr.s_addr = inet_addr(info->ip4);
-    if (ioctl(iff->fd, SIOCSIFADDR, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface ip: (%d) %s\n", errno, strerror(errno));
-      return -1;;
-    }
-  }
-
-  if(strlen(info->mask) && strcmp(local.mask, info->mask)) {
-    struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_netmask; 
-    sa->sin_family = AF_INET;
-    sa->sin_addr.s_addr = inet_addr(info->mask);
-    if (ioctl(iff->fd, SIOCSIFNETMASK, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface net mask: (%d) %s\n", errno, strerror(errno));
-      return -1;
-    }
-  }
-
-  if(strlen(info->bcast) && strcmp(local.bcast, info->bcast)) {
-    struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_broadaddr; 
-    sa->sin_family = AF_INET;
-    sa->sin_addr.s_addr = inet_addr(info->bcast);
-    if (ioctl(iff->fd, SIOCSIFBRDADDR, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface bcast address: (%d) %s\n", errno, strerror(errno));
-      return -1;
-    }
-  }
-
-  if(info->mtu != local.mtu) {
-    devea.ifr_mtu = info->mtu;
-    if (ioctl(iff->fd, SIOCSIFMTU, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface mtu: (%d) %s\n", errno, strerror(errno));
-      return -1;
-    }
-  }
-
-  if(info->metric != local.metric) {
-    devea.ifr_metric = info->metric;
-    if (ioctl(iff->fd, SIOCSIFMETRIC, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface metric: (%d) %s\n", errno, strerror(errno));
-      return -1;
-    }
-  }
-							
-  if(local.map.base_address != info->map.base_address || 
-     local.map.dma_channel != info->map.dma_channel ||
-     local.map.interrupt != info->map.interrupt ||
-     local.map.memory_end != info->map.memory_end ||
-     local.map.memory_start != info->map.memory_start ||
-     local.map.port != info->map.port) {
-    struct ifmap *imap = (struct ifmap *)&devea.ifr_map;
-    imap->irq = local.map.interrupt;
-    imap->base_addr = local.map.base_address;
-    imap->mem_end = local.map.memory_end;
-    imap->mem_start = local.map.memory_start;
-    imap->dma = local.map.dma_channel;
-    imap->port = local.map.port;
-    if(local.map.base_address != info->map.base_address)
-      imap->base_addr = info->map.base_address;
-    if(local.map.dma_channel != info->map.dma_channel)
-      imap->dma =  info->map.dma_channel;
-    if(local.map.interrupt != info->map.interrupt)
-      imap->irq = info->map.interrupt;
-    if(local.map.memory_end != info->map.memory_end)
-      imap->mem_end = info->map.memory_end;
-    if(local.map.memory_start != info->map.memory_start)
-      imap->mem_start = info->map.memory_start;
-    if(local.map.port != info->map.port)
-      imap->port = info->map.port;
-    if (ioctl(iff->fd,SIOCSIFMAP, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface map: (%d) %s\n", errno, strerror(errno));
-      return -1;
-    }
-  }
-  return 0;
 }
