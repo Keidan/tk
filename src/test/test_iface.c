@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   for(i = 0; i < count; i++) {
     netiface_t iface = netiface_list_get(ifaces, keys[i]);
     netiface_read(iface, &info);
-    netiface_print(stdout, &info);
+    netiface_print(stdout, &info, 0);
   }
   /* change mac + ip for eth0 */
   //netiface_t iface = netiface_list_get(ifaces, "eth0");
@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
   //strcpy(info.mac, "48:5b:39:cc:ca:42");
   //strcpy(info.ip4, "10.101.1.5");
   //netiface_write(iface, &info);
-  //netiface_print(stdout, &info);
+  //netiface_print(stdout, &info, 0);
   /* clear all */
   netiface_list_delete(ifaces);
   log_close();

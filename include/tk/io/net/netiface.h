@@ -178,12 +178,13 @@
   __u32 netiface_datas_available(const netiface_t iface);
 
   /**
-   * @fn void netiface_print(FILE* out, const struct netiface_info_s *info)
+   * @fn void netiface_print(FILE* out, const struct netiface_info_s *info, _Bool up_only)
    * @brief Print iface informations.
    * @param out The output stream.
    * @param info Iface informations.
+   * @param up_only Print only up device.
    */
-  void netiface_print(FILE* out, const struct netiface_info_s *info);
+  void netiface_print(FILE* out, const struct netiface_info_s *info, _Bool up_only);
 
   /**
    * @fn void netiface_flags_update(int* flags, _Bool state, int flag)

@@ -423,12 +423,14 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
 }
 
 /**
- * @fn void netiface_print(FILE* out, const struct netiface_info_s *info)
+ * @fn void netiface_print(FILE* out, const struct netiface_info_s *info, _Bool up_only)
  * @brief Print iface informations.
  * @param out The output stream.
  * @param info Iface informations.
+ * @param up_only Print only up device.
  */
-void netiface_print(FILE* out, const struct netiface_info_s *info) {
+void netiface_print(FILE* out, const struct netiface_info_s *info, _Bool up_only) {
+  if(up_only && !IFACE_IS_UP(info->flags)) return;
   fprintf(out, "%s\t", info->name);
   fprintf(out, "Link encap: ");
   switch(info->family) {
