@@ -47,7 +47,7 @@
   #define IFACE_IS_NOARP(flags)             (flags & IFF_NOARP)
 
 
-  #define IFACE_SET_PROMISC(flags, add)     netiface_flags_update(&flags, dd, IFF_PROMISC)
+  #define IFACE_SET_PROMISC(flags, add)     netiface_flags_update(&flags, add, IFF_PROMISC)
   #define IFACE_SET_NOTRAILERS(flags, add)  netiface_flags_update(&flags, add, IFF_NOTRAILERS)
   #define IFACE_SET_DEBUG(flags, add)       netiface_flags_update(&flags, add, IFF_DEBUG)
   #define IFACE_SET_LOOPBACK(flags, add)    netiface_flags_update(&flags, add, IFF_LOOPBACK)
