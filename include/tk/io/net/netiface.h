@@ -194,4 +194,12 @@
    * @param flag The flag to add or remove.
    */
   void netiface_flags_update(int* flags, _Bool state, int flag);
+
+  /**
+   * @fn int netiface_up(const netiface_t iface)
+   * @brief UP the iface.
+   * @param iface the idface to up.
+   * @return -1 on error else 0
+   */
+  int netiface_up(const netiface_t iface);
 #endif  /* __NETIFACE_H__ */

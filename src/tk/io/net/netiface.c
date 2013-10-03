@@ -207,6 +207,12 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
   strcpy(info->name, iff->name);
   strcpy(devea.ifr_name, iff->name);
 
+  // Get the flags list
+  if (ioctl(iff->fd, SIOCGIFFLAGS, &devea) == 0)
+    info->flags = devea.ifr_flags;
+  else
+    logger(LOG_ERR, "Unable to get the iface flags: (%d) %s\n", errno, strerror(errno));
+  
   // Get the IPv4 address
   if(ioctl(iff->fd, SIOCGIFADDR, &devea) == 0) {
     sa = (struct sockaddr_in *)&devea.ifr_addr;
@@ -241,12 +247,6 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
 	    devea.ifr_hwaddr.sa_data[5]&0xFF);
   } else
     logger(LOG_ERR, "Unable to get the mac address: (%d) %s\n", errno, strerror(errno));
-					
-  // Get the flags list
-  if (ioctl(iff->fd, SIOCGIFFLAGS, &devea) == 0)
-    info->flags = devea.ifr_flags;
-  else
-    logger(LOG_ERR, "Unable to get the iface flags: (%d) %s\n", errno, strerror(errno));
 
   // Get the metric
   if (ioctl(iff->fd, SIOCGIFMETRIC, &devea) == 0) {
@@ -320,6 +320,34 @@ void netiface_flags_update(int* flags, _Bool state, int flag) {
 }
 
 /**
+ * @fn int netiface_up(const netiface_t iface)
+ * @brief UP the iface.
+ * @param iface the idface to up.
+ * @return -1 on error else 0
+ */
+int netiface_up(const netiface_t iface) {
+  struct ifreq ifr;
+  create_ptr(iff, iface);
+  if(!test_ptr(iff)) return -1;
+  memset(&ifr, 0, sizeof(ifr));
+  strncpy((char *)ifr.ifr_name, iff->name, IF_NAMESIZE);
+  int ret = ioctl(iff->fd, SIOCGIFFLAGS, &ifr);
+  if (ret == -1) {
+    logger(LOG_ERR, "flags: (%d) %s.\n", errno, strerror(errno));
+    return ret;
+  }
+  if(!(!!(ifr.ifr_flags & IFF_UP))) {
+    ifr.ifr_flags |= IFF_UP;
+    ret = ioctl(iff->fd, SIOCGIFFLAGS, &ifr);
+    if (ret == -1) {
+      logger(LOG_ERR, "flags: (%d) %s.\n", errno, strerror(errno));
+      return -1;
+    }
+  }
+  return 0;
+}
+
+/**
  * @fn int netiface_write(const netiface_t iface, const netiface_info_t info)
  * @brief Write some informations from the iface.
  * @param iface The iface handle.
@@ -375,16 +403,18 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
   }
 	
   if(strlen(info->ip4) && strcmp(local.ip4, info->ip4)) {
+    if(netiface_up(iface)) return -1;
     struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_addr; 
     sa->sin_family = AF_INET;
     sa->sin_addr.s_addr = inet_addr(info->ip4);
     if (ioctl(iff->fd, SIOCSIFADDR, &devea) < 0) {
       logger(LOG_ERR, "Unable to update the iface ip: (%d) %s\n", errno, strerror(errno));
-      return -1;;
+      return -1;
     }
   }
 
   if(strlen(info->mask) && strcmp(local.mask, info->mask)) {
+    if(netiface_up(iface)) return -1;
     struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_netmask; 
     sa->sin_family = AF_INET;
     sa->sin_addr.s_addr = inet_addr(info->mask);
@@ -395,6 +425,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
   }
 
   if(strlen(info->bcast) && strcmp(local.bcast, info->bcast)) {
+    if(netiface_up(iface)) return -1;
     struct sockaddr_in *sa = (struct sockaddr_in *)&devea.ifr_broadaddr; 
     sa->sin_family = AF_INET;
     sa->sin_addr.s_addr = inet_addr(info->bcast);
@@ -405,6 +436,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
   }
 
   if(info->mtu != local.mtu) {
+    if(netiface_up(iface)) return -1;
     devea.ifr_mtu = info->mtu;
     if (ioctl(iff->fd, SIOCSIFMTU, &devea) < 0) {
       logger(LOG_ERR, "Unable to update the iface mtu: (%d) %s\n", errno, strerror(errno));
@@ -413,6 +445,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
   }
 
   if(info->metric != local.metric) {
+    if(netiface_up(iface)) return -1;
     devea.ifr_metric = info->metric;
     if (ioctl(iff->fd, SIOCSIFMETRIC, &devea) < 0) {
       logger(LOG_ERR, "Unable to update the iface metric: (%d) %s\n", errno, strerror(errno));
