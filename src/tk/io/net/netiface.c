@@ -216,7 +216,7 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
   // Get the IPv4 address
   if(ioctl(iff->fd, SIOCGIFADDR, &devea) == 0) {
     sa = (struct sockaddr_in *)&devea.ifr_addr;
-    strcpy(info->ip4, inet_ntoa(sa->sin_addr));
+    strncpy(info->ip4, inet_ntoa(sa->sin_addr), sizeof(netiface_ip4_t));
   } else
     logger(LOG_ERR, "Unable to get the ipv4 address: (%d) %s\n", errno, strerror(errno));
 
@@ -224,21 +224,21 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
   // Get the sub netmask address
   if (ioctl(iff->fd, SIOCGIFNETMASK, &devea) == 0) {
     sa = (struct sockaddr_in*) &devea.ifr_netmask;
-    strcpy(info->mask, inet_ntoa(sa->sin_addr));
+    strncpy(info->mask, inet_ntoa(sa->sin_addr), sizeof(netiface_ip4_t));
   } else
     logger(LOG_ERR, "Unable to get the netmask address: (%d) %s\n", errno, strerror(errno));
 
   // Get the broadcast address
   if (ioctl(iff->fd, SIOCGIFBRDADDR, &devea) == 0) {
     struct sockaddr_in *sbcast = (struct sockaddr_in *)&devea.ifr_broadaddr;
-    strcpy(info->bcast, inet_ntoa(sbcast->sin_addr));
+    strncpy(info->bcast, inet_ntoa(sbcast->sin_addr), sizeof(netiface_ip4_t));
   } else
     logger(LOG_ERR, "Unable to get the broad cast address: (%d) %s\n", errno, strerror(errno));
 
   // Get the mac address and familly
   if (ioctl(iff->fd, SIOCGIFHWADDR, &devea) == 0) {
     info->family = devea.ifr_hwaddr.sa_family;
-    sprintf(info->mac, "%02x:%02x:%02x:%02x:%02x:%02x",
+    snprintf(info->mac, sizeof(netiface_mac_t), "%02x:%02x:%02x:%02x:%02x:%02x",
 	    devea.ifr_hwaddr.sa_data[0]&0xFF,
 	    devea.ifr_hwaddr.sa_data[1]&0xFF,
 	    devea.ifr_hwaddr.sa_data[2]&0xFF,
