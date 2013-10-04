@@ -65,8 +65,8 @@
 
 
   typedef char netiface_name_t[IF_NAMESIZE];
-  typedef char netiface_ip4_t[15];
-  typedef char netiface_mac_t[17];
+  typedef char netiface_ip4_t[16];
+  typedef char netiface_mac_t[18];
   typedef __u8 netiface_bmac_t[ETH_ALEN];
 
   typedef void* netiface_t;
