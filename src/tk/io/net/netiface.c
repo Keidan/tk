@@ -381,7 +381,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
       devea.ifr_hwaddr.sa_data[i] = (unsigned char) tmp[i];
     devea.ifr_hwaddr.sa_family = info->family;
     if (ioctl(iff->fd,SIOCSIFHWADDR, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface mac: (%d) %s\n", errno, strerror(errno));
+      logger(LOG_ERR, "Unable to update the iface mac(%s): (%d) %s\n", info->mac, errno, strerror(errno));
       return -1;
     }
     if(up) {
@@ -408,7 +408,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
     sa->sin_family = AF_INET;
     sa->sin_addr.s_addr = inet_addr(info->ip4);
     if (ioctl(iff->fd, SIOCSIFADDR, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface ip: (%d) %s\n", errno, strerror(errno));
+      logger(LOG_ERR, "Unable to update the iface ip (%s): (%d) %s\n", info->ip4, errno, strerror(errno));
       return -1;
     }
   }
@@ -419,7 +419,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
     sa->sin_family = AF_INET;
     sa->sin_addr.s_addr = inet_addr(info->mask);
     if (ioctl(iff->fd, SIOCSIFNETMASK, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface net mask: (%d) %s\n", errno, strerror(errno));
+      logger(LOG_ERR, "Unable to update the iface net mask (%s): (%d) %s\n", info->mask, errno, strerror(errno));
       return -1;
     }
   }
@@ -430,7 +430,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
     sa->sin_family = AF_INET;
     sa->sin_addr.s_addr = inet_addr(info->bcast);
     if (ioctl(iff->fd, SIOCSIFBRDADDR, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface bcast address: (%d) %s\n", errno, strerror(errno));
+      logger(LOG_ERR, "Unable to update the iface bcast address (%s): (%d) %s\n", info->bcast, errno, strerror(errno));
       return -1;
     }
   }
@@ -439,7 +439,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
     if(netiface_up(iface)) return -1;
     devea.ifr_mtu = info->mtu;
     if (ioctl(iff->fd, SIOCSIFMTU, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface mtu: (%d) %s\n", errno, strerror(errno));
+      logger(LOG_ERR, "Unable to update the iface mtu (%d): (%d) %s\n", info->mtu, errno, strerror(errno));
       return -1;
     }
   }
@@ -448,7 +448,7 @@ int netiface_write(const netiface_t iface, const netiface_info_t info) {
     if(netiface_up(iface)) return -1;
     devea.ifr_metric = info->metric;
     if (ioctl(iff->fd, SIOCSIFMETRIC, &devea) < 0) {
-      logger(LOG_ERR, "Unable to update the iface metric: (%d) %s\n", errno, strerror(errno));
+      logger(LOG_ERR, "Unable to update the iface metric (%d): (%d) %s\n", info->metric, errno, strerror(errno));
       return -1;
     }
   }
