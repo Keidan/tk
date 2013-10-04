@@ -308,13 +308,13 @@ __u32 netiface_datas_available(const netiface_t iface) {
 }
 
 /**
- * @fn void netiface_flags_update(int* flags, _Bool state, int flag)
+ * @fn void netiface_flags_update(short int* flags, _Bool state, int flag)
  * @brief utils, update the flags value.
  * @param flags The flags list.
  * @param state Add or remove.
  * @param flag The flag to add or remove.
  */
-void netiface_flags_update(int* flags, _Bool state, int flag) {
+void netiface_flags_update(short int* flags, _Bool state, int flag) {
   if(state) *flags |= flag;
   else *flags &= ~flag;
 }
@@ -336,8 +336,8 @@ int netiface_up(const netiface_t iface) {
     logger(LOG_ERR, "flags: (%d) %s.\n", errno, strerror(errno));
     return ret;
   }
-  if(!(!!(ifr.ifr_flags & IFF_UP))) {
-    ifr.ifr_flags |= IFF_UP;
+  if(!IFACE_IS_UP(ifr.ifr_flags)) {
+    IFACE_SET_UP(ifr.ifr_flags, 1);
     ret = ioctl(iff->fd, SIOCGIFFLAGS, &ifr);
     if (ret == -1) {
       logger(LOG_ERR, "flags: (%d) %s.\n", errno, strerror(errno));

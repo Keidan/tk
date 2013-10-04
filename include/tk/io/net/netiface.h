@@ -81,7 +81,7 @@
       int family;
       int metric;
       int mtu;
-      int flags;
+      short int flags;
       struct iface_status_s status; /* read only */
   };
   typedef struct netiface_info_s *netiface_info_t;
@@ -187,13 +187,13 @@
   void netiface_print(FILE* out, const struct netiface_info_s *info, _Bool up_only);
 
   /**
-   * @fn void netiface_flags_update(int* flags, _Bool state, int flag)
+   * @fn void netiface_flags_update(short int* flags, _Bool state, int flag)
    * @brief utils, update the flags value.
    * @param flags The flags list.
    * @param state Add or remove.
    * @param flag The flag to add or remove.
    */
-  void netiface_flags_update(int* flags, _Bool state, int flag);
+  void netiface_flags_update(short int* flags, _Bool state, int flag);
 
   /**
    * @fn int netiface_up(const netiface_t iface)
