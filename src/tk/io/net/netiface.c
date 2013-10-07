@@ -212,6 +212,12 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
     info->flags = devea.ifr_flags;
   else
     logger(LOG_ERR, "Unable to get the iface flags: (%d) %s\n", errno, strerror(errno));
+
+  // Get the iface index
+  if (ioctl(iff->fd, SIOCGIFINDEX, &devea) == 0)
+    info->index = devea.ifr_ifindex;
+  else
+    logger(LOG_ERR, "Unable to get the iface index: (%d) %s\n", errno, strerror(errno));
   
   // Get the IPv4 address
   if(ioctl(iff->fd, SIOCGIFADDR, &devea) == 0) {

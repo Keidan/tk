@@ -82,6 +82,7 @@
       int metric;
       int mtu;
       short int flags;
+      int index; /* read only */
       struct iface_status_s status; /* read only */
   };
   typedef struct netiface_info_s *netiface_info_t;
