@@ -30,3 +30,10 @@ set(bin_src
 )
 add_executable(test_iface ${bin_src})
 target_link_libraries(test_iface tk)
+
+#arp case
+set(bin_src 
+  ${TEST_SRC_DIR}/test_arp.c 
+)
+add_executable(test_arp ${bin_src})
+target_link_libraries(test_arp tk)
