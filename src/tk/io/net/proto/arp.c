@@ -22,6 +22,7 @@
 */
 #include <tk/io/net/proto/arp.h>
 #include <tk/io/net/nettools.h>
+#include <tk/sys/systools.h>
 #include <tk/utils/string.h>
 #include <tk/sys/log.h>
 #include <tk/sys/log.h>
@@ -32,15 +33,128 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
-#include <sys/time.h>
-#include <sys/select.h>
+#include <netdb.h>
 
 typedef struct {
     uint8_t dst[6];
     uint8_t src[6];
     uint8_t proto[2];
 } ethhdr_t;
+
+/**
+ * @fn int arp_find_from_table(char* ip, struct arp_entry_s *entry)
+ * @brief Search an arp entry from the system table.
+ * @param ip The ip or the hostname to search.
+ * @param entry The result entry (only available if this function return 1).
+ * @return -1: error or not found, 0: found
+ */
+int arp_find_from_table(char* ip, struct arp_entry_s *entry) {
+  char** keys;
+  int count, i, fd;
+  htable_t ifaces;
+  netiface_t iface;
+  _Bool found = 0;
+  struct arpreq arpreq;
+  struct sockaddr_in *sin;
+  struct hostent *hp;
+
+  if(!entry) {
+    logger(LOG_ERR, "Null entry pointer!\n");
+    return -1;
+  }
+  memset(entry, 0, sizeof(struct arp_entry_s));
+  memset(&arpreq, 0, sizeof(arpreq));
+  
+  sin = (struct sockaddr_in *) &arpreq.arp_pa;
+  sin->sin_family = AF_INET;
+  sin->sin_addr.s_addr = inet_addr((char*)ip);
+  if(sin->sin_addr.s_addr ==-1){
+    if(!(hp = gethostbyname(ip))){
+      logger(LOG_ERR, "gethostbyname failed: (%d) %s\n", h_errno, hstrerror(h_errno));
+      return -1;
+    }
+    bcopy((char *)hp->h_addr, (char *)&sin->sin_addr, sizeof(sin->sin_addr));
+    logger(LOG_DEBUG, "Host name '%s' resolved '%s'\n", ip, inet_ntoa(sin->sin_addr));
+  }
+
+  ifaces = netiface_list_new(NETIFACE_LVL_UDP, NETIFACE_KEY_NAME);
+  count = htable_get_keys(ifaces, &keys);
+  for(i = 0; i < count; i++) {
+    found = 0;
+    iface = netiface_list_get(ifaces, keys[i]);
+    netiface_get_fd(iface, &fd);
+    netiface_get_name(iface, arpreq.arp_dev);
+    if (ioctl(fd, SIOCGARP, &arpreq) < 0) {
+      logger(LOG_ERR, "SIOCGARP: (%d) %s\n", errno, strerror(errno));
+      continue;
+    }
+    if(!strcmp(ip, inet_ntoa(sin->sin_addr))) {
+      found = 1;
+      break;
+    }
+  }
+  netiface_list_delete(ifaces);
+  if(!found) {
+    logger(LOG_ERR, "%s was not found!\n", ip);
+    return -1;
+  }
+  if (arpreq.arp_flags & ATE_COM) {
+    strcpy(entry->name, arpreq.arp_dev);
+    strcpy(entry->ip, inet_ntoa(sin->sin_addr));
+    entry->flags = arpreq.arp_flags;
+    memcpy(entry->bmac, (unsigned char *) &arpreq.arp_ha.sa_data[0], 6);
+    nettools_mac2str(entry->bmac, entry->mac);
+  } else {
+    logger(LOG_ERR, "SIOCGARP failed: *** INCOMPLETE ***\n");
+    return -1;
+  }
+  return 0;
+}
+
+/**
+ * @fn int arp_add_in_table(netiface_name_t name, const char *ip, netiface_mac_t mac)
+ * @brief Add a new entry into the ARP table.
+ * @param name The interface name.
+ * @param ip The ip or the hostname to add.
+ * @param mac The mac to add.
+ * @return -1 on error else 0;
+ */
+int arp_add_in_table(netiface_name_t name, const char *ip, netiface_mac_t mac) {
+  int fd;
+  struct arpreq arpreq;
+  struct sockaddr_in *sin;
+  struct hostent *hp;
+
+  memset(&arpreq, 0, sizeof(arpreq));
+  
+  sin = (struct sockaddr_in *) &arpreq.arp_pa;
+  sin->sin_family = AF_INET;
+  sin->sin_addr.s_addr = inet_addr((char*)ip);
+  if(sin->sin_addr.s_addr ==-1){
+    if(!(hp = gethostbyname(ip))){
+      logger(LOG_ERR, "gethostbyname failed: (%d) %s\n", h_errno, hstrerror(h_errno));
+      return -1;
+    }
+    bcopy((char *)hp->h_addr, (char *)&sin->sin_addr, sizeof(sin->sin_addr));
+    logger(LOG_DEBUG, "Host name '%s' resolved '%s'\n", ip, inet_ntoa(sin->sin_addr));
+  }
+  strcpy(arpreq.arp_dev, name);
+  arpreq.arp_flags = ATE_COM;
+  nettools_str2mac(mac, (unsigned char *) &arpreq.arp_ha.sa_data[0]);
+  if((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+    logger(LOG_DEBUG, "socket failed: (%d) %s'\n", errno, strerror(errno));
+    return -1;
+  } 
+  if (ioctl(fd, SIOCSARP, &arpreq) < 0) {
+    close(fd);
+    logger(LOG_ERR, "SIOCGARP: (%d) %s\n", errno, strerror(errno));
+    return -1;
+  }
+  close(fd);
+  return 0;
+}
 
 /**
  * @fn static void arp_preare_buffer(arp_buffer_t buffer)
@@ -134,37 +248,6 @@ int arp_is_arp_frame(arp_buffer_t frame, unsigned int l) {
 }
 
 /**
- * @fn static unsigned long arp_msectime();
- * @brief Get the current time in ms.
- * @return The current time.
- */
-static unsigned long arp_msectime() {
-  struct timeval t;
-  gettimeofday(&t, NULL);
-  return ((t.tv_sec) * 1000 + t.tv_usec/1000);
-}
-
-/**
- * @fn static int arp_recvfrom_timeout(int fd, long sec)
- * @brief Wait for input datas.
- * @param fd The RAW socket FD.
- * @param sec The seconds nb before timeout.
- * @return -1 on error, 0 on timeout else >=1
- */
-static int arp_recvfrom_timeout(int fd, long sec) {
-  // Setup timeval variable
-  struct timeval timeout;
-  timeout.tv_sec = sec;
-  timeout.tv_usec = 0;
-  // Setup fd_set structure
-  fd_set fds;
-  FD_ZERO(&fds);
-  FD_SET(fd, &fds);
-  return select(fd+1, &fds, 0, 0, &timeout);
-}
-
-
-/**
  * @fn int arp_resolve_ip(struct arpcfg_s cfg, struct netiface_info_s me, netiface_ip4_t dest_ip, netiface_mac_t *dest_mac)
  * @brief Resolve the ARP request.
  * @param cfg ARP config.
@@ -174,16 +257,25 @@ static int arp_recvfrom_timeout(int fd, long sec) {
  * @retrn -1 on error else 0.
  */
 int arp_resolve_ip(struct arpcfg_s cfg, struct netiface_info_s me, netiface_ip4_t dest_ip, netiface_mac_t *dest_mac) {
+  struct arp_entry_s entry;
   struct sockaddr_ll nic_dev = {0};
+  arp_buffer_t buffer;
+  int fd, ret;
+  unsigned int i;
+  _Bool end = 0;
+  memset(*dest_mac, 0, sizeof(netiface_mac_t));
+  /* check if the mac is prensent */
+  if(!arp_find_from_table(dest_ip, &entry)) {
+    strcpy(*dest_mac, entry.mac);
+    return 0;
+  }
+  
   nic_dev.sll_family   = PF_PACKET;
   nic_dev.sll_protocol = htons(ETH_P_ALL);
   nic_dev.sll_pkttype  = PACKET_OTHERHOST;
   nic_dev.sll_addr[6]  = 0x00;
   nic_dev.sll_addr[7]  = 0x00;
-  arp_buffer_t buffer;
-  int fd, ret;
-  unsigned int i;
-  _Bool end = 0;
+
   fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
   if(fd == -1) {
     logger(LOG_ERR, "Socket open failed: (%d) %s\n", errno, strerror(errno));
@@ -199,16 +291,16 @@ int arp_resolve_ip(struct arpcfg_s cfg, struct netiface_info_s me, netiface_ip4_
   arp_preare_buffer(buffer);
   for(i = 0; ((i<cfg.max_attempts) && !end ); ++i) {
     ret = 0;
-    unsigned long sentat = arp_msectime();
+    unsigned long sentat = systools_msectime();
     if(cfg.debug) logger(LOG_DEBUG, "Resolving %s, attempt %d\n", dest_ip, i+1);
     if(arp_send_request(fd, &nic_dev, me, buffer, dest_ip, cfg.debug) == -1) {
       close(fd);
       return -1;
     }
-    while(( arp_msectime() < (sentat + cfg.timeout)) && !end) {
+    while(( systools_msectime() < (sentat + cfg.timeout)) && !end) {
       memset(buffer, 0, sizeof(arp_buffer_t));
       socklen_t msize = sizeof(nic_dev);
-      switch(arp_recvfrom_timeout(fd, cfg.timeout)) {//Data received ?
+      switch(nettools_recvfrom_timeout(fd, cfg.timeout, 0)) {//Data received ?
 	case -1:
 	  if(cfg.debug) logger(LOG_ERR, "Error while reading socket\n");
 	  break;
@@ -242,6 +334,7 @@ int arp_resolve_ip(struct arpcfg_s cfg, struct netiface_info_s me, netiface_ip4_
 	      if(cfg.debug) logger(LOG_DEBUG, "Reply is for me, got MAC Address: %s\n", dest_mac);
 	      end = 1;
 	      close(fd);
+	      arp_add_in_table(me.name, dest_ip, *dest_mac); 
 	      return 1;
 	    } else {
 	      if(cfg.debug) logger(LOG_DEBUG, "Other reply for MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\n",

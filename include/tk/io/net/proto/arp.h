@@ -41,6 +41,42 @@
   #define DEF_ARP_CFG ((struct arpcfg_s){ARP_MAX_ATTEMPTS,ARP_TIMEOUT,0})
   #define DEF_ARP_DBG ((struct arpcfg_s){ARP_MAX_ATTEMPTS,ARP_TIMEOUT,1})
 
+/*  arp_flags and at_flags field values */
+  #define ATE_INUSE       0x01 /* entry in use */
+  #define ATE_COM         0x02 /* completed entry (enaddr valid) */
+  #define ATE_PERM        0x04 /* permanent entry */
+  #define ATE_PUBL        0x08 /* publish entry (respond for other host) */
+  #define ATE_USETRAILERS 0x10 /* has requested trailers */
+  #define ATE_PROXY       0x20 /* Do PROXY arp */
+
+  struct arp_entry_s {
+      netiface_name_t name;
+      netiface_ip4_t ip;
+      netiface_mac_t mac;
+      netiface_bmac_t bmac;
+      int flags;
+  };
+
+
+  /**
+   * @fn int arp_find_from_table(char* ip, struct arp_entry_s *entry)
+   * @brief Search an arp entry from the system table.
+   * @param ip The ip or the hostname to search.
+   * @param entry The result entry (only available if this function return 1).
+   * @return -1: error or not found, 0: found
+   */
+  int arp_find_from_table(char* ip, struct arp_entry_s *entry);
+
+  /**
+   * @fn int arp_add_in_table(netiface_name_t name, const char *ip, netiface_mac_t mac)
+   * @brief Add a new entry into the ARP table.
+   * @param name The interface name.
+   * @param ip The ip or the hostname to add.
+   * @param mac The mac to add.
+   * @return -1 on error else 0;
+   */
+  int arp_add_in_table(netiface_name_t name, const char *ip, netiface_mac_t mac);
+
   /**
    * @fn int arp_is_arp_frame(arp_buffer_t frame, unsigned int l)
    * @brief Test if the current frame is a vaid ARP frame. 
