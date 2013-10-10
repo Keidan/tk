@@ -144,6 +144,15 @@
   int netiface_get_fd(netiface_t iface, int *fd);
 
   /**
+   * @fn int netiface_get_fd(netiface_t iface, netiface_name_t name)
+   * @brief Get the internal iface name.
+   * @param iface The iface.
+   * @param name The result name.
+   * @return 0 on success else -1.
+   */
+  int netiface_get_name(netiface_t iface, netiface_name_t name);
+
+  /**
    * @fn int netiface_read(const netiface_t iface, netiface_info_t info)
    * @brief Read some informations from the iface.
    * @param iface The iface handle.
