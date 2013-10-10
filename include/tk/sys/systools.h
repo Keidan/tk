@@ -33,6 +33,13 @@
   #define is_big_endian() !wicked_cast(unsigned char, 1u)
 
   /**
+   * @fn unsigned long systools_msectime();
+   * @brief Get the current time in ms.
+   * @return The current time.
+   */
+  unsigned long systools_msectime();
+
+  /**
    * @def SYSTOOLS_1KO
    * @brief Value of 1 Kb in octets
    * @see bns_utils_size_to_string

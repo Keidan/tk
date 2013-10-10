@@ -27,11 +27,25 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sys/time.h>
 #include <string.h>
 #include <math.h>
 #include <signal.h>
 
 #define USEC_PER_SEC         1000000UL
+
+/**
+ * @fn unsigned long systools_msectime();
+ * @brief Get the current time in ms.
+ * @return The current time.
+ */
+unsigned long systools_msectime() {
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  return ((t.tv_sec) * 1000 + t.tv_usec/1000);
+}
+
+
 
 /**
  * @fn void systools_size_to_string(long size, char ssize[SYSTOOLS_MAX_SSIZE])
