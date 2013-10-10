@@ -290,4 +290,14 @@
    */
   _Bool nettools_valid_mac(netiface_mac_t mac);
 
+
+  /**
+   * @fn int nettools_recvfrom_timeout(int fd, long sec, long usec)
+   * @brief Wait for input datas.
+   * @param fd The RAW socket FD.
+   * @param sec The seconds nb before timeout.
+   * @return -1 on error, 0 on timeout else >=1
+   */
+  int nettools_recvfrom_timeout(int fd, long sec, long usec);
+
 #endif /* __NETTOOLS_H__ */

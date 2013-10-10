@@ -536,3 +536,23 @@ _Bool nettools_match_from_simple_filter(struct nettools_headers_s *net, struct n
   }
   return mac_found && ip_found && port_found;
 }
+
+
+/**
+ * @fn int nettools_recvfrom_timeout(int fd, long sec, long usec)
+ * @brief Wait for input datas.
+ * @param fd The RAW socket FD.
+ * @param sec The seconds nb before timeout.
+ * @return -1 on error, 0 on timeout else >=1
+ */
+int nettools_recvfrom_timeout(int fd, long sec, long usec) {
+  // Setup timeval variable
+  struct timeval timeout;
+  timeout.tv_sec = sec;
+  timeout.tv_usec = usec;
+  // Setup fd_set structure
+  fd_set fds;
+  FD_ZERO(&fds);
+  FD_SET(fd, &fds);
+  return select(fd+1, &fds, 0, 0, &timeout);
+}
