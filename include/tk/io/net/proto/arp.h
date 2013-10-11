@@ -78,6 +78,54 @@
   int arp_add_in_table(netiface_name_t name, const char *ip, netiface_mac_t mac);
 
   /**
+   * @fn _Bool arp_entry_is_inuse(const struct arp_entry_s *entry)
+   * @brief Test if the ARP entry contains the flag inuse.
+   * @param entry The entry to test.
+   * @return 0 if the entry does not contains the flag else 1.
+   */
+  _Bool arp_entry_is_inuse(const struct arp_entry_s *entry);
+
+  /**
+   * @fn _Bool arp_entry_is_completed(const struct arp_entry_s *entry)
+   * @brief Test if the ARP entry contains the flag completed.
+   * @param entry The entry to test.
+   * @return 0 if the entry does not contains the flag else 1.
+   */
+  _Bool arp_entry_is_completed(const struct arp_entry_s *entry);
+
+  /**
+   * @fn _Bool arp_entry_is_permanent(const struct arp_entry_s *entry) 
+   * @brief Test if the ARP entry contains the flag permanent.
+   * @param entry The entry to test.
+   * @return 0 if the entry does not contains the flag else 1.
+   */
+  _Bool arp_entry_is_permanent(const struct arp_entry_s *entry);
+
+  /**
+   * @fn _Bool arp_entry_is_published(const struct arp_entry_s *entry)
+   * @brief Test if the ARP entry contains the flag published.
+   * @param entry The entry to test.
+   * @return 0 if the entry does not contains the flag else 1.
+   */
+  _Bool arp_entry_is_published(const struct arp_entry_s *entry);
+
+  /**
+   * @fn _Bool arp_entry_is_trailers(const struct arp_entry_s *entry)
+   * @brief Test if the ARP entry contains the flag trailers.
+   * @param entry The entry to test.
+   * @return 0 if the entry does not contains the flag else 1.
+   */
+  _Bool arp_entry_is_trailers(const struct arp_entry_s *entry);
+
+  /**
+   * @fn _Bool arp_entry_is_proxy(const struct arp_entry_s *entry)
+   * @brief Test if the ARP entry contains the flag proxy.
+   * @param entry The entry to test.
+   * @return 0 if the entry does not contains the flag else 1.
+   */
+  _Bool arp_entry_is_proxy(const struct arp_entry_s *entry);
+
+  /**
    * @fn int arp_is_arp_frame(arp_buffer_t frame, unsigned int l)
    * @brief Test if the current frame is a vaid ARP frame. 
    * @param frame The frame to test.

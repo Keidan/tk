@@ -100,7 +100,10 @@ int arp_find_from_table(char* ip, struct arp_entry_s *entry) {
     logger(LOG_ERR, "%s was not found!\n", ip);
     return -1;
   }
-  if (arpreq.arp_flags & ATE_COM) {
+  strcpy(entry->name, arpreq.arp_dev);
+  strcpy(entry->ip, inet_ntoa(sin->sin_addr));
+  entry->flags = arpreq.arp_flags;
+  if (entry->flags & ATE_COM) {
     strcpy(entry->name, arpreq.arp_dev);
     strcpy(entry->ip, inet_ntoa(sin->sin_addr));
     entry->flags = arpreq.arp_flags;
@@ -155,6 +158,67 @@ int arp_add_in_table(netiface_name_t name, const char *ip, netiface_mac_t mac) {
   close(fd);
   return 0;
 }
+
+/**
+ * @fn _Bool arp_entry_is_inuse(const struct arp_entry_s *entry)
+ * @brief Test if the ARP entry contains the flag inuse.
+ * @param entry The entry to test.
+ * @return 0 if the entry does not contains the flag else 1.
+ */
+_Bool arp_entry_is_inuse(const struct arp_entry_s *entry) {
+  return entry && entry->flags & ATE_INUSE;
+}
+
+/**
+ * @fn _Bool arp_entry_is_completed(const struct arp_entry_s *entry)
+ * @brief Test if the ARP entry contains the flag completed.
+ * @param entry The entry to test.
+ * @return 0 if the entry does not contains the flag else 1.
+ */
+_Bool arp_entry_is_completed(const struct arp_entry_s *entry) {
+  return entry && entry->flags & ATE_COM;
+}
+
+/**
+ * @fn _Bool arp_entry_is_permanent(const struct arp_entry_s *entry) 
+ * @brief Test if the ARP entry contains the flag permanent.
+ * @param entry The entry to test.
+ * @return 0 if the entry does not contains the flag else 1.
+ */
+_Bool arp_entry_is_permanent(const struct arp_entry_s *entry) {
+  return entry && entry->flags & ATE_PERM;
+}
+
+/**
+ * @fn _Bool arp_entry_is_published(const struct arp_entry_s *entry)
+ * @brief Test if the ARP entry contains the flag published.
+ * @param entry The entry to test.
+ * @return 0 if the entry does not contains the flag else 1.
+ */
+_Bool arp_entry_is_published(const struct arp_entry_s *entry) {
+  return entry && entry->flags & ATE_PUBL;
+}
+
+/**
+ * @fn _Bool arp_entry_is_trailers(const struct arp_entry_s *entry)
+ * @brief Test if the ARP entry contains the flag trailers.
+ * @param entry The entry to test.
+ * @return 0 if the entry does not contains the flag else 1.
+ */
+_Bool arp_entry_is_trailers(const struct arp_entry_s *entry) {
+  return entry && entry->flags & ATE_USETRAILERS;
+}
+
+/**
+ * @fn _Bool arp_entry_is_proxy(const struct arp_entry_s *entry)
+ * @brief Test if the ARP entry contains the flag proxy.
+ * @param entry The entry to test.
+ * @return 0 if the entry does not contains the flag else 1.
+ */
+_Bool arp_entry_is_proxy(const struct arp_entry_s *entry) {
+  return entry && entry->flags & ATE_PROXY;
+}
+
 
 /**
  * @fn static void arp_preare_buffer(arp_buffer_t buffer)
