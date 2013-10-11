@@ -136,6 +136,11 @@
 
   typedef __u8* net_buffer_t;
 
+  struct net_payload_s {
+      __u32 length;
+      net_buffer_t buffer;
+  };
+
  /**
    * @fn int nettools_decode_buffer(const net_buffer_t buffer, __u32 length, struct nettools_headers_s *net, bns_packet_convert_et convert)
    * @brief Decode the packets in terms of the input buffer.
