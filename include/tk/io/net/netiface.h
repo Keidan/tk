@@ -118,6 +118,15 @@
   void netiface_list_delete(htable_t table);
 
   /**
+   * @fn int netiface_get_info_by_name(netiface_name_t name, netiface_info_t info) 
+   * @brief Retrieved the iface information by her name.
+   * @param name The iface name.
+   * @param info The output info.
+   * @return -1 on error else 0
+   */
+  int netiface_get_info_by_name(netiface_name_t name, netiface_info_t info);
+
+  /**
    * @fn int netiface_bind(netiface_t iface)
    * @brief Bind to the iface.
    * @param iface The iface.

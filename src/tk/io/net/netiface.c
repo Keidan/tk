@@ -138,6 +138,29 @@ void netiface_list_delete(htable_t table) {
 }
 
 /**
+ * @fn int netiface_get_info_by_name(netiface_name_t name, netiface_info_t info) 
+ * @brief Retrieved the iface information by her name.
+ * @param name The iface name.
+ * @param info The output info.
+ * @return -1 on error else 0
+ */
+int netiface_get_info_by_name(netiface_name_t name, netiface_info_t info) {
+  htable_t ifaces = netiface_list_new(NETIFACE_LVL_UDP, NETIFACE_KEY_NAME);
+  if(!ifaces) return -1;
+  netiface_t iface = netiface_list_get(ifaces, name);
+  if(!iface) {
+    netiface_list_delete(ifaces);
+    return -1;
+  }
+  if(netiface_read(iface, info)) {
+    netiface_list_delete(ifaces);
+    return -1;
+  }
+  netiface_list_delete(ifaces);
+  return 0;
+}
+
+/**
  * @fn int netiface_get_index(netiface_t iface, int *index)
  * @brief Get the internal iface index.
  * @param iface The iface.

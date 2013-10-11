@@ -20,12 +20,8 @@ int main(int argc, char** argv) {
   /* } */
 
   /* arp_add_in_table("wlan0", "192.168.1.18", "74:e5:43:5a:ea:ff"); */
-
-  htable_t ifaces = netiface_list_new(NETIFACE_LVL_UDP, NETIFACE_KEY_NAME);
   struct netiface_info_s info;
-  netiface_t iface = netiface_list_get(ifaces, "wlan0");
-  netiface_read(iface, &info);
-  netiface_list_delete(ifaces);
+  netiface_get_info_by_name("wlan0", &info);
   netiface_mac_t mac;
   int ret = arp_resolve_ip(DEF_ARP_DBG, info, "192.168.1.1", &mac);
   //int ret = arp_resolve_ip(DEF_ARP_DBG, info, "192.168.43.1", &mac);
