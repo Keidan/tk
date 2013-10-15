@@ -35,7 +35,6 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <netdb.h>
 
 typedef struct {
     uint8_t dst[6];
@@ -58,7 +57,6 @@ int arp_find_from_table(char* ip, struct arp_entry_s *entry) {
   _Bool found = 0;
   struct arpreq arpreq;
   struct sockaddr_in *sin;
-  struct hostent *hp;
 
   if(!entry) {
     logger(LOG_ERR, "Null entry pointer!\n");
@@ -68,16 +66,7 @@ int arp_find_from_table(char* ip, struct arp_entry_s *entry) {
   memset(&arpreq, 0, sizeof(arpreq));
   
   sin = (struct sockaddr_in *) &arpreq.arp_pa;
-  sin->sin_family = AF_INET;
-  sin->sin_addr.s_addr = inet_addr((char*)ip);
-  if(sin->sin_addr.s_addr ==-1){
-    if(!(hp = gethostbyname(ip))){
-      logger(LOG_ERR, "gethostbyname failed: (%d) %s\n", h_errno, hstrerror(h_errno));
-      return -1;
-    }
-    bcopy((char *)hp->h_addr, (char *)&sin->sin_addr, sizeof(sin->sin_addr));
-    logger(LOG_DEBUG, "Host name '%s' resolved '%s'\n", ip, inet_ntoa(sin->sin_addr));
-  }
+  if(nettools_ip_to_sockaddr(ip, sin) == -1) return -1;
 
   ifaces = netiface_list_new(NETIFACE_LVL_UDP, NETIFACE_KEY_NAME);
   count = htable_get_keys(ifaces, &keys);
@@ -128,21 +117,11 @@ int arp_add_in_table(netiface_name_t name, const char *ip, netiface_mac_t mac) {
   int fd;
   struct arpreq arpreq;
   struct sockaddr_in *sin;
-  struct hostent *hp;
 
   memset(&arpreq, 0, sizeof(arpreq));
   
   sin = (struct sockaddr_in *) &arpreq.arp_pa;
-  sin->sin_family = AF_INET;
-  sin->sin_addr.s_addr = inet_addr((char*)ip);
-  if(sin->sin_addr.s_addr ==-1){
-    if(!(hp = gethostbyname(ip))){
-      logger(LOG_ERR, "gethostbyname failed: (%d) %s\n", h_errno, hstrerror(h_errno));
-      return -1;
-    }
-    bcopy((char *)hp->h_addr, (char *)&sin->sin_addr, sizeof(sin->sin_addr));
-    logger(LOG_DEBUG, "Host name '%s' resolved '%s'\n", ip, inet_ntoa(sin->sin_addr));
-  }
+  if(nettools_ip_to_sockaddr(ip, sin) == -1) return -1;
   strcpy(arpreq.arp_dev, name);
   arpreq.arp_flags = ATE_COM;
   nettools_str2mac(mac, (unsigned char *) &arpreq.arp_ha.sa_data[0]);

@@ -38,7 +38,7 @@
 #include <tk/io/net/nettools.h>
 #include <tk/utils/string.h>
 #include <tk/sys/log.h>
-
+#include <netdb.h>
 
 /**
  * @fn int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const netiface_name_t iname)
@@ -210,6 +210,28 @@ unsigned int nettools_ip_to_long(const char* s) {
   return ntohl(n.sin_addr.s_addr);
 }
 
+/**
+ * @fn int nettools_ip_to_sockaddr(const char* ip, struct sockaddr_in *sin)
+ * @brief Convert an ascii ip (or host name) to a sockaddr_in.
+ * @param ip The ip (or hostname) to convert.
+ * @param sin The output.
+ * @return -1 on error else 0 on success.
+ */
+int nettools_ip_to_sockaddr(const char* ip, struct sockaddr_in *sin) {
+  struct hostent *hp;
+  if(!sin) return -1;
+  sin->sin_family = AF_INET;
+  sin->sin_addr.s_addr = inet_addr((char*)ip);
+  if(sin->sin_addr.s_addr == -1){
+    if(!(hp = gethostbyname(ip))){
+      logger(LOG_ERR, "gethostbyname failed: (%d) %s\n", h_errno, hstrerror(h_errno));
+      return -1;
+    }
+    bcopy((char *)hp->h_addr, (char *)&sin->sin_addr, sizeof(sin->sin_addr));
+    logger(LOG_DEBUG, "Host name '%s' resolved '%s'\n", ip, inet_ntoa(sin->sin_addr));
+  }
+  return 0;
+}
 
 /**
  * @fn pcap_hdr_t nettools_pcap_global_hdr(void)

@@ -240,6 +240,15 @@
   unsigned int nettools_ip_to_long(const char* s);
 
   /**
+   * @fn int nettools_ip_to_sockaddr(const char* ip, struct sockaddr_in *sin)
+   * @brief Convert an ascii ip (or host name) to a sockaddr_in.
+   * @param ip The ip (or hostname) to convert.
+   * @param sin The output.
+   * @return -1 on error else 0 on success.
+   */
+  int nettools_ip_to_sockaddr(const char* ip, struct sockaddr_in *sin);
+
+  /**
    * @fn pcap_hdr_t nettools_pcap_global_hdr(void)
    * @brief Build the main header of the pcap file.
    * @param link Data link type.
