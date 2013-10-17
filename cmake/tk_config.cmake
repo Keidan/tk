@@ -5,6 +5,7 @@ include(CheckTypeSize)
 check_include_file(zlib.h HAVE_ZLIB_H)
 check_include_file(termios.h HAVE_TERMIOS_H)
 check_include_file(ncurses.h HAVE_NCURSES_H)
+check_include_file(libiptc/libiptc.h HAVE_IPTC_H)
 
 if(HAVE_ZLIB_H)
   set(CMAKE_EXTRA_INCLUDE_FILES zconf.h)
