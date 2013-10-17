@@ -26,15 +26,40 @@
 #include <tk/utils/llist.h>
 
 
-llist_t llist_create(void* data) {
+llist_t llist_create(void* data, size_t vlen) {
   llist_t n;
   if(!(n=malloc(sizeof(ll_st)))) return NULL;
-  n->data=data;
+  if(vlen) {
+    n->data = malloc(vlen);
+    if(!n->data) {
+      free(n);
+      return NULL;
+    }
+    memcpy(n->data, data, vlen);
+  } else
+    n->data=data;
   n->next=NULL;
   n->head=NULL;
+  n->alloc = vlen != 0;
   return n;
 }
 
+/**
+ * @fn llist_t llist_pushback_and alloc(llist_t list, void* value)
+ * @brief Add an item at the last and alloc a pointer for the datas
+ * @param list The list
+ * @param value The value.
+ * @return The list with the new item.
+ */
+llist_t llist_pushback_and_alloc(llist_t list, void* value, size_t vlen) {
+  llist_t newnode;
+  newnode = llist_create(value, vlen);
+  if(!list) return (newnode->head = newnode);
+  newnode->head = list->head;
+  newnode->next = list->next;
+  list->next = newnode;
+  return list;
+}
 /**
  * @fn llist_t llist_pushback(llist_t list, void* value)
  * @brief Add an item at the last
@@ -43,13 +68,7 @@ llist_t llist_create(void* data) {
  * @return The list with the new item.
  */
 llist_t llist_pushback(llist_t list, void* value) {
-  llist_t newnode;
-  newnode = llist_create(value);
-  if(!list) return (newnode->head = newnode);
-  newnode->head = list->head;
-  newnode->next = list->next;
-  list->next = newnode;
-  return list;
+  return llist_pushback_and_alloc(list, value, 0);
 }
 
 /**
@@ -61,7 +80,7 @@ llist_t llist_pushback(llist_t list, void* value) {
  */
 llist_t llist_pushfirst(llist_t list, void* value) {
   llist_t newnode;
-  newnode = llist_create(value);
+  newnode = llist_create(value, 0);
   newnode->next = list;
   return newnode;
 }
@@ -198,7 +217,7 @@ void llist_remove_by_value(llist_t *list, void* val)  {
          */
         prev->next = curr->next;
       }
-
+      if(curr->alloc && curr->data) free(curr->data), curr->data = NULL;
       /* Deallocate the node. */
       free(curr);
 
@@ -230,26 +249,14 @@ void llist_clear(llist_t *list) {
   while(*list) {
     node = *list;
     *list = (*list)->next;
-    if(node) free(node);
+    if(node) {
+      if(node->alloc && node->data) free(node->data), node->data = NULL;
+      free(node);
+    }
   } 
   *list = NULL;
 }
 
-
-/**
- * @fn void llist_clear_all_empty_data(llist_t *list, void* empty_value)
- * @brief Clear all elements with the NULL datas.
- * @param list The list
- */
-void llist_clear_all_empty_data(llist_t *list, void* empty_value) {
-  if(!list || !*list) return;
-  llist_t node;
-  while(*list) {
-    node = *list;
-    *list = (*list)->next;
-    if(node && node->data == empty_value) free(node);
-  }
-}
 
 /**
  * @fn llist_t llist_sort(llist_t list, llist_comparator_t comparator)

@@ -33,6 +33,7 @@
       void*        data;
       ll_st        *next;
       ll_st        *head;
+      _Bool        alloc;
   };
 
   typedef ll_st* llist_t;
@@ -67,6 +68,15 @@
    * @return The list with the new item.
    */
   llist_t llist_pushback(llist_t list, void* value);
+
+  /**
+   * @fn llist_t llist_pushback_and alloc(llist_t list, void* value)
+   * @brief Add an item at the last and alloc a pointer for the datas
+   * @param list The list
+   * @param value The value.
+   * @return The list with the new item.
+   */
+  llist_t llist_pushback_and_alloc(llist_t list, void* value, size_t vlen);
 
   /**
    * @fn llist_t llist_pushfirst(llist_t list, void* value)
@@ -142,13 +152,6 @@
    * @param list The list.
    */
   void llist_clear(llist_t *list);
-
-  /**
-   * @fn void llist_clear_all_empty_data(llist_t *list, void* empty_value)
-   * @brief Clear all elements with the NULL datas.
-   * @param list The list
-   */
-  void llist_clear_all_empty_data(llist_t *list, void* empty_value);
 
   /**
    * @fn llist_t llist_sort(llist_t list, llist_comparator_t comparator)
