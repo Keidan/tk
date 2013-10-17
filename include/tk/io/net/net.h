@@ -26,6 +26,7 @@
   #include <tk/io/net/netiface.h>
   #include <tk/io/net/nettools.h>
   #include <tk/io/net/netprint.h>
+  #include <tk/io/net/netfilter.h>
 
 
 #endif /* __NET_H__ */

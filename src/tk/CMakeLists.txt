@@ -12,6 +12,7 @@ set(lib_src
   ${TK_SRC_DIR}/sys/syssig.c 
   ${TK_SRC_DIR}/sys/systools.c 
   ${TK_SRC_DIR}/sys/proc.c
+  ${TK_SRC_DIR}/sys/probe.c
   ${TK_SRC_DIR}/io/file.c
   ${TK_SRC_DIR}/io/net/nettools.c
   ${TK_SRC_DIR}/io/net/netprint.c
@@ -43,7 +44,13 @@ if(HAVE_ZLIB_H)
     ${TK_SRC_DIR}/utils/z.c
   )
 endif(HAVE_ZLIB_H)
-
+# add netfilter if iptc is found
+if(HAVE_IPTC_H)
+  set(lib_src ${lib_src} 
+    ${TK_SRC_DIR}/io/net/netfilter.c
+  )
+  set(link ${link} ip4tc)
+endif(HAVE_IPTC_H)
 
 add_library(tk SHARED ${lib_src})
 target_link_libraries(tk ${link})
