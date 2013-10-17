@@ -314,4 +314,13 @@
    */
   int nettools_recvfrom_timeout(int fd, long sec, long usec);
 
+
+  /**
+   * @fn __u8 nettools_get_cidr(netiface_ip4_t ip)
+   * @brief Get the CIDR value from an IP.
+   * @param ip The IP.
+   * @return The CIDR (0 min max 32)
+   */
+  __u8 nettools_get_cidr(netiface_ip4_t ip);
+
 #endif /* __NETTOOLS_H__ */

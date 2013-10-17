@@ -39,6 +39,7 @@
 #include <tk/utils/string.h>
 #include <tk/sys/log.h>
 #include <netdb.h>
+#include <netinet/in.h>
 
 /**
  * @fn int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const netiface_name_t iname)
@@ -577,4 +578,25 @@ int nettools_recvfrom_timeout(int fd, long sec, long usec) {
   FD_ZERO(&fds);
   FD_SET(fd, &fds);
   return select(fd+1, &fds, 0, 0, &timeout);
+}
+
+/**
+ * @fn __u8 nettools_get_cidr(netiface_ip4_t ip)
+ * @brief Get the CIDR value from an IP.
+ * @param ip The IP.
+ * @return The CIDR (0 min max 32)
+ */
+__u8 nettools_get_cidr(netiface_ip4_t ip) {
+  unsigned char bits = 0;
+  in_addr_t mask;
+  in_addr_t host;
+  if(!ip || !strlen(ip)) return 32;
+
+  mask = inet_network(ip);
+  host = ~mask;
+  /* a valid netmask must be 2^n - 1 */
+  if((host & (host + 1)) != 0)
+    return -1;
+  for(; mask; mask <<= 1) ++bits;
+  return bits;
 }
