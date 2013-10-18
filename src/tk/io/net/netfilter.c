@@ -70,6 +70,28 @@ static void netfilter_int2ip(__u32 ip, netiface_ip4_t i);
  * @param lrule The output rule.
  */
 static void netiface_prepare_lrule(const struct ipt_entry *e, struct iptc_handle *h, const char *chain, struct netfilter_rule_ls_s *lrule);
+/**
+ * @fn static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entry, const ipt_chainlabel chainlabel)
+ * @brief adds an ipt_entry to the specified chain - finally ;-)
+ * @param h IPTC handle.
+ * @param entry the entry which should be adedded
+ * @param chainlabel the name of the chain from which the entry shall be deleted
+ * @param table the handle for the table from which the entry shall be deleted
+ * @return -1 on error else 0 on sucess.
+ */
+static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainlabel);
+/**
+ * @fn static int netfilter_remove_from_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainLabel)
+ * @brief Deletes an ipt_entry from the specified chain
+ * @param h IPTC handle.
+ * @param entry the entry which should be deleted
+ * @param matchmask libiptc needs a mask telling what parts of an entry to consider when searching for the entry which shall bel deleted.
+ * @param chainlabel the name of the chain from which the entry shall be deleted
+ * @param table the handle for the table from which the entry shall be deleted
+ * @return -1 on error else 0 on sucess.
+ */
+static int netfilter_remove_from_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainlabel);
+
 /*************/
 /************Global fields */
 static pthread_mutex_t hard_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -311,6 +333,47 @@ static void netiface_prepare_lrule(const struct ipt_entry *e, struct iptc_handle
     strcpy(lrule->target, target_name);
 }
 
+
+/**
+ * @fn static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entry, const ipt_chainlabel chainlabel)
+ * @brief adds an ipt_entry to the specified chain - finally ;-)
+ * @param h IPTC handle.
+ * @param entry the entry which should be adedded
+ * @param chainlabel the name of the chain from which the entry shall be deleted
+ * @param table the handle for the table from which the entry shall be deleted
+ * @return -1 on error else 0 on sucess.
+ */
+static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainlabel) {
+  int ret;
+  pthread_mutex_lock(&hard_lock);
+  ret = iptc_append_entry(chainlabel, entry, h);
+  pthread_mutex_unlock(&hard_lock);
+  if (ret == 1)
+    return 0;
+  logger(LOG_ERR, "# ERROR: Adding of entry to table failed!\n");
+  return -1;
+}
+/**
+ * @fn static int netfilter_remove_from_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainLabel)
+ * @brief Deletes an ipt_entry from the specified chain
+ * @param h IPTC handle.
+ * @param entry the entry which should be deleted
+ * @param matchmask libiptc needs a mask telling what parts of an entry to consider when searching for the entry which shall bel deleted.
+ * @param chainlabel the name of the chain from which the entry shall be deleted
+ * @param table the handle for the table from which the entry shall be deleted
+ * @return -1 on error else 0 on sucess.
+ */
+static int netfilter_remove_from_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainlabel) {
+  int ret;
+  pthread_mutex_lock(&hard_lock);
+  ret = iptc_delete_entry(chainlabel, entry, matchmask, h);
+  pthread_mutex_unlock(&hard_lock);
+  if (ret == 1)
+    return 0;
+  logger(LOG_ERR, "# ERROR: Removing of entry to table failed!\n");
+  return -1;
+}
+
 /**
  * @fn static void netfilter_int2ip(__u32 ip, netiface_ip4_t i)
  * @brief Convert an int to an ip4.
@@ -325,3 +388,66 @@ static void netfilter_int2ip(__u32 ip, netiface_ip4_t i) {
   bzero(i, sizeof(netiface_ip4_t));
   sprintf(i, "%u.%u.%u.%u", IP_PARTS(ip));
 }
+
+/**
+ * @fn int netfilter_remove(netfilter_t netf, const struct netfilter_rule_s* rule)
+ * @brief Prepares a rule in order to be deleted from the Kernel:
+ * - does basic sanity checks
+ * - calls prepareEntry in order to get an ipt_entry
+ * - removes the ipt_entry to kernel
+ * @param netf Netfilter handle.
+ * @param rule rule which shall be removed
+ * @return -1 on error else 0 on success
+ */
+int netfilter_remove(netfilter_t netf, const struct netfilter_rule_s* rule) {
+  int ret = 0;
+  int esize = 0;
+  unsigned char *matchmask;
+  struct ipt_entry *entry;		/* pointer to entry */
+  create_ptr(nf, netf);
+  if(!test_ptr(nf)) return -1;
+
+  /* Sanity checks: rule, chainLabel and table */
+  if(!rule) {
+    logger(LOG_ERR, "# ERROR: Rule points to NULL\n");
+    return -1;
+  }
+  if(!rule->chain) {
+    logger(LOG_ERR, "# ERROR: ChainLabel points to NULL\n");
+    return -1;
+  }
+  if(!nf->h) {
+    logger(LOG_ERR, "# ERROR: Table points to NULL\n");
+    return -1;
+  }
+  if((ret = netfilter_prepare_entry(rule, rule->target, &entry)) < 0) {
+    logger(LOG_ERR, "# ERROR: Couldn't create ipt_entry\n");
+    return -1;
+  }
+
+  esize = ret;
+  /* libiptc needs a mask telling what parts of an entry
+   * to consider when searching for the entry which shall bel deleted.
+   *
+   * For an exact match a unsigned char* set to 0xFF with the length of the
+   * entry is needed.
+   * What a coincidence that prepareEntry returnes the length value ;-) */
+  
+  if((matchmask = ((unsigned char *)malloc(esize))) == NULL) {
+    free(entry);
+    logger(LOG_ERR, "# ERROR: Couldn't allocate memory for matchmask!\n");
+    return -1;
+  }
+
+  /* set all bits of the matchmask to '1' */
+  memset(matchmask, 0xFF, esize);
+
+  /* ready to remove the rule from the kernel */
+  ret = netfilter_remove_from_kernel(nf->h, entry, matchmask, rule->chain);
+
+  /* cleanups */
+  free(entry);
+  free(matchmask);
+  return ret;
+}
+

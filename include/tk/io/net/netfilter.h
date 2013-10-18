@@ -37,6 +37,32 @@
   typedef char ipt_targetlabel [255];
 
 
+  struct netfilter_ip_rule_s {
+      struct {
+	  netiface_ip4_t ip;
+	  netiface_ip4_t mask;
+      } str;
+      struct {
+	  __u16 min;
+	  __u16 max;
+      } port;
+      __u8 cidr;
+  };
+
+  struct netfilter_rule_s {
+      struct netfilter_ip_rule_s src;
+      struct netfilter_ip_rule_s dst;
+      __u8 proto; /* Transport layer protocol */
+      struct {
+	  netiface_name_t input;
+	  netiface_name_t output;
+      } ifaces;
+      ipt_targetlabel target;
+      ipt_chainlabel chain;
+  };
+
+
+
   struct netfilter_rule_ls_s {
       netiface_ip4_t  src; /* Source IP */
       netiface_ip4_t  dst; /* Destination IP*/   
