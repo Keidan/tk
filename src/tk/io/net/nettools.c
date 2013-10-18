@@ -41,6 +41,44 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
+
+static struct nettools_subnet_s subnet_table [] = {
+  {1, 31, "128.0.0.0"},
+  {2, 30, "192.0.0.0"},
+  {3, 29, "224.0.0.0"},
+  {4, 28, "240.0.0.0"},
+  {5, 27, "248.0.0.0"},
+  {6, 26, "252.0.0.0"},
+  {7, 25, "254.0.0.0"},
+  {8, 24, "255.0.0.0"},
+  {9, 23, "255.128.0.0"},
+  {10, 22, "255.192.0.0"},
+  {11, 21, "255.224.0.0"},
+  {12, 20, "255.240.0.0"},
+  {13, 19, "255.248.0.0"},
+  {14, 18, "255.252.0.0"},
+  {15, 17, "255.254.0.0"},
+  {16, 16, "255.255.0.0"},
+  {17, 15, "255.255.128.0"},
+  {18, 14, "255.255.192.0"},
+  {19, 13, "255.255.224.0"},
+  {20, 12, "255.255.240.0"},
+  {21, 11, "255.255.248.0"},
+  {22, 10, "255.255.252.0"},
+  {23, 9, "255.255.254.0"},
+  {24, 8, "255.255.255.0"},
+  {25, 7, "255.255.255.128"},
+  {26, 6, "255.255.255.192"},
+  {27, 5, "255.255.255.224"},
+  {28, 4, "255.255.255.240"},
+  {29, 3, "255.255.255.248"},
+  {30, 2, "255.255.255.252"},
+  {31, 1, "255.255.255.254"},
+  {32, 0, "255.255.255.255"}
+};
+
+
+
 /**
  * @fn int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const netiface_name_t iname)
  * @brief List all network interfaces, configures and adds into the list (CAUTION: after the call of this function a socket is opened).
@@ -599,4 +637,16 @@ __u8 nettools_get_cidr(netiface_ip4_t ip) {
     return -1;
   for(; mask; mask <<= 1) ++bits;
   return bits;
+}
+
+/**
+ * @fn const char* nettools_get_mask_by_cidr(__u8 cidr)
+ * @brief Get the associated mask from cidr.
+ * @param cid The cidr.
+ * @return The mask
+ */
+const char* nettools_get_mask_by_cidr(__u8 cidr) {
+  if(cidr == 0) cidr = 1;
+  if(cidr > 32) cidr = 32;
+  return subnet_table[cidr - 1].smask;
 }

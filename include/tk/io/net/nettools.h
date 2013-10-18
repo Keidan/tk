@@ -44,6 +44,12 @@
     netiface_mac_t mac;
   };
 
+  struct nettools_subnet_s{
+      __u8 cidr;
+      __u8 available_bits;
+      netiface_ip4_t smask;
+  };
+
 /* utilisee pour le decodage de la reponse/requete ARP */
   struct arphdr2 {
     unsigned char sha[ETH_ALEN];
@@ -322,5 +328,14 @@
    * @return The CIDR (0 min max 32)
    */
   __u8 nettools_get_cidr(netiface_ip4_t ip);
+
+
+  /**
+   * @fn const char* nettools_get_mask_by_cidr(__u8 cidr)
+   * @brief Get the associated mask from cidr.
+   * @param cid The cidr.
+   * @return The mask
+   */
+  const char* nettools_get_mask_by_cidr(__u8 cidr);
 
 #endif /* __NETTOOLS_H__ */
