@@ -250,6 +250,27 @@ unsigned int nettools_ip_to_long(const char* s) {
 }
 
 /**
+ * @fn int nettools_ip_to_sinaddr(const char* ip, struct sockaddr_in *sin)
+ * @brief Convert an ascii ip to a struct in_addr.
+ * @param ip The ip to convert.
+ * @param sin The output.
+ * @return -1 on error else 0 on success.
+ */
+int nettools_ip_to_inaddr(const char* ip, struct in_addr *sin_addr) {
+  struct hostent *hp;
+  if(!sin_addr) return -1;
+  sin_addr->s_addr = inet_addr((char*)ip);
+  if(sin_addr->s_addr == -1){
+    if(!(hp = gethostbyname(ip))){
+      logger(LOG_ERR, "gethostbyname failed: (%d) %s\n", h_errno, hstrerror(h_errno));
+      return -1;
+    }
+    bcopy((char *)hp->h_addr, (char *)sin_addr, sizeof(*sin_addr));
+    logger(LOG_DEBUG, "Host name '%s' resolved '%s'\n", ip, inet_ntoa(*sin_addr));
+  }
+  return 0;
+}
+/**
  * @fn int nettools_ip_to_sockaddr(const char* ip, struct sockaddr_in *sin)
  * @brief Convert an ascii ip (or host name) to a sockaddr_in.
  * @param ip The ip (or hostname) to convert.
@@ -257,19 +278,9 @@ unsigned int nettools_ip_to_long(const char* s) {
  * @return -1 on error else 0 on success.
  */
 int nettools_ip_to_sockaddr(const char* ip, struct sockaddr_in *sin) {
-  struct hostent *hp;
   if(!sin) return -1;
   sin->sin_family = AF_INET;
-  sin->sin_addr.s_addr = inet_addr((char*)ip);
-  if(sin->sin_addr.s_addr == -1){
-    if(!(hp = gethostbyname(ip))){
-      logger(LOG_ERR, "gethostbyname failed: (%d) %s\n", h_errno, hstrerror(h_errno));
-      return -1;
-    }
-    bcopy((char *)hp->h_addr, (char *)&sin->sin_addr, sizeof(sin->sin_addr));
-    logger(LOG_DEBUG, "Host name '%s' resolved '%s'\n", ip, inet_ntoa(sin->sin_addr));
-  }
-  return 0;
+  return nettools_ip_to_inaddr(ip, &sin->sin_addr);
 }
 
 /**

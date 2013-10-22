@@ -255,6 +255,15 @@
   int nettools_ip_to_sockaddr(const char* ip, struct sockaddr_in *sin);
 
   /**
+   * @fn int nettools_ip_to_sinaddr(const char* ip, struct sockaddr_in *sin)
+   * @brief Convert an ascii ip to a struct in_addr.
+   * @param ip The ip to convert.
+   * @param sin The output.
+   * @return -1 on error else 0 on success.
+   */
+  int nettools_ip_to_inaddr(const char* ip, struct in_addr *sin_addr);
+
+  /**
    * @fn pcap_hdr_t nettools_pcap_global_hdr(void)
    * @brief Build the main header of the pcap file.
    * @param link Data link type.
@@ -310,7 +319,6 @@
    */
   _Bool nettools_valid_mac(netiface_mac_t mac);
 
-
   /**
    * @fn int nettools_recvfrom_timeout(int fd, long sec, long usec)
    * @brief Wait for input datas.
@@ -320,7 +328,6 @@
    */
   int nettools_recvfrom_timeout(int fd, long sec, long usec);
 
-
   /**
    * @fn __u8 nettools_get_cidr(netiface_ip4_t ip)
    * @brief Get the CIDR value from an IP.
@@ -328,7 +335,6 @@
    * @return The CIDR (0 min max 32)
    */
   __u8 nettools_get_cidr(netiface_ip4_t ip);
-
 
   /**
    * @fn const char* nettools_get_mask_by_cidr(__u8 cidr)
