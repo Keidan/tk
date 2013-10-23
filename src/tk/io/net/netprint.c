@@ -26,6 +26,8 @@
 #include <tk/io/net/netprint.h>
 #include <tk/io/net/nettools.h>
 #include <tk/sys/log.h>
+#include <linux/udp.h>
+#include <linux/tcp.h>
 
 
 #define SET_NSET(cond) (!!(cond)), NETPRINT_SET_NSET(cond)

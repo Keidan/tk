@@ -40,7 +40,8 @@
 #include <tk/sys/log.h>
 #include <netdb.h>
 #include <netinet/in.h>
-
+#include <linux/udp.h>
+#include <linux/tcp.h>
 
 static struct nettools_subnet_s subnet_table [] = {
   {1, 31, "128.0.0.0"},

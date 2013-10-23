@@ -28,8 +28,6 @@
   #include <net/if.h>
   #include <linux/if_ether.h>
   #include <netinet/ip.h>
-  #include <linux/udp.h>
-  #include <linux/tcp.h>
   #include <net/if_arp.h>
   #include <arpa/inet.h>
   #include <sys/select.h>
