@@ -69,8 +69,6 @@ int probe_get_binary(file_name_t probe) {
  */
 int probe_insert(const char *modname, const char *modprobe, _Bool quiet) {
   file_name_t buf;
-  char *argv[4];
-  int *status = malloc(sizeof(int));
   /* If they don't explicitly set it, read out of kernel */
   if (modprobe == NULL) {
     if(probe_get_binary(buf) == -1);
@@ -78,37 +76,7 @@ int probe_insert(const char *modname, const char *modprobe, _Bool quiet) {
     modprobe = buf;
   }
 
-  /*
-   * Need to flush the buffer, or the child may output it again
-   * when switching the program thru execv.
-   */
-  fflush(stdout);
-
-  switch (vfork()) {
-    case 0:
-      argv[0] = (char *)modprobe;
-      argv[1] = (char *)modname;
-      if (quiet) {
-	argv[2] = (char*)"-q";
-	argv[3] = NULL;
-      } else {
-	argv[2] = NULL;
-	argv[3] = NULL;
-      }
-      execv(argv[0], argv);
-      /* not usually reached */
-      exit(1);
-    case -1:
-      return -1;  
-    default: /* parent */
-      wait(status);
-      status = status;
-  }
-  
-  if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-    free(status);
-    return 0;
-  }
-  free(status);
-  return -1;
+  file_name_t full;
+  sprintf(full, "%s %s", modprobe, modname);
+  return system(full);
 }
