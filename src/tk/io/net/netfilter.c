@@ -21,6 +21,7 @@
 *******************************************************************************
 */
 #include <tk/sys/probe.h>
+#include <tk/io/net/nettools.h>
 #include <tk/io/net/netfilter.h>
 #include <tk/sys/log.h>
 #include <unistd.h>
@@ -32,12 +33,19 @@
 
 /************ Macros */
 /* Here begins some of the code taken from iptables-save.c **************** */
-#define IP_PARTS_NATIVE(n)		\
-  (unsigned int)((n)>>24)&0xFF,		\
-  (unsigned int)((n)>>16)&0xFF,		\
-  (unsigned int)((n)>>8)&0xFF,		\
-  (unsigned int)((n)&0xFF)
-#define IP_PARTS(n) IP_PARTS_NATIVE(ntohl(n))
+#ifndef IP_PARTS_NATIVE
+  #define IP_PARTS_NATIVE(n)			\
+    (unsigned int)((n)>>24)&0xFF,		\
+    (unsigned int)((n)>>16)&0xFF,		\
+    (unsigned int)((n)>>8)&0xFF,		\
+    (unsigned int)((n)&0xFF)
+#endif
+#ifndef IP_PARTS
+  #define IP_PARTS(n) IP_PARTS_NATIVE(ntohl(n))
+#endif
+#ifndef IPT_ALIGN
+  #define IPT_ALIGN(s) (((s) + (__alignof__(struct ipt_entry)-1)) & ~(__alignof__(struct ipt_entry)-1))
+#endif
 #define create_ptr(local, param) struct netfilter_s *local = (struct netfilter_s*)param
 #define test_ptr(ptr) (ptr && ptr->magic == NETFILTER_MAGIC)
 /*************/
@@ -79,7 +87,7 @@ static void netiface_prepare_lrule(const struct ipt_entry *e, struct iptc_handle
  * @param table the handle for the table from which the entry shall be deleted
  * @return -1 on error else 0 on sucess.
  */
-static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainlabel);
+static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entry, const ipt_chainlabel chainlabel);
 /**
  * @fn static int netfilter_remove_from_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainLabel)
  * @brief Deletes an ipt_entry from the specified chain
@@ -91,7 +99,72 @@ static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entr
  * @return -1 on error else 0 on sucess.
  */
 static int netfilter_remove_from_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainlabel);
+/**
+ * @fn static void netfilter_parse_ports(__u16 from[2],  __u16 to[2])
+ * @brief Compares two ports and changes their order if higher value is
+ * in the first array element
+ * @param from array containing the ports to check
+ * @param to array containing the (swapped) ports
+ */
+static void netfilter_parse_ports(__u16 from[2],  __u16 to[2]);
+/**
+ * @fn static struct ipt_entry* netfilter_build_entry(struct ipt_ip* ip, struct ipt_entry_match* match, struct ipt_entry_target* target, int *entrysize)
+ * @brief Builds an ipt_entry consisting of ipt_ip, ipt_match, ipt_entry
+ * @param *ip ipt_ip containing IP, Mask and Interfacenames
+ * @param *match ipt_match containing match information i.e. ports
+ * @param *target ipt_target containing ACTION , i.c. "ACCEPT"
+ * @return ipt_entry* on success else NULL
+ */
+static struct ipt_entry* netfilter_build_entry(struct ipt_ip* ip, struct ipt_entry_match* match, struct ipt_entry_target* target, int *entrysize);
+/**
+ * @fn int netfilter_prepare_entry(struct netfilter_rule_s *rule, const char* targetlabel, struct ipt_entry** entry)
+ * @brief Prepares a rule in order to be added to the Kernel:
+ * - creates ipt_entry from ipt_ip, ipt_match, ipt_target with the
+ *   contents of the given rule
+ *
+ * @param rule	rule which shall be added.
+ * @param targetlabel The label of the target.
+ * @param entry Where to put the created ipt_entry
+ * @return length of the entry on success else -1 on error.
+ */
+int netfilter_prepare_entry(struct netfilter_rule_s *rule, const char* targetlabel, struct ipt_entry** entry);
+/**
+ * @fn struct ipt_entry_target* netfilter_build_target(const char* action)
+ * @brief Builds an ipt_target
+ * @param action a valid action i.e "ACCEPT", "DROP", "REJECT"
+ * @return  ipt_entry_target* on success else NULL on error.
+ */
+struct ipt_entry_target* netfilter_build_target(const char* action);
 
+/**
+ * @fn static struct ipt_ip* netfilter_build_ip(struct netfilter_rule_s* rule)
+ * @brief Creates an ipt_ip and fills it with content from given rule
+ * @param rule Rule containing information to parse
+ * @return ipt_ip* on success else NULL on error
+ */
+static struct ipt_ip* netfilter_build_ip(struct netfilter_rule_s* rule);
+
+/**
+ * @fn static struct ipt_entry_match* netfilter_build_match(struct netfilter_rule_s* rule)
+ * @brief Creates an ipt_entry_match and fills it with content from given rule
+ * @param rule Rule containing information to parse
+ * @return ipt_entry_match* on success else NULL on error
+ **/
+static struct ipt_entry_match* netfilter_build_match(struct netfilter_rule_s* rule);
+ /**
+  * @fn static struct ipt_entry_match* netfilter_build_match_tcp(struct netfilter_rule_s* rule)
+  * @brief Prepares the match (for TCP) so that it can be added to an ipt_entry
+  * @param rule Rule containing information to parse
+  * @return ipt_entry_match* on success else NULL on error
+  */
+static struct ipt_entry_match* netfilter_build_match_tcp(struct netfilter_rule_s* rule);
+ /**
+  * @fn static struct ipt_entry_match* netfilter_build_match_udp(struct netfilter_rule_s* rule)
+  * @brief Prepares the match (for UDP) so that it can be added to an ipt_entry
+  * @param rule Rule containing information to parse
+  * @return ipt_entry_match* on success else NULL on error
+  */
+static struct ipt_entry_match* netfilter_build_match_udp(struct netfilter_rule_s* rule);
 /*************/
 /************Global fields */
 static pthread_mutex_t hard_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -251,13 +324,14 @@ const char* netfilter_get_table_name(netfilter_t netf) {
 }
 
 /**
- * @fn void netfilter_parse_ports(netfilter_port_t from,  netfilter_port_t to[2])
+ * @fn static void netfilter_parse_ports(__u16 from[2],  __u16 to[2])
  * @brief Compares two ports and changes their order if higher value is
  * in the first array element
  * @param from array containing the ports to check
  * @param to array containing the (swapped) ports
  **/
-void netfilter_parse_ports(netfilter_port_t from,  netfilter_port_t to) {
+static void netfilter_parse_ports(__u16 from[2],  __u16 to[2]) {
+
   if(!from[0]) {
     to[0] = 0;
     // if B not null ? (then) A==C : (else) A==D
@@ -343,7 +417,7 @@ static void netiface_prepare_lrule(const struct ipt_entry *e, struct iptc_handle
  * @param table the handle for the table from which the entry shall be deleted
  * @return -1 on error else 0 on sucess.
  */
-static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entry, unsigned char *matchmask, const ipt_chainlabel chainlabel) {
+static int netfilter_add_to_kernel(struct iptc_handle *h, struct ipt_entry* entry, const ipt_chainlabel chainlabel) {
   int ret;
   pthread_mutex_lock(&hard_lock);
   ret = iptc_append_entry(chainlabel, entry, h);
@@ -390,7 +464,7 @@ static void netfilter_int2ip(__u32 ip, netiface_ip4_t i) {
 }
 
 /**
- * @fn int netfilter_remove(netfilter_t netf, const struct netfilter_rule_s* rule)
+ * @fn int netfilter_remove(netfilter_t netf, struct netfilter_rule_s* rule)
  * @brief Prepares a rule in order to be deleted from the Kernel:
  * - does basic sanity checks
  * - calls prepareEntry in order to get an ipt_entry
@@ -399,7 +473,7 @@ static void netfilter_int2ip(__u32 ip, netiface_ip4_t i) {
  * @param rule rule which shall be removed
  * @return -1 on error else 0 on success
  */
-int netfilter_remove(netfilter_t netf, const struct netfilter_rule_s* rule) {
+int netfilter_remove(netfilter_t netf, struct netfilter_rule_s *rule) {
   int ret = 0;
   int esize = 0;
   unsigned char *matchmask;
@@ -451,3 +525,348 @@ int netfilter_remove(netfilter_t netf, const struct netfilter_rule_s* rule) {
   return ret;
 }
 
+
+/**
+ * @fn int netfilter_add(netfilter_t netf, struct netfilter_rule_s* rule)
+ * @bief Prepares a rule in order to be added to the Kernel:
+ * - does basic sanity checks
+ * - calls prepareEntry in order to get an ipt_entry
+ * - adds the ipt_entry to kernel
+ * @param netf Ntfilter handle.
+ * @param rule rule which shall be added
+ * @return -1 on error else 0 on success
+ **/
+int netfilter_add(netfilter_t netf, struct netfilter_rule_s* rule) {
+  int ret = 0;
+  struct ipt_entry *entry;		/* pointer to entry */
+  create_ptr(nf, netf);
+  if(!test_ptr(nf)) return -1;
+
+  /* Sanity checks: rule, chainLabel, targetLabel and table */
+  if(!rule) {
+    logger(LOG_ERR, "# ERROR: Rule points to NULL\n");
+    return -1;
+  }
+  if(!rule->chain) {
+    logger(LOG_ERR, "# ERROR: ChainLabel points to NULL\n");
+    return -1;
+  }
+  if(!rule->target) {
+    logger(LOG_ERR, "# ERROR: TargetLabel points to NULL\n");
+    return -1;
+  }
+  if(!nf->h) {
+    logger(LOG_ERR, "# ERROR: Table points to NULL\n");
+    return -1;
+  }
+  
+  if((ret = netfilter_prepare_entry(rule, rule->target, &entry)) < 0) {
+    logger(LOG_ERR, "# ERROR: Couldn't create ipt_entry\n");
+    return false;
+  }
+
+  /* ready to add the rule to the kernel */
+  ret = netfilter_add_to_kernel(nf->h, entry, rule->chain);
+  /* cleanups */
+  free(entry);
+  return ret;
+}
+
+/**
+ * @fn static struct ipt_entry* netfilter_build_entry(struct ipt_ip* ip, struct ipt_entry_match* match, struct ipt_entry_target* target, int *entrysize)
+ * @brief Builds an ipt_entry consisting of ipt_ip, ipt_match, ipt_entry
+ * @param ip ipt_ip containing IP, Mask and Interfacenames
+ * @param match ipt_match containing match information i.e. ports
+ * @param target ipt_target containing ACTION , i.c. "ACCEPT"
+ * @return ipt_entry* on success else NULL
+ */
+static struct ipt_entry* netfilter_build_entry(struct ipt_ip* ip, struct ipt_entry_match* match, struct ipt_entry_target* target, int *entrysize) {
+  struct ipt_entry *entry;
+  int tsize = 0, esize = 0, msize = 0;
+
+  /* some basic sanity checks */
+  if(target == NULL) {
+    logger(LOG_ERR, "# ERROR: BuildEntry was called with NULL target\n");
+    if(match != NULL)
+      free(match), match = NULL;
+    if(ip != NULL)
+      free(ip), ip = NULL;
+    return NULL;
+  }
+
+  if(ip == NULL) {
+    logger(LOG_ERR, "# ERROR: BuildEntry was called with NULL ipt_ip\n");
+    free(target);
+    if(match != NULL)
+      free(match), match = NULL;
+    return NULL;
+  }
+
+  /* get size of target */
+  tsize = target->u.target_size;
+
+  /* get size of match */
+  if(match != NULL)
+    msize = match->u.match_size;
+	
+  /* size of an ipt_entry computes as sum of size of entry itself + match(es) + target */
+  esize = IPT_ALIGN(sizeof(*entry) + msize + tsize);
+  /* return size in entrysize - delete function will be happy to know that value */
+  *entrysize = esize;
+
+  if((entry = ((struct ipt_entry *)malloc(esize))) == NULL) {
+    logger(LOG_ERR, "# ERROR: Couldn't allocate memory for ipt_entry\n");
+    free(target);
+    if(match != NULL)
+      free(match), match = NULL;
+    free(ip), ip = NULL;
+    return NULL;
+  }
+
+  /* clear memory of entry & fill in offsets */
+  memset(entry, 0, esize);
+  entry->next_offset = esize;
+  entry->target_offset = esize - tsize;
+
+  /* now we concatenate the ipt_entry with target and match.
+   * Very ugly, in deed!
+   */
+
+  if (match != NULL)
+    memcpy(entry->elems, match, msize);
+
+  memcpy(entry->elems + msize, target, tsize);
+  memcpy(&(entry->ip), ip, sizeof(*ip));
+
+  /* free used memory of ip, match and target */
+  if(match != NULL)
+    free(match), match = NULL;
+  free(ip), ip = NULL;
+  free(target);
+  return entry;
+}
+
+/**
+ * @fn int netfilter_prepare_entry(struct netfilter_rule_s *rule, const char* targetlabel, struct ipt_entry** entry)
+ * @brief Prepares a rule in order to be added to the Kernel:
+ * - creates ipt_entry from ipt_ip, ipt_match, ipt_target with the
+ *   contents of the given rule
+ *
+ * @param rule	rule which shall be added.
+ * @param argetlabel The label of the target.
+ * @param *entry Where to put the created ipt_entry
+ * @return length of the entry on success else -1 on error.
+ */
+int netfilter_prepare_entry(struct netfilter_rule_s *rule, const char* targetlabel, struct ipt_entry** entry) {
+  /* *** Step 1/5 - Initialization *** */
+  int entrysize = 0;
+  struct ipt_ip *ip;			/* pointer to ipt_ip */
+  struct ipt_entry_target *target;	/* pointer to target */
+  struct ipt_entry_match *match;	/* pointer to match */
+  
+  /* *** Step 2/5 - create ipt_ip and fill it with content *** */
+  if ((ip = netfilter_build_ip(rule)) == NULL) {
+    logger(LOG_ERR, "# ERROR: Couldn't create ipt_entry!\n" );
+    return -1;
+  }
+
+  /* *** Step 3/5 - create ipt_target and fill it with content *** */
+  if((target = netfilter_build_target(targetlabel)) == NULL) {
+    if(ip) free(ip);
+    logger(LOG_ERR, "# ERROR: Couldn't create target!\n");
+    return -1;
+  }
+
+  /* *** Step 4/5 - create ipt_match and fill it with content *** */
+  match = netfilter_build_match(rule);
+
+  /* *** Step 5/5 - create ipt_entry and add it to the table *** */
+  if ((*entry = netfilter_build_entry(ip, match, target, &entrysize)) == NULL) {
+    if(ip) free(ip);
+    if(target) free(target);
+    if(match) free(match);
+    logger(LOG_ERR, "# ERROR: Couldn't create ipt_entry\n");
+    return -1;
+  }
+
+  return entrysize;
+}
+
+/**
+ * @fn struct ipt_entry_target* netfilter_build_target(const char* action)
+ * @brief Builds an ipt_target
+ * @param action a valid action i.e "ACCEPT", "DROP", "REJECT"
+ * @return  ipt_entry_target* on success else NULL on error.
+ */
+struct ipt_entry_target* netfilter_build_target(const char* action) {
+  int tsize;
+  struct ipt_entry_target *target;
+
+  /* ipt_entry has to be aligned for kernel convenience */
+  tsize = IPT_ALIGN ( sizeof ( struct ipt_entry_target ) + 4 );
+  if((target = ((struct ipt_entry_target *)malloc ( tsize ))) == NULL) {
+    logger(LOG_ERR, "# ERROR: Couldn't allocate memory for ipt_entry_target\n");
+    return NULL;
+  }
+  /* initialize target */
+  memset(target, 0, tsize);
+
+  /*set size of target*/
+  target->u.target_size = tsize;
+  target->u.user.target_size = tsize;
+
+  /* fill in actual target, i.e. "ACCEPT", "DROP", ... */
+  strncpy(target->u.user.name, action, XT_FUNCTION_MAXNAMELEN - 1);
+  return target;
+}
+
+
+/**
+ * @fn static struct ipt_ip* netfilter_build_ip(struct netfilter_rule_s* rule)
+ * @brief Creates an ipt_ip and fills it with content from given rule
+ * @param rule Rule containing information to parse
+ * @return ipt_ip* on success else NULL on error
+ */
+static struct ipt_ip* netfilter_build_ip(struct netfilter_rule_s* rule) {
+  struct ipt_ip *ip = NULL;
+
+  if((ip = ((struct ipt_ip *)malloc (sizeof (*ip)))) == NULL) {
+    logger(LOG_ERR, "# ERROR: Couldn't allocate memory for ipt_ip\n");
+    return NULL;
+  }
+
+  /* fill ipt_ip ip with content */
+  memset(ip, 0, sizeof(*ip));			//null the structure
+  if(rule->src.str.ip != 0 && strlen(rule->src.str.ip))
+    nettools_ip_to_inaddr(rule->src.str.ip, &ip->src);
+  if(rule->src.str.mask != 0 && strlen(rule->src.str.mask))
+    nettools_ip_to_inaddr(rule->src.str.mask, &ip->smsk);
+
+  if(rule->dst.str.ip != 0 && strlen(rule->dst.str.ip))
+    nettools_ip_to_inaddr(rule->dst.str.ip, &ip->dst);
+  if(rule->dst.str.mask != 0 && strlen(rule->dst.str.mask))
+    nettools_ip_to_inaddr(rule->dst.str.mask, &ip->dmsk);
+
+  ip->proto = rule->proto;
+
+  if(rule->ifaces.input && strlen(rule->ifaces.input))
+    strncpy(ip->iniface, rule->ifaces.input, IFNAMSIZ);	//incoming interfacename
+  if(rule->ifaces.output && strlen(rule->ifaces.output))
+    strncpy(ip->outiface, rule->ifaces.output, IFNAMSIZ);	//outgoing interfacename
+  return ip;
+}
+
+
+/**
+ * @fn static struct ipt_entry_match* netfilter_build_match(struct netfilter_rule_s* rule)
+ * @brief Creates an ipt_entry_match and fills it with content from given rule
+ * @param rule Rule containing information to parse
+ * @return ipt_entry_match* on success else NULL on error
+ **/
+static struct ipt_entry_match* netfilter_build_match(struct netfilter_rule_s* rule) {
+  struct ipt_entry_match *match = NULL;
+
+  /* matches are protocol specific extensions, so we split up from here
+   * in protocol specific functions, each handling the corresponding transport protocol
+   */
+  switch(rule->proto) {
+    case IPPROTO_TCP: {
+      /* we only need to create a match, if a port is specified */
+      if(rule->src.port.min || rule->src.port.max || rule->dst.port.max || rule->dst.port.max)
+	if((match = netfilter_build_match_tcp(rule)) == NULL)
+	  logger(LOG_ERR, "# ERROR: Couldn't create tcp match\n");
+      break;
+    }
+    case IPPROTO_UDP: {
+      /* we only need to create a match, if a port is specified */
+      if(rule->src.port.min || rule->src.port.max || rule->dst.port.min || rule->dst.port.max)
+	if((match = netfilter_build_match_udp(rule)) == NULL)
+	  logger(LOG_ERR, "# ERROR: Couldn't create tcp match\n");
+      
+      break;
+    }
+      
+    default: {
+      /* match = NULL should be save for every protocol */
+      match = NULL;
+    }
+  }
+  return match;
+}
+
+
+ /**
+  * @fn static struct ipt_entry_match* netfilter_build_match_tcp(struct netfilter_rule_s* rule)
+  * @brief Prepares the match (for TCP) so that it can be added to an ipt_entry
+  * @param rule Rule containing information to parse
+  * @return ipt_entry_match* on success else NULL on error
+  */
+static struct ipt_entry_match* netfilter_build_match_tcp(struct netfilter_rule_s* rule) {
+  int msize;
+  struct ipt_tcp tcp;
+  struct ipt_entry_match *match = NULL;
+  __u16 ps[2] = {rule->src.port.min, rule->src.port.max};
+  __u16 pd[2] = {rule->dst.port.min, rule->dst.port.max};
+  /* match has to be aligned for kernel convenience */
+  msize = IPT_ALIGN(sizeof(*match) + sizeof(tcp));
+
+  if((match = ((struct ipt_entry_match *)malloc(msize))) == NULL) {
+    logger(LOG_ERR, "# ERROR: Couldn't allocate memory for ipt_entry_match\n");
+    return NULL;
+  }
+
+  /* copy needed information */
+  memset(match, 0, msize);
+  match->u.match_size = msize;
+  strcpy(match->u.user.name, "tcp");
+
+  memset(&tcp, 0, sizeof(tcp));
+
+  /* Change ports if higher portno is in Xpts[0] and lower one in Xpts[1] */
+  if(rule->src.port.min != 0) netfilter_parse_ports(ps, tcp.spts);
+  else tcp.spts[0] = 0, tcp.spts[1] = 0xffff;
+  if(rule->dst.port.min != 0) netfilter_parse_ports(pd, tcp.dpts);
+  else tcp.dpts[0] = 0, tcp.dpts[1] = 0xffff;
+  /* copy needed information into match */
+  memcpy(&match->data, &tcp, sizeof(tcp));
+  
+  return match;
+}
+
+ /**
+  * @fn static struct ipt_entry_match* netfilter_build_match_udp(struct netfilter_rule_s* rule)
+  * @brief Prepares the match (for IDNP) so that it can be added to an ipt_entry
+  * @param rule Rule containing information to parse
+  * @return ipt_entry_match* on success else NULL on error
+  */
+static struct ipt_entry_match* netfilter_build_match_udp(struct netfilter_rule_s* rule) {
+  int msize;
+  struct ipt_udp udp;
+  struct ipt_entry_match *match = NULL;
+  __u16 ps[2] = {rule->src.port.min, rule->src.port.max};
+  __u16 pd[2] = {rule->dst.port.min, rule->dst.port.max};
+
+  /* match has to be aligned for kernel convenience */
+  msize = IPT_ALIGN(sizeof(*match) + sizeof(udp));
+  
+  if(( match = ((struct ipt_entry_match *)malloc(msize))) == NULL) {
+    logger(LOG_ERR, "# ERROR: Couldn't allocate memory for ipt_entry_match\n");
+    return NULL;
+  }
+
+  /* copy needed information */
+  memset(match, 0, msize);
+  match->u.match_size = msize;
+  strcpy(match->u.user.name, "udp");
+
+  memset(&udp, 0, sizeof(udp));
+
+  /* Change ports if higher portno is in Xpts[0] and lower one in Xpts[1] */
+  if(rule->src.port.min != 0) netfilter_parse_ports(ps, udp.spts);
+  else udp.spts[0] = 0, udp.spts[1] = 0xffff;
+  if(rule->dst.port.min != 0) netfilter_parse_ports(pd, udp.dpts);
+  else udp.dpts[0] = 0, udp.dpts[1] = 0xffff;
+  /* copy needed information into match*/
+  memcpy(&match->data, &udp, sizeof(udp));
+  return match;
+}

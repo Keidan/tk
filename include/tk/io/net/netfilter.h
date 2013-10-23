@@ -32,20 +32,20 @@
     #define NETFILTER_TABLE "filter"
   #endif
 
-  typedef __u16 netfilter_port_t[2];
   typedef char ipt_tablelabel [255];
   typedef char ipt_targetlabel [255];
 
+  struct netfilter_port_s {
+      __u16 min;
+      __u16 max;
+  };
 
   struct netfilter_ip_rule_s {
       struct {
 	  netiface_ip4_t ip;
 	  netiface_ip4_t mask;
       } str;
-      struct {
-	  __u16 min;
-	  __u16 max;
-      } port;
+      struct netfilter_port_s port;
       __u8 cidr;
   };
 
@@ -134,15 +134,6 @@
   const char* netfilter_get_table_name(netfilter_t netf);
 
   /**
-   * @fn void netfilter_parse_ports(netfilter_port_t from,  netfilter_port_t to)
-   * @brief Compares two ports and changes their order if higher value is
-   * in the first array element
-   * @param from array containing the ports to check
-   * @param to array containing the (swapped) ports
-   */
-  void netfilter_parse_ports(netfilter_port_t from,  netfilter_port_t to);
-
-  /**
    * @fn llist_t netfilter_ls(netfilter_t netf, const ipt_chainlabel mchain)
    * @brief List all rules associated to the specified chain.
    * @param netf The netfilter context.
@@ -150,5 +141,29 @@
    * @return A list of (struct netfilter_rule_ls_s*)
    */
   llist_t netfilter_ls(netfilter_t netf, const ipt_chainlabel mchain);
+
+  /**
+   * @fn int netfilter_remove(netfilter_t netf, struct netfilter_rule_s* rule)
+   * @brief Prepares a rule in order to be deleted from the Kernel:
+   * - does basic sanity checks
+   * - calls prepareEntry in order to get an ipt_entry
+   * - removes the ipt_entry to kernel
+   * @param netf Netfilter handle.
+   * @param rule rule which shall be removed
+   * @return -1 on error else 0 on success
+ */
+  int netfilter_remove(netfilter_t netf, struct netfilter_rule_s* rule);
+
+  /**
+   * @fn int netfilter_add(netfilter_t netf, struct netfilter_rule_s* rule)
+   * @bief Prepares a rule in order to be added to the Kernel:
+   * - does basic sanity checks
+   * - calls prepareEntry in order to get an ipt_entry
+   * - adds the ipt_entry to kernel
+   * @param netf Ntfilter handle.
+   * @param rule rule which shall be added
+   * @return -1 on error else 0 on success
+   **/
+  int netfilter_add(netfilter_t netf, struct netfilter_rule_s* rule);
 
 #endif /* __NETFILTER_H__ */
