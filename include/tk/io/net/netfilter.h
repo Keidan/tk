@@ -32,8 +32,12 @@
     #define NETFILTER_TABLE "filter"
   #endif
 
+  #define NETFILTER_TCP IPPROTO_TCP
+  #define NETFILTER_uDP IPPROTO_UDP
+
   typedef char ipt_tablelabel [255];
   typedef char ipt_targetlabel [255];
+  typedef char netfilter_ip4cidr_t[19];
 
   struct netfilter_port_s {
       __u16 min;
@@ -42,12 +46,11 @@
 
   struct netfilter_ip_rule_s {
       struct {
-	  netiface_ip4_t ip;
-	  netiface_ip4_t mask;
+	  netfilter_ip4cidr_t ip;
+	  netfilter_ip4cidr_t mask;
       } str;
       struct netfilter_port_s port;
-      __u8 cidr;
-  };
+   };
 
   struct netfilter_rule_s {
       struct netfilter_ip_rule_s src;

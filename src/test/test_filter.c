@@ -18,13 +18,25 @@ int main(int argc, char** argv) {
   struct netfilter_rule_s rule;
   bzero(&rule, sizeof(struct netfilter_rule_s));
   strcpy(rule.src.str.ip, "192.168.1.1");
-  strcpy(rule.src.str.mask, "255.255.255.0");
+  //strcpy(rule.src.str.mask, "255.255.255.0");
   rule.src.port.min = 5060;
   rule.src.port.max = 5065;
   strcpy(rule.ifaces.input, "eth0");
   strcpy(rule.target,"DROP");
   strcpy(rule.chain, "INPUT");
   printf("Add rule: %d\n", netfilter_add(nf, &rule));
+  printf("Commit: %d\n", netfilter_commit(nf));
+
+
+  struct netfilter_rule_s rule2;
+  bzero(&rule2, sizeof(struct netfilter_rule_s));
+  strcpy(rule2.src.str.ip, "192.0.0.0/8");
+  rule2.src.port.min = 80;
+  rule2.proto = NETFILTER_TCP;
+  strcpy(rule2.ifaces.input, "eth0");
+  strcpy(rule2.target,"DROP");
+  strcpy(rule2.chain, "INPUT");
+  printf("Add rule: %d\n", netfilter_add(nf, &rule2));
   printf("Commit: %d\n", netfilter_commit(nf));
 
   llist_t list = netfilter_ls(nf, "INPUT");

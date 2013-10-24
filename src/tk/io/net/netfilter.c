@@ -23,6 +23,7 @@
 #include <tk/sys/probe.h>
 #include <tk/io/net/nettools.h>
 #include <tk/io/net/netfilter.h>
+#include <tk/utils/string.h>
 #include <tk/sys/log.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -729,24 +730,46 @@ struct ipt_entry_target* netfilter_build_target(const char* action) {
  */
 static struct ipt_ip* netfilter_build_ip(struct netfilter_rule_s* rule) {
   struct ipt_ip *ip = NULL;
-
+  int idx;
+  netiface_ip4_t sip;
   if((ip = ((struct ipt_ip *)malloc (sizeof (*ip)))) == NULL) {
     logger(LOG_ERR, "# ERROR: Couldn't allocate memory for ipt_ip\n");
     return NULL;
   }
 
   /* fill ipt_ip ip with content */
-  memset(ip, 0, sizeof(*ip));			//null the structure
-  if(rule->src.str.ip != 0 && strlen(rule->src.str.ip))
-    nettools_ip_to_inaddr(rule->src.str.ip, &ip->src);
-  if(rule->src.str.mask != 0 && strlen(rule->src.str.mask))
-    nettools_ip_to_inaddr(rule->src.str.mask, &ip->smsk);
+  memset(ip, 0, sizeof(*ip));//null the structure
+  idx = string_indexof(rule->src.str.ip, "/");
+  if(idx == -1) {
+    if(rule->src.str.ip != 0 && strlen(rule->src.str.ip))
+      nettools_ip_to_inaddr(rule->src.str.ip, &ip->src);
+    if(rule->src.str.mask != 0 && strlen(rule->src.str.mask))
+      nettools_ip_to_inaddr(rule->src.str.mask, &ip->smsk);
+    else {
+      idx = nettools_get_cidr(rule->src.str.ip);
+      nettools_ip_to_inaddr(nettools_get_mask_by_cidr(idx), &ip->smsk);
+    }
+  } else {
+    strncpy(sip, rule->src.str.ip, idx);
+    nettools_ip_to_inaddr(sip, &ip->src);
+    nettools_ip_to_inaddr(nettools_get_mask_by_cidr(string_parse_int(rule->src.str.ip + idx + 1, 32)), &ip->smsk);
+  }
 
-  if(rule->dst.str.ip != 0 && strlen(rule->dst.str.ip))
-    nettools_ip_to_inaddr(rule->dst.str.ip, &ip->dst);
-  if(rule->dst.str.mask != 0 && strlen(rule->dst.str.mask))
-    nettools_ip_to_inaddr(rule->dst.str.mask, &ip->dmsk);
-
+  idx = string_indexof(rule->dst.str.ip, "/");
+  if(idx == -1) {
+    if(rule->dst.str.ip != 0 && strlen(rule->dst.str.ip))
+      nettools_ip_to_inaddr(rule->dst.str.ip, &ip->dst);
+    if(rule->dst.str.mask != 0 && strlen(rule->dst.str.mask))
+      nettools_ip_to_inaddr(rule->dst.str.mask, &ip->dmsk);
+    else {
+      idx = nettools_get_cidr(rule->dst.str.ip);
+      nettools_ip_to_inaddr(nettools_get_mask_by_cidr(idx), &ip->dmsk);
+    }
+  } else {
+    strncpy(sip, rule->dst.str.ip, idx);
+    nettools_ip_to_inaddr(sip, &ip->dst);
+    nettools_ip_to_inaddr(nettools_get_mask_by_cidr(string_parse_int(rule->dst.str.ip + idx + 1, 32)), &ip->dmsk);
+  }
   ip->proto = rule->proto;
 
   if(rule->ifaces.input && strlen(rule->ifaces.input))
