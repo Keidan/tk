@@ -7,6 +7,8 @@ check_include_file(termios.h HAVE_TERMIOS_H)
 check_include_file(ncurses.h HAVE_NCURSES_H)
 check_include_file(libiptc/libiptc.h HAVE_IPTC_H)
 
+check_include_file(linux/rtnetlink.h HAVE_RTNETLINK_H)
+
 if(HAVE_ZLIB_H)
   set(CMAKE_EXTRA_INCLUDE_FILES zconf.h)
   check_type_size(z_crc_t HAVE_Z_CRC_T)

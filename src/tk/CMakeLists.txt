@@ -51,6 +51,12 @@ if(HAVE_IPTC_H)
   )
   set(link ${link} ip4tc)
 endif(HAVE_IPTC_H)
+# add netroute if rtnetlink is found
+if(HAVE_RTNETLINK_H)
+  set(lib_src ${lib_src} 
+    ${TK_SRC_DIR}/io/net/netroute.c
+  )
+endif(HAVE_RTNETLINK_H)
 
 add_library(tk SHARED ${lib_src})
 target_link_libraries(tk ${link})
