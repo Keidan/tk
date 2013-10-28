@@ -342,4 +342,29 @@
    */
   const char* nettools_get_mask_by_cidr(__u8 cidr);
 
+  /**
+   * @fn __u8 nettools_get_cidr_by_mask(netiface_ip4_t mask)
+   * @brief get the cidr by the mask addr.
+   * @param mask The mask.
+   * @return The cidr else 0 on error.
+   */
+ __u8 nettools_get_cidr_by_mask(netiface_ip4_t mask);
+
+  /**
+   * @fn nettools_net_to_str_ip(struct in_addr in)
+   * @brief Convert network IP addr to string.
+   * @param in In to convert.
+   * @return String ip.
+   */
+  const char* nettools_net_to_str_ip(struct in_addr in);
+
+  /**
+   * @fn void nettools_get_subnet(netiface_ip4_t ip, netiface_ip4_t mask, netiface_ip4_t subnet)
+   * @brief calculate the subnet from the ip and the mask.
+   * @param ip the ip.
+   * @param mask the mask.
+   * @param subnet the result.
+   */
+  void nettools_get_subnet(netiface_ip4_t ip, netiface_ip4_t mask, netiface_ip4_t subnet);
+
 #endif /* __NETTOOLS_H__ */

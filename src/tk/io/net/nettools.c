@@ -37,6 +37,7 @@
 #include <regex.h>
 #include <tk/io/net/nettools.h>
 #include <tk/utils/string.h>
+#include <tk/utils/stringtoken.h>
 #include <tk/sys/log.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -248,6 +249,16 @@ unsigned int nettools_ip_to_long(const char* s) {
   struct sockaddr_in n;
   inet_aton(s,&n.sin_addr);
   return ntohl(n.sin_addr.s_addr);
+}
+
+/**
+ * @fn nettools_net_to_str_ip(struct in_addr in)
+ * @brief Convert network IP addr to string.
+ * @param in In to convert.
+ * @return String ip.
+ */
+const char* nettools_net_to_str_ip(struct in_addr in) {
+  return inet_ntoa(in);
 }
 
 /**
@@ -637,18 +648,17 @@ int nettools_recvfrom_timeout(int fd, long sec, long usec) {
  * @return The CIDR (0 min max 32)
  */
 __u8 nettools_get_cidr(netiface_ip4_t ip) {
-  unsigned char bits = 0;
-  in_addr_t mask;
-  in_addr_t host;
-  if(!ip || !strlen(ip)) return 32;
-
-  mask = inet_network(ip);
-  host = ~mask;
-  /* a valid netmask must be 2^n - 1 */
-  if((host & (host + 1)) != 0)
-    return -1;
-  for(; mask; mask <<= 1) ++bits;
-  return bits;
+  if(!ip || !strlen(ip)) return 0;
+  struct in_addr i_ip;
+  unsigned long mask;
+  int maskbits;
+  if ( ! inet_aton(ip, &i_ip) ) {
+    return 0;
+  }
+  /* Calculate the number of network bits */
+  mask = ntohl(i_ip.s_addr);
+  for ( maskbits = 32 ; (mask & (1L<<(32-maskbits))) == 0 ; maskbits-- ) ;
+  return maskbits;
 }
 
 /**
@@ -661,4 +671,41 @@ const char* nettools_get_mask_by_cidr(__u8 cidr) {
   if(cidr == 0) cidr = 1;
   if(cidr > 32) cidr = 32;
   return subnet_table[cidr - 1].smask;
+}
+
+/**
+ * @fn __u8 nettools_get_cidr_by_mask(netiface_ip4_t mask)
+ * @brief get the cidr by the mask addr.
+ * @param mask The mask.
+ * @return The cidr else 0 on error.
+ */
+__u8 nettools_get_cidr_by_mask(netiface_ip4_t mask) {
+  if(!mask || !strlen(mask)) return 0;
+  size_t i;
+  for(i = 0; i < 32; ++i)
+    if(!strcmp(mask, subnet_table[i].smask)) return subnet_table[i].cidr;
+  return 0;
+}
+
+/**
+ * @fn void nettools_get_subnet(netiface_ip4_t ip, netiface_ip4_t mask, netiface_ip4_t subnet)
+ * @brief calculate the subnet from the ip and the mask.
+ * @param ip the ip.
+ * @param mask the mask.
+ * @param subnet the result.
+ */
+void nettools_get_subnet(netiface_ip4_t ip, netiface_ip4_t mask, netiface_ip4_t subnet) {
+  bzero(subnet, sizeof(netiface_ip4_t));
+  
+  int i, sub[4], a, b;
+  stringtoken_t tok1 = stringtoken_init(ip, ".");
+  stringtoken_t tok2 = stringtoken_init(mask, ".");
+  for(i = 0; i < 4; i++) {
+    a = string_parse_int(stringtoken_next_token(tok1), 0);
+    b = string_parse_int(stringtoken_next_token(tok2), 0);
+    sub[i] = a & b;
+  }
+  stringtoken_release(tok1);
+  stringtoken_release(tok2);
+  sprintf(&subnet[0], "%d.%d.%d.%d", sub[0], sub[1], sub[2], sub[3]);
 }
