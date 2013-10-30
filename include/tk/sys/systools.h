@@ -32,6 +32,16 @@
   #define is_little_endian() wicked_cast(unsigned char, 1u)
   #define is_big_endian() !wicked_cast(unsigned char, 1u)
 
+
+  /**
+   * @fn int systools_exec(const char* fmt, ...)
+   * @brief Execute a system command
+   * @param fmt The command and/or the format.
+   * @param ... The parameters.
+   * @return see "man 3 system"
+   */
+  int systools_exec(const char* fmt, ...);
+
   /**
    * @fn unsigned long systools_msectime();
    * @brief Get the current time in ms.

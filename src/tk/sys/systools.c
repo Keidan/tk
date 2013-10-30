@@ -21,6 +21,7 @@
 *******************************************************************************
 */
 #include <tk/sys/systools.h>
+#include <tk/utils/stringbuffer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -34,6 +35,23 @@
 
 #define USEC_PER_SEC         1000000UL
 
+/**
+ * @fn int systools_exec(const char* fmt, ...)
+ * @brief Execute a system command
+ * @param fmt The command and/or the format.
+ * @param ... The parameters.
+ * @return see "man 3 system"
+ */
+int systools_exec(const char* fmt, ...) {
+ va_list args;
+ stringbuffer_t b = stringbuffer_new();
+ va_start(args, fmt);
+ stringbuffer_vprintf(b, fmt, args);
+ va_end(args);
+ int r = system(stringbuffer_to_str(b));
+ stringbuffer_delete(b);
+ return r;
+}
 /**
  * @fn unsigned long systools_msectime();
  * @brief Get the current time in ms.
