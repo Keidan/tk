@@ -27,6 +27,8 @@
   #include <tk/io/net/nettools.h>
   #include <tk/io/net/netprint.h>
   #include <tk/io/net/netfilter.h>
+  #include <tk/io/net/netroute.h>
+  #include <tk/io/net/nettun.h>
 
 
 #endif /* __NET_H__ */
