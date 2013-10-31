@@ -55,3 +55,9 @@ if(HAVE_RTNETLINK_H)
   add_executable(test_route ${bin_src})
   target_link_libraries(test_route tk)
 endif(HAVE_RTNETLINK_H)
+
+set(bin_src 
+  ${TEST_SRC_DIR}/test_tun.c 
+  )
+add_executable(test_tun ${bin_src})
+target_link_libraries(test_tun tk)
