@@ -13,6 +13,8 @@ int main(int argc, char** argv) {
   char** keys;
   int i, count;
 
+  netiface_create("eth0:1", "10.101.0.10");
+
   htable_t ifaces = netiface_list_new(NETIFACE_LVL_UDP, NETIFACE_KEY_NAME);
   count = htable_get_keys(ifaces, &keys);
   struct netiface_info_s info;

@@ -99,6 +99,15 @@
     NETIFACE_KEY_INDEX 
   } netiface_key_type;
 
+
+  /**
+   * @fn int netiface_create(netiface_name_t name, netiface_ip4_t ip)
+   * @brief crate an interface alias.
+   * @param name The aliasnam
+   * @return -1 on error else 0.
+   */
+  int netiface_create(netiface_name_t name, netiface_ip4_t ip);
+
   #define netiface_list_get(ifaces, key) htable_lookup(ifaces, key)
 
   /**
