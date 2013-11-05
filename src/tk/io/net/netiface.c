@@ -21,6 +21,7 @@
 *******************************************************************************
 */
 #include <tk/io/net/netiface.h>
+#include <tk/io/net/nettools.h>
 #include <tk/sys/systools.h>
 #include <tk/sys/log.h>
 #include <tk/utils/string.h>
@@ -54,26 +55,14 @@ struct netiface_s {
  */
 int netiface_create(netiface_name_t name, netiface_ip4_t ip) {
   struct ifreq ifr;
-  struct sockaddr_in sin;
-  unsigned long lip;
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
   if(fd == -1) {
     logger(LOG_ERR, "socket: (%d) %s.\n", errno, strerror(errno));
     return -1;
   }
-  inet_pton(AF_INET, ip, &sin);
-  memcpy(&lip, &sin.sin_addr.s_addr, sizeof(unsigned long)); 
-
   strncpy(ifr.ifr_name, name, IFNAMSIZ);
-  memset(&sin, 0, sizeof(struct sockaddr));
-  sin.sin_family = AF_INET;
-  memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
-
-  memset(&sin, 0, sizeof(struct sockaddr));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = lip;
-  memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
-
+  memset(&ifr.ifr_addr, 0, sizeof(struct sockaddr));
+  nettools_ip_to_sockaddr(ip, (struct sockaddr_in *)&ifr.ifr_addr);
   if (ioctl(fd, SIOCSIFADDR, &ifr) < 0) { 
     logger(LOG_ERR, "SIOCSIFADDR: (%d) %s.\n", errno, strerror(errno));
     close(fd);
