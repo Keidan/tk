@@ -20,8 +20,8 @@
 *
 *******************************************************************************
 */
-#ifndef __ETH_H__
-  #define __ETH_H__
+#ifndef __UDP_H__
+  #define __UDP_H__
 
   /**
    * @fn udp_t udp_new()
@@ -38,4 +38,4 @@
   void udp_delete(udp_t udp);
 
 
-#endif /* __ETH_H__ */
+#endif /* __UDP_H__ */

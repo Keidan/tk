@@ -47,6 +47,18 @@ struct netiface_s {
     int fd;
 };
 
+
+/**
+ * @fn static int netiface_prepare_iface(netiface_sock_level level, netiface_key_type type, htable_t *table, netiface_name_t iname)
+ * @brief Prepare the iface to add.
+ * @param level The socket level.
+ * @param type Table key type.
+ * @param table The table pointer.
+ * @param iname The iface name.
+ * @return -1 on error else 0 on success.
+ */
+static int netiface_prepare_iface(netiface_sock_level level, netiface_key_type type, htable_t *table, netiface_name_t iname);
+
 /**
  * @fn int netiface_create(netiface_name_t name, netiface_ip4_t ip)
  * @brief crate an interface alias.
@@ -82,14 +94,19 @@ int netiface_create(netiface_name_t name, netiface_ip4_t ip) {
  * @return The table list (key:see key type, value:netiface_t)
  */
 htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
+  char buf[1024];
   htable_t table = htable_new();
-  struct netiface_s iface;
-  int i;
-  struct ifreq ifr;
+  char **keys = NULL;
+  int j, count;
+  struct netiface_s* it;
+  _Bool found;
+  int n_ifaces, i, fd;
+  struct ifreq ifr, *iff;
+  struct ifconf ifc;
 
   memset(&ifr, 0, sizeof(ifr));
 
-  /* List all network devices */
+  /* step1: List all network devices */
   struct if_nameindex *nameindex = if_nameindex();
   if(nameindex == NULL){
     logger(LOG_ERR, "if_nameindex: (%d) %s.\n", errno, strerror(errno));
@@ -101,46 +118,102 @@ htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
   i = 0; /* init */
   while(1){
     if(!nameindex[i].if_name) break;
-    /* Get the iface name */
-    memset(&iface, 0, sizeof(struct netiface_s));
-    strncpy(iface.name, nameindex[i++].if_name, sizeof(netiface_name_t));
-    
-    /* Create a socket*/
-    /* Socket raw by default*/
-    if(level == NETIFACE_LVL_TCP)
-      iface.fd = socket(AF_INET, SOCK_STREAM, 0);
-    else if(level == NETIFACE_LVL_UDP)
-      iface.fd = socket(AF_INET, SOCK_DGRAM, 0);
-    else
-      iface.fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-    if(iface.fd < 0) {
+    if(netiface_prepare_iface(level, type, &table, nameindex[i++].if_name) == -1) {
       if_freenameindex(nameindex);
-      htable_delete(table);
-      logger(LOG_ERR, "socket failed: (%d) %s.\n", errno, strerror(errno));
       return NULL;
     }
-
-    /* Get the iface index */
-    strncpy((char *)ifr.ifr_name, iface.name, IF_NAMESIZE);
-    if((ioctl(iface.fd, SIOCGIFINDEX, &ifr)) == -1) {
-      htable_delete(table);
-      if_freenameindex(nameindex);
-      close(iface.fd);
-      logger(LOG_ERR, "get index failed: (%d) %s.\n", errno, strerror(errno));
-      return NULL;
-    }
-    iface.index = ifr.ifr_ifindex;
-    iface.magic = NETIFACE_MAGIC;
-    if(type == NETIFACE_KEY_FD)
-      htable_add(table, (char*)string_convert(iface.fd, 10), &iface, sizeof(struct netiface_s));
-    else if(type == NETIFACE_KEY_INDEX)
-      htable_add(table, (char*)string_convert(iface.index, 10), &iface, sizeof(struct netiface_s));
-    else /* key name by default */
-      htable_add(table, iface.name, &iface, sizeof(struct netiface_s));
   }
   /* Release the pointer */
   if_freenameindex(nameindex);
+
+  /* step2 check for configured aliases */
+  /* Get a socket handle. */
+  fd = socket(AF_INET, SOCK_DGRAM, 0);
+  if(fd < 0) {
+    logger(LOG_ERR, "socket: (%d) %s.\n", errno, strerror(errno));
+    htable_delete(table);
+    return NULL;
+  }
+  /* Query available interfaces. */
+  ifc.ifc_len = sizeof(buf);
+  ifc.ifc_buf = buf;
+  if(ioctl(fd, SIOCGIFCONF, &ifc) < 0) {
+    logger(LOG_ERR, "SIOCGIFCONF: (%d) %s.\n", errno, strerror(errno));
+    close(fd);
+    htable_delete(table);
+    return NULL;
+  }
+  close(fd);
+  /* Iterate through the list of interfaces. */
+  iff = ifc.ifc_req;
+  n_ifaces = ifc.ifc_len / sizeof(struct ifreq);
+  for(i = 0; i < n_ifaces; i++) {
+    struct ifreq *item = &iff[i];
+    count = htable_get_keys(table, &keys);
+    found = 0;
+    for(j = 0; j < count; j++) {
+      it = (struct netiface_s*)htable_lookup(table, keys[j]);
+      if(!strcmp(it->name, item->ifr_name)) {
+	found = 1;
+	break;
+      }
+    }
+    free(keys);
+    if(!found) {
+      if(netiface_prepare_iface(level, type, &table, item->ifr_name) == -1)
+	return NULL;
+    }
+  }
   return table;
+}
+
+/**
+ * @fn static int netiface_prepare_iface(netiface_sock_level level, netiface_key_type type, htable_t *table, netiface_name_t iname)
+ * @brief Prepare the iface to add.
+ * @param level The socket level.
+ * @param type Table key type.
+ * @param table The table pointer.
+ * @param iname The iface name.
+ * @return -1 on error else 0 on success.
+ */
+static int netiface_prepare_iface(netiface_sock_level level, netiface_key_type type, htable_t *table, netiface_name_t iname) {
+  struct ifreq ifr;
+  struct netiface_s iface;
+  /* Get the iface name */
+  memset(&iface, 0, sizeof(struct netiface_s));
+  strncpy(iface.name, iname, sizeof(netiface_name_t));
+    
+  /* Create a socket*/
+  /* Socket raw by default*/
+  if(level == NETIFACE_LVL_TCP)
+    iface.fd = socket(AF_INET, SOCK_STREAM, 0);
+  else if(level == NETIFACE_LVL_UDP)
+    iface.fd = socket(AF_INET, SOCK_DGRAM, 0);
+  else
+    iface.fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+  if(iface.fd < 0) {
+    htable_delete(*table);
+    logger(LOG_ERR, "socket failed: (%d) %s.\n", errno, strerror(errno));
+    return -1;
+  }
+
+  /* Get the iface index */
+  strncpy((char *)ifr.ifr_name, iface.name, IF_NAMESIZE);
+  if((ioctl(iface.fd, SIOCGIFINDEX, &ifr)) == -1) {
+    htable_delete(*table);
+    close(iface.fd);
+    logger(LOG_ERR, "get index failed: (%d) %s.\n", errno, strerror(errno));
+    return -1;
+  }
+  iface.index = ifr.ifr_ifindex;
+  iface.magic = NETIFACE_MAGIC;
+  if(type == NETIFACE_KEY_FD)
+    htable_add(*table, (char*)string_convert(iface.fd, 10), &iface, sizeof(struct netiface_s));
+  else if(type == NETIFACE_KEY_INDEX)
+    htable_add(*table, (char*)string_convert(iface.index, 10), &iface, sizeof(struct netiface_s));
+  else /* key name by default */
+    htable_add(*table, iface.name, &iface, sizeof(struct netiface_s));
+  return 0;
 }
 
 /**
