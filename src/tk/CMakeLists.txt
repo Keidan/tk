@@ -13,6 +13,7 @@ set(lib_src
   ${TK_SRC_DIR}/sys/systools.c 
   ${TK_SRC_DIR}/sys/proc.c
   ${TK_SRC_DIR}/sys/probe.c
+  ${TK_SRC_DIR}/sys/process.c
   ${TK_SRC_DIR}/io/file.c
   ${TK_SRC_DIR}/io/net/nettools.c
   ${TK_SRC_DIR}/io/net/netsocket.c
