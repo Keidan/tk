@@ -25,14 +25,36 @@
 
   #include <tk/utils/stringbuffer.h>
 
+  struct pstream_s {
+      int fd_in;
+      int fd_out;
+      int cpid;
+  };
+
   /**
-   * @fn stringbuffer_t process_execute(char* fmt, ...)
+   * @fn void process_exec_p(struct pstream_s *stream, char* fpath, char* args)
+   * @brief Execute a piped application an retrieved the IO stream.
+   * @param stream The result IO.
+   * @param fpath The full script path.
+   * @param args The script args.
+   */
+  void process_exec_p(struct pstream_s *stream, char* fpath, char* args);
+
+
+  /**
+   * @fn void process_kill_p(struct pstream_s *stream)
+   * @brief Kill a pending process executed with process_p functions.
+   * @param stream The strea input.
+   */
+  void process_kill_p(struct pstream_s *stream);
+
+  /**
+   * @fn stringbuffer_t process_exec(char* fmt, ...)
    * @brief Execute a command in a pipe.
    * @param fmt The command to execute.
    * @param ... The command args.
    * @return The result else NULL on error (for non NULL returns stringbuffer_delete is required).
    */
-  stringbuffer_t process_execute(char* fmt, ...);
-
+  stringbuffer_t process_exec(char* fmt, ...);
 
 #endif /* __PROCESS_H__ */
