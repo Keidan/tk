@@ -96,6 +96,45 @@ void systools_get_proc_filename(char filename[FILENAME_MAX], int pid, const char
 }
 
 /**
+ * @fn int systools_find_file(const char *fname, file_name_t fpath)
+ * @brief find an application into thePATH env.
+ * @param fname The file name to search.
+ * @param fpath The full path
+ * @return -1 on error else 0.
+ */
+int systools_find_file(const char *fname, file_name_t fpath) {
+  const char* paths = getenv ("PATH");
+  char* works, *tmp, *copy;
+  uint32_t l;
+  FILE* f;
+  bzero(fpath, sizeof(file_name_t));
+  if(!paths) {
+    logger(LOG_ERR, "Null env path");
+    return -1;
+  }
+  works = strdup(paths);
+  copy = works;
+  while((tmp = strsep(&works, ":")) != NULL) {
+    strcpy(fpath, tmp);
+    l = strlen(fpath);
+    if(fpath[l] != '/') fpath[l] = '/';
+    strcat(fpath,  fname);
+    f = fopen(fpath, "rb");
+    if(!f) bzero(fpath, sizeof(file_name_t));
+    else {
+      fclose(f);
+      break;
+    }
+  }
+  free(copy);
+  if(!strlen(fpath)) {
+    logger(LOG_ERR, "The file '%s' was not found in the system path.", fname);
+    return -1;
+  }
+  return 0;
+}
+
+/**
  * @fn long long systools_jiffies_to_microsecond(long long jiffies)
  * @brief Convert jiffies to microsecond
  * @return long long

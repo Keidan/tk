@@ -23,6 +23,7 @@
 #ifndef __SYSTOOLS_H__
   #define __SYSTOOLS_H__
 
+  #include <tk/io/file.h>
   #include <stdio.h>
   #include <stdint.h>
   #include <tk/sys/log.h>
@@ -32,6 +33,14 @@
   #define is_little_endian() wicked_cast(unsigned char, 1u)
   #define is_big_endian() !wicked_cast(unsigned char, 1u)
 
+/**
+ * @fn int systools_find_file(const char *fname, file_name_t fpath)
+ * @brief find an application into thePATH env.
+ * @param fname The file name to search.
+ * @param fpath The full path
+ * @return -1 on error else 0.
+ */
+  int systools_find_file(const char *fname, file_name_t fpath);
 
   /**
    * @fn int systools_exec(const char* fmt, ...)
