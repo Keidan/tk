@@ -20,9 +20,9 @@
 *
 *******************************************************************************
 */
+#include <tk/sys/systools.h>
 #include <tk/io/net/proto/arp.h>
 #include <tk/io/net/nettools.h>
-#include <tk/sys/systools.h>
 #include <tk/utils/string.h>
 #include <tk/sys/log.h>
 #include <tk/sys/log.h>

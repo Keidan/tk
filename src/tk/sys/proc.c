@@ -20,6 +20,7 @@
  *
  *******************************************************************************
  */
+#include <tk/sys/systools.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +33,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <tk/sys/proc.h>
-#include <tk/sys/systools.h>
 #include <tk/sys/log.h>
 
 int proc_stat(struct proc_stat_s *stat, i_t pid) {

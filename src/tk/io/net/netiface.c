@@ -20,9 +20,9 @@
 *
 *******************************************************************************
 */
-#include <tk/io/net/netiface.h>
-#include <tk/io/net/nettools.h>
 #include <tk/sys/systools.h>
+#include <tk/io/net/nettools.h>
+#include <tk/io/net/netiface.h>
 #include <tk/sys/log.h>
 #include <tk/utils/string.h>
 #include <stdlib.h>
