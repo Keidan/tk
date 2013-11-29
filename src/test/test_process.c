@@ -17,16 +17,16 @@ int main(int argc, char** argv) {
 //  stringbuffer_delete(b);
 
   struct pstream_s stream;
-  process_exec_p(&stream, "/home/kei/devel/tk/plop.sh", NULL);
+  process_exec_p(&stream, "/bin/bash", "bash");
   char buf[1024];
   read(stream.fd_out, buf, sizeof(buf));
   printf("'%s'\n", buf);
-  if(string_indexof(buf, "(yes/no)") != -1) {
-    write(stream.fd_in, "yes\n", strlen("yes\n"));
-    read(stream.fd_out, buf, sizeof(buf));
-    printf("'%s'\n", buf);
-  }
-  write(stream.fd_in, "no\n", strlen("no\n"));
+  write(stream.fd_in, "echo \"plop\"", strlen("echo \"plop\""));
+  read(stream.fd_out, buf, sizeof(buf));
+  printf("'%s'\n", buf);
+  write(stream.fd_in, "exit", strlen("exit"));
+  read(stream.fd_out, buf, sizeof(buf));
+  printf("'%s'\n", buf);
   process_kill_p(&stream);
   log_close();
   return 0;

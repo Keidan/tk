@@ -67,6 +67,19 @@ void process_exec_p(struct pstream_s *stream, char* fpath, char* args) {
 }
 
 /**
+ * @fn void process_exec_bash_over_socket(struct process_netshell_s cfg)
+ * @brief Attach the socket to a new shell instance.
+ * @param cfg The cofiguration.
+ */
+void process_exec_bash_over_socket(struct process_netshell_s cfg) {
+  dup2(cfg.fd,0);
+  dup2(cfg.fd,1);
+  dup2(cfg.fd,2);
+  execl(cfg.sh_path,cfg.sh_name,(char *)0);
+  close(cfg.fd);
+}
+
+/**
  * @fn void process_kill_p(struct pstream_s *stream)
  * @brief Kill a pending process executed with process_p functions.
  * @param stream The strea input.

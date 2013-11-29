@@ -31,6 +31,19 @@
       int cpid;
   };
 
+  struct process_netshell_s {
+      int fd;
+      char* sh_path;
+      char* sh_name;
+};
+
+/**
+ * @fn void process_exec_bash_over_socket(struct process_netshell_s cfg)
+ * @brief Attach the socket to a new shell instance.
+ * @param cfg The cofiguration.
+ */
+ void process_exec_bash_over_socket(struct process_netshell_s cfg);
+
   /**
    * @fn void process_exec_p(struct pstream_s *stream, char* fpath, char* args)
    * @brief Execute a piped application an retrieved the IO stream.
