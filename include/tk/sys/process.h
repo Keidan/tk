@@ -23,6 +23,7 @@
 #ifndef __PROCESS_H__
   #define __PROCESS_H__
 
+  #include <tk/io/file.h>
   #include <tk/utils/stringbuffer.h>
 
   struct pstream_s {
@@ -33,8 +34,8 @@
 
   struct process_netshell_s {
       int fd;
-      char* sh_path;
-      char* sh_name;
+      file_name_t sh_path;
+      file_name_t sh_name;
 };
 
 /**
