@@ -69,6 +69,14 @@
   void netsocket_close(netsocket_t sock);
 
   /**
+   * @fn int netsocket_get_fd(netsocket_t sock)
+   * @brief Get the socket fd.
+   * @param sock The socket associated with the fd.
+   * @return the FD else -1 on error.
+   */
+  int netsocket_get_fd(netsocket_t sock);
+
+  /**
    * @fn int netsocket_connect(netsocket_t sock)
    * @brief Connect a connected mode socket (see NETSOCKET_MODE_TCP)
    * @param sock The socket to connect.

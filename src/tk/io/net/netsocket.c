@@ -45,6 +45,19 @@ struct netsocket_s {
 
 
 /**
+ * @fn int netsocket_get_fd(netsocket_t sock)
+ * @brief Get the socket fd.
+ * @param sock The socket associated with the fd.
+ * @return the FD else -1 on error.
+ */
+int netsocket_get_fd(netsocket_t sock) {
+  create_ptr(s, sock);
+  if(!test_ptr(s)) return -1;
+  return s->fd;
+}
+
+
+/**
  * @fn netsocket_t netsocket_new(struct netsocket_inet_s inet, netsocket_mode_et mode)
  * @brief Create a new socket.
  * @param inet The inet address.
