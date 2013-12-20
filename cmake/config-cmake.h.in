@@ -24,7 +24,10 @@
   #define __TK_CONFIG_H__
 
   #cmakedefine HAVE_ZLIB_H
+  #cmakedefine HAVE_Z_CRC_T
   #cmakedefine HAVE_TERMIOS_H
   #cmakedefine HAVE_NCURSES_H
+  #cmakedefine HAVE_IPTC_H
+  #cmakedefine HAVE_RTNETLINK_H
 
 #endif /* __TK_CONFIG_H__
