@@ -1,4 +1,25 @@
-#ifndef __NETIFACE_STATUS_H__
+/**
+*******************************************************************************
+* @file netiface_status.h
+* @author Keidan
+* @date 23/09/2013
+* @par Project
+* tk
+*
+* @par Copyright
+* Copyright 2011-2014 Keidan, all right reserved
+*
+* This software is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY.
+*
+* Licence summary : 
+*    You can modify and redistribute the sources code and binaries.
+*    You can send me the bug-fix
+*
+* Term of the licence in in the file licence.txt.
+*
+*******************************************************************************
+*/#ifndef __NETIFACE_STATUS_H__
   #define __NETIFACE_STATUS_H__
 
   #define PROCFS_NET_WIRELESS "/proc/net/wireless"
