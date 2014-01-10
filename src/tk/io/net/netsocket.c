@@ -93,6 +93,28 @@ void netsocket_delete(netsocket_t sock) {
 }
 
 /**
+ * @fn int netsocket_open(netsocket_t sock)
+ * @brief open the socket
+ * @param sock The socket to open.
+ * @return -1 on error else 0
+ */
+int netsocket_open(netsocket_t sock) {
+  create_ptr(s, sock);
+  if(!test_ptr(s)) return -1;
+  if(s->mode == NETSOCKET_MODE_RAW)
+    s->fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+  else if(s->mode == NETSOCKET_MODE_UDP)
+    s->fd = socket(AF_INET, SOCK_DGRAM, 0);
+  else 
+    s->fd = socket(AF_INET, SOCK_STREAM, 0);
+  if(s->fd < 0) {
+    logger(LOG_ERR, "socket failed: (%d) %s.\n", errno, strerror(errno));
+    return -1;
+  }
+  return 0;
+}
+
+/**
  * @fn void netsocket_close(netsocket_t sock)
  * @brief close the socket
  * @param sock The socket to close.
@@ -116,9 +138,7 @@ int netsocket_connect(netsocket_t sock) {
   if(!test_ptr(s)) return -1;
   struct sockaddr_in serv_addr;
   int on = 1;
-  if(s->mode == NETSOCKET_MODE_TCP)
-    s->fd = socket(AF_INET, SOCK_STREAM, 0);
-  else return -1;
+  if(s->mode != NETSOCKET_MODE_TCP) return -1;
   if(s->fd < 0) {
     logger(LOG_ERR, "socket failed: (%d) %s.\n", errno, strerror(errno));
     return -1;
@@ -149,17 +169,8 @@ int netsocket_bind(netsocket_t sock) {
   if(!test_ptr(s)) return -1;
   struct sockaddr_in addr;
   int ling;
-
-  if(s->mode == NETSOCKET_MODE_RAW)
-    s->fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-  else if(s->mode == NETSOCKET_MODE_UDP)
-    s->fd = socket(AF_INET, SOCK_DGRAM, 0);
-  else 
-    s->fd = socket(AF_INET, SOCK_STREAM, 0);
-  if(s->fd < 0) {
-    logger(LOG_ERR, "socket failed: (%d) %s.\n", errno, strerror(errno));
-    return -1;
-  }
+  if(s->fd < 0)
+    if(netsocket_open(sock)) return -1;
   /* set reuseaddr*/
   ling = 1;
   if (setsockopt(s->fd, SOL_SOCKET, SO_REUSEADDR, (char *)&ling, sizeof(ling)) != 0) {

@@ -60,6 +60,13 @@
    * @param sock The socket to delete.
    */
   void netsocket_delete(netsocket_t sock);
+  /**
+   * @fn int netsocket_open(netsocket_t sock)
+   * @brief open the socket
+   * @param sock The socket to open.
+   * @return -1 on error else 0
+   */
+  int netsocket_open(netsocket_t sock);
 
   /**
    * @fn void netsocket_close(netsocket_t sock)
