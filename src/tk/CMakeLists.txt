@@ -4,6 +4,7 @@ set(lib_src
   ${TK_SRC_DIR}/utils/string.c 
   ${TK_SRC_DIR}/utils/stringtoken.c
   ${TK_SRC_DIR}/utils/stringbuffer.c 
+  ${TK_SRC_DIR}/utils/bytebuffer.c 
   ${TK_SRC_DIR}/utils/htable.c 
   ${TK_SRC_DIR}/utils/llist.c 
   ${TK_SRC_DIR}/utils/llist_iter.c 
@@ -14,6 +15,7 @@ set(lib_src
   ${TK_SRC_DIR}/sys/proc.c
   ${TK_SRC_DIR}/sys/probe.c
   ${TK_SRC_DIR}/sys/process.c
+  ${TK_SRC_DIR}/sys/systask.c
   ${TK_SRC_DIR}/io/file.c
   ${TK_SRC_DIR}/io/net/nettools.c
   ${TK_SRC_DIR}/io/net/netsocket.c
@@ -22,9 +24,10 @@ set(lib_src
   ${TK_SRC_DIR}/io/net/netiface.c
   ${TK_SRC_DIR}/io/net/netiface_status.c
   ${TK_SRC_DIR}/io/net/proto/arp.c
+  ${TK_SRC_DIR}/io/net/proto/ping.c
 )
 # generic link
-set(link m pthread)
+set(link m pthread rt)
 
 # add serial management if termios is found
 if(HAVE_TERMIOS_H)

@@ -68,3 +68,10 @@ set(bin_src
 )
 add_executable(test_process ${bin_src})
 target_link_libraries(test_process tk)
+
+#ping case
+set(bin_src 
+  ${TEST_SRC_DIR}/test_ping.c 
+)
+add_executable(test_ping ${bin_src})
+target_link_libraries(test_ping tk)
