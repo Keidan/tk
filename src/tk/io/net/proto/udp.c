@@ -7,7 +7,7 @@
 * tk
 *
 * @par Copyright
-* Copyright 2011-2013 Keidan, all right reserved
+* Copyright 2011-2014 Keidan, all right reserved
 *
 * This software is distributed in the hope that it will be useful, but WITHOUT
 * ANY WARRANTY.
@@ -26,6 +26,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <netinet/ip.h>
+#include <netinet/udp.h>
+#include <netinet/ether.h>
+#include <linux/if_packet.h>
 
 #define UDP_MAGIC 0xC007ED
 #define UDP_H_ETH_SET 0x02

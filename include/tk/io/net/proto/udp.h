@@ -7,7 +7,7 @@
 * tk
 *
 * @par Copyright
-* Copyright 2011-2013 Keidan, all right reserved
+* Copyright 2011-2014 Keidan, all right reserved
 *
 * This software is distributed in the hope that it will be useful, but WITHOUT
 * ANY WARRANTY.
