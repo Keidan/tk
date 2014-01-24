@@ -30,6 +30,9 @@
   #include <stdio.h>
   #include <tk/io/net/netiface_status.h>
 
+  #define is_valid_index(info) (info.index > 0) 
+  #define is_valid_index_p(info) (info->index > 0) 
+
   #define IFACE_IS_PROMISC(flags)           (flags & IFF_PROMISC)
   #define IFACE_IS_NOTRAILERS(flags)        (flags & IFF_NOTRAILERS)
   #define IFACE_IS_DEBUG(flags)             (flags & IFF_DEBUG)
