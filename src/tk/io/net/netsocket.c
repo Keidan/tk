@@ -45,6 +45,18 @@ struct netsocket_s {
 
 
 /**
+ * @fn void netsocket_set_fd(netsocket_t sock, int fd)
+ * @brief Set the socket fd.
+ * @param sock The socket associated with the fd.
+ * @param fd the new FD
+ */
+void netsocket_set_fd(netsocket_t sock, int fd) {
+  create_ptr(s, sock);
+  if(!test_ptr(s)) return;
+  s->fd = fd;
+}
+
+/**
  * @fn int netsocket_get_fd(netsocket_t sock)
  * @brief Get the socket fd.
  * @param sock The socket associated with the fd.
@@ -58,13 +70,11 @@ int netsocket_get_fd(netsocket_t sock) {
 
 
 /**
- * @fn netsocket_t netsocket_new(struct netsocket_inet_s inet, netsocket_mode_et mode)
+ * @fn netsocket_t netsocket_new0()
  * @brief Create a new socket.
- * @param inet The inet address.
- * @param mode The socket mode.
  * @return A netsocket_t instance else NULL on error.
  */
-netsocket_t netsocket_new(struct netsocket_inet_s inet, netsocket_mode_et mode) {
+netsocket_t netsocket_new0() {
   struct netsocket_s *ns = NULL;
   if((ns = malloc(sizeof(struct netsocket_s))) == NULL) {
     logger(LOG_ERR, "Unable to allocate a memory.\n");
@@ -73,6 +83,20 @@ netsocket_t netsocket_new(struct netsocket_inet_s inet, netsocket_mode_et mode) 
   memset(ns, 0, sizeof(struct netsocket_s));
   ns->magic = NETSOCKET_MAGIC;
   ns->fd = 0;
+  return ns;
+}
+
+/**
+ * @fn netsocket_t netsocket_new(struct netsocket_inet_s inet, netsocket_mode_et mode)
+ * @brief Create a new socket.
+ * @param inet The inet address.
+ * @param mode The socket mode.
+ * @return A netsocket_t instance else NULL on error.
+ */
+netsocket_t netsocket_new(struct netsocket_inet_s inet, netsocket_mode_et mode) {
+  struct netsocket_s *ns = (struct netsocket_s *)netsocket_new0();
+  if(ns == NULL)
+    return NULL;
   ns->mode = mode;
   memcpy(&ns->inet, &inet, sizeof(struct netsocket_inet_s));
   return ns;

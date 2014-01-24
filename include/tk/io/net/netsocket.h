@@ -46,6 +46,13 @@
   typedef void* netsocket_t;
 
   /**
+   * @fn netsocket_t netsocket_new0()
+   * @brief Create a new socket.
+   * @return A netsocket_t instance else NULL on error.
+   */
+  netsocket_t netsocket_new0();
+
+  /**
    * @fn netsocket_t netsocket_new(struct netsocket_inet_s inet, netsocket_mode_et mode)
    * @brief Create a new socket.
    * @param inet The inet address.
@@ -82,6 +89,14 @@
    * @return the FD else -1 on error.
    */
   int netsocket_get_fd(netsocket_t sock);
+
+  /**
+   * @fn void netsocket_set_fd(netsocket_t sock, int fd)
+   * @brief Set the socket fd.
+   * @param sock The socket associated with the fd.
+   * @param fd the new FD
+   */
+  void netsocket_set_fd(netsocket_t sock, int fd);
 
   /**
    * @fn int netsocket_connect(netsocket_t sock)
