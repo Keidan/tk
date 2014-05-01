@@ -37,6 +37,7 @@
  */
 void string_tolower(const char* source, char* dest) {
   int i;
+  if(!source || !dest) return;
   for(i = 0; i < strlen(source); i++)
     dest[i] = tolower(source[i]);
 }
@@ -49,6 +50,7 @@ void string_tolower(const char* source, char* dest) {
  */
 void string_toupper(const char* source, char* dest) {
   int i;
+  if(!source || !dest) return;
   for(i = 0; i < strlen(source); i++)
     dest[i] = toupper(source[i]);
 }
@@ -62,7 +64,7 @@ void string_toupper(const char* source, char* dest) {
  * @return substring (free required).
  */
 char* string_substring(const char* str, size_t begin, size_t len)  { 
-  if (str == 0 || strlen(str) == 0 || strlen(str) < begin || strlen(str) < (begin+len)) 
+  if (!str || !strlen(str) || strlen(str) < begin || strlen(str) < (begin+len)) 
     return 0; 
   return strndup(str + begin, len); 
 } 
@@ -75,6 +77,7 @@ char* string_substring(const char* str, size_t begin, size_t len)  {
  * @return -1 if not found else 0.
  */
 int string_indexof(const char* source, const char* needed) {
+  if(!source || !needed) return -1;
   char * found = strstr(source, needed);
   if(found != NULL)  return found - source;
   return -1;
@@ -88,6 +91,7 @@ int string_indexof(const char* source, const char* needed) {
  * @return Occurences number.
  */
 size_t string_count(const char* source, const char needed) {
+  if(!source) return 0;
   size_t i, len = strlen(source), count = 0;
   for(i = 0; i < len; i++)
     if(source[i] == needed) count++;
@@ -103,6 +107,7 @@ size_t string_count(const char* source, const char needed) {
  */
 int string_isint(const char* source) {
   int i, off = 0;
+  if(!source) return 0;
   if(source[0] == '-') off = 1;
   for(i = off; i < strlen(source); i++)
     if(!isdigit(source[i]))
@@ -118,6 +123,7 @@ int string_isint(const char* source) {
  * @return the int value.
  */
 int string_parse_int(char* str, int def) {
+  if(!str) return def;
   int n = strtol(str, NULL, 10);
   if((errno == ERANGE) || (errno == EINVAL)) {
     return def;
@@ -133,6 +139,7 @@ int string_parse_int(char* str, int def) {
  * @return the int value.
  */
 long long int string_parse_long(char* str, long long int def) {
+  if(!str) return def;
   int n = strtoll(str, NULL, 10);
   if((errno == ERANGE) || (errno == EINVAL)) {
     return def;
@@ -151,6 +158,7 @@ _Bool string_match(const char* str, const char* regex) {
   regex_t preg;
   char *text;
   size_t size;
+  if(!str) return 0;
   int err = regcomp(&preg, regex, REG_NOSUB|REG_EXTENDED);
   if(!err) {
     int match = regexec(&preg, str, 0, NULL, 0);
@@ -199,15 +207,16 @@ const char* string_convert(unsigned long num, int base) {
  * @return The binary representation.
  */
 const char* const string_hex2bin(const char* hexstr) {
+  int i = 0;
   static char str[132];
   static char hex[] = "0123456789ABCDEF";
   static char *quad [] = { "0000", "0001", "0010", "0011", "0100", "0101",
                            "0110", "0111", "1000", "1001", "1010", "1011",
                            "1100", "1101", "1110", "1111" };
+  bzero(str, 132);
+  if(!hexstr) return str;
   if(hexstr[0] == '0' && hexstr[1] == 'x')
     hexstr+=2;
-  bzero(str, 132);
-  int i = 0;
   while(*hexstr) {
     strcpy(str+i, quad[strchr(hex, *hexstr)-hex]);
     i+=4;
