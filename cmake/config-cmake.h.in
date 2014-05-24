@@ -29,5 +29,8 @@
   #cmakedefine HAVE_NCURSES_H
   #cmakedefine HAVE_IPTC_H
   #cmakedefine HAVE_RTNETLINK_H
+  #cmakedefine HAVE_LUA_H
+  #cmakedefine HAVE_LAUXLIB_H
+  #cmakedefine HAVE_LUALIB_H
 
 #endif /* __TK_CONFIG_H__

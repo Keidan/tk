@@ -75,3 +75,12 @@ set(bin_src
 )
 add_executable(test_ping ${bin_src})
 target_link_libraries(test_ping tk)
+
+# lua case
+if(HAVE_LUA_H)
+  set(bin_src 
+    ${TEST_SRC_DIR}/test_lua.c 
+  )
+  add_executable(test_lua ${bin_src})
+  target_link_libraries(test_lua tk)
+endif(HAVE_LUA_H)

@@ -63,6 +63,14 @@ if(HAVE_RTNETLINK_H)
     ${TK_SRC_DIR}/io/net/netroute.c
   )
 endif(HAVE_RTNETLINK_H)
+# add netroute if lua is found
+if(HAVE_LUA_H)
+  set(lib_src ${lib_src} 
+    ${TK_SRC_DIR}/io/lua.c
+    ${TK_SRC_DIR}/io/sr_lua.c
+  )
+  set(link ${link} ${LUA_LIBRARY})
+endif(HAVE_LUA_H)
 
 add_library(tk SHARED ${lib_src})
 target_link_libraries(tk ${link})
