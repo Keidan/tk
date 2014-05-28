@@ -294,20 +294,20 @@
   void nettools_write_pcap_packet(FILE* output, __u32 link, const net_buffer_t buffer, size_t a_length, size_t r_length, _Bool *first);
 
   /**
-   * @fn void nettools_mac2str(netiface_bmac_t mac, netiface_mac_t m)
+   * @fn void nettools_mac2str(const netiface_bmac_t mac, netiface_mac_t m)
    * @brief Convert a MAC array into a string.
    * @param mac MAC to convert.
    * @param m MAC in string.
    */
-  void nettools_mac2str(netiface_bmac_t mac, netiface_mac_t m);
+  void nettools_mac2str(const netiface_bmac_t mac, netiface_mac_t m);
 
   /**
-   * @fn void nettools_str2mac(netiface_mac_t mac, netiface_bmac_t m)
+   * @fn void nettools_str2mac(const netiface_mac_t mac, netiface_bmac_t m)
    * @brief Convert a MAC string into a MAC array.
    * @param mac MAC to convert
    * @param m MAC in array.
    */
-  void nettools_str2mac(netiface_mac_t mac, netiface_bmac_t m);
+  void nettools_str2mac(const netiface_mac_t mac, netiface_bmac_t m);
 
   /**
    * @fn _Bool nettools_valid_mac(netiface_mac_t mac)

@@ -533,25 +533,26 @@ _Bool nettools_valid_mac(netiface_mac_t mac) {
 }
 
 /**
- * @fn void nettools_mac2str(netiface_bmac_t mac, netiface_mac_t m)
+ * @fn void nettools_mac2str(const netiface_bmac_t mac, netiface_mac_t m)
  * @brief Convert a MAC array into a string.
  * @param mac MAC to convert.
  * @param m MAC in string.
  */
-void nettools_mac2str(netiface_bmac_t mac, netiface_mac_t m) {
+void nettools_mac2str(const netiface_bmac_t mac, netiface_mac_t m) {
   sprintf(m, "%02x:%02x:%02x:%02x:%02x:%02x", 
 	  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 /**
- * @fn void nettools_str2mac(netiface_mac_t mac, netiface_bmac_t m)
+ * @fn void nettools_str2mac(const netiface_mac_t mac, netiface_bmac_t m)
  * @brief Convert a MAC string into a MAC array.
  * @param mac MAC to convert
  * @param m MAC in array.
  */
-void nettools_str2mac(netiface_mac_t mac, netiface_bmac_t m) {
-  sscanf(mac, "%x:%x:%x:%x:%x:%x", 
-	 (__u32*)&m[0], (__u32*)&m[1], (__u32*)&m[2], (__u32*)&m[3], (__u32*)&m[4], (__u32*)&m[5]);
+void nettools_str2mac(const netiface_mac_t mac, netiface_bmac_t m) {
+  int n[6], i;
+  sscanf(mac, "%x:%x:%x:%x:%x:%x", &n[0], &n[1], &n[2], &n[3], &n[4], &n[5]);
+  for(i = 0; i < 6; i++) m[i] = n[i];
 }
 
 
