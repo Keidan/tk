@@ -76,7 +76,7 @@ int arp_find_from_table(char* ip, struct arp_entry_s *entry) {
     netiface_get_fd(iface, &fd);
     netiface_get_name(iface, arpreq.arp_dev);
     if (ioctl(fd, SIOCGARP, &arpreq) < 0) {
-      logger(LOG_ERR, "SIOCGARP: (%d) %s\n", errno, strerror(errno));
+      logger(LOG_ERR, "%s(%s): (%d) %s\n", arpreq.arp_dev, ip, errno, strerror(errno));
       continue;
     }
     if(!strcmp(ip, inet_ntoa(sin->sin_addr))) {
@@ -124,14 +124,16 @@ int arp_add_in_table(netiface_name_t name, const char *ip, netiface_mac_t mac) {
   if(nettools_ip_to_sockaddr(ip, sin) == -1) return -1;
   strcpy(arpreq.arp_dev, name);
   arpreq.arp_flags = ATE_COM;
-  nettools_str2mac(mac, (unsigned char *) &arpreq.arp_ha.sa_data[0]);
+  netiface_bmac_t m;
+  nettools_str2mac(mac, m);
+  memcpy(&arpreq.arp_ha.sa_data, &m, sizeof(netiface_bmac_t));
   if((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
     logger(LOG_DEBUG, "socket failed: (%d) %s'\n", errno, strerror(errno));
     return -1;
   } 
   if (ioctl(fd, SIOCSARP, &arpreq) < 0) {
     close(fd);
-    logger(LOG_ERR, "SIOCGARP: (%d) %s\n", errno, strerror(errno));
+    logger(LOG_ERR, "%s(%s %s): (%d) %s\n", name, ip, mac, errno, strerror(errno));
     return -1;
   }
   close(fd);
@@ -232,6 +234,14 @@ int arp_send_request(int fd, struct sockaddr_ll *ndev, struct netiface_info_s me
   struct ether_arp *earp = (struct  ether_arp*)(buffer + sizeof(ethhdr_t));  
   struct sockaddr_ll nic_dev;
   struct sockaddr_in n;
+  netiface_ip4_t sdip;
+  char* temp = NULL;
+  if(nettools_is_ipv4(dest))
+    temp = strdup(dest);
+  else {
+    nettools_hostname_to_ip(dest, (char*)sdip);
+    temp = strdup(sdip);
+  }
   //Initialize
   memset(&nic_dev, 0, sizeof(struct sockaddr_ll));
   nic_dev.sll_ifindex = me.index;
@@ -250,21 +260,25 @@ int arp_send_request(int fd, struct sockaddr_ll *ndev, struct netiface_info_s me
   inet_aton((char*)me.ip4, &n.sin_addr);
   memcpy(earp->arp_spa, &n.sin_addr, 4);
   memset(earp->arp_tha, 0x00, ETH_ALEN);
-  inet_aton((char*)dest, &n.sin_addr);
+  inet_aton((char*)temp, &n.sin_addr);
   memcpy(earp->arp_tpa, &n.sin_addr, 4);
 
   if(sendto(fd, buffer, sizeof(arp_buffer_t), 0, (struct sockaddr const*)&nic_dev, sizeof(nic_dev)) == -1) {
+    free(temp);
     logger(LOG_ERR, "sendto failed: (%d) %s\n", errno, strerror(errno));
     return -1;
   }
-  if(debug) logger(LOG_DEBUG, "Sending ARP Request ...  ARP Header SrcIP: %s, DstIP: %s, SrcHw: %02X:%02X:%02X:%02X:%02X:%02X, DstHw: %02X:%02X:%02X:%02X:%02X:%02X ...\n",
-		   me.ip4, dest,
+  if(debug) {
+    logger(LOG_DEBUG, "Sending ARP Request ...  ARP Header SrcIP: %s, DstIP: %s(%s), SrcHw: %02X:%02X:%02X:%02X:%02X:%02X, DstHw: %02X:%02X:%02X:%02X:%02X:%02X ...\n",
+		   me.ip4, temp,dest,
 		   earp->arp_sha[0], earp->arp_sha[1], earp->arp_sha[2],
 		   earp->arp_sha[3], earp->arp_sha[4], earp->arp_sha[5],
 		   earp->arp_tha[0], earp->arp_tha[1], earp->arp_tha[2],
 		   earp->arp_tha[3], earp->arp_tha[4], earp->arp_tha[5]);
+  }
   if(ndev)
     memcpy(ndev, &nic_dev, sizeof(struct sockaddr_ll));
+  free(temp);
   return 0;
 }
 
@@ -320,16 +334,28 @@ int arp_resolve_ip(struct arpcfg_s cfg, struct netiface_info_s me, netiface_ip4_
   nic_dev.sll_addr[7]  = 0x00;
 
   fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+
   if(fd == -1) {
     logger(LOG_ERR, "Socket open failed: (%d) %s\n", errno, strerror(errno));
     return -1;
   }
   __u8 iip[4];
-  char* temp = strdup(dest_ip);
+  netiface_ip4_t sip;
+  char* temp = NULL;
+  _Bool first_reply_can_be_default_gw = 0;
+  if(nettools_is_ipv4(dest_ip))
+    temp = strdup(dest_ip);
+  else {
+    nettools_hostname_to_ip(dest_ip, (char*)sip);
+    temp = strdup(sip);
+    first_reply_can_be_default_gw = 1;
+  }
+      
   char* bck = temp;
   for(i = 0; i < 4; i++)
     iip[i] = string_parse_int(strsep(&temp, "."), 0);
   free(bck);
+
   memset(buffer, 0, sizeof(arp_buffer_t));
   arp_preare_buffer(buffer);
   for(i = 0; ((i<cfg.max_attempts) && !end ); ++i) {
@@ -352,7 +378,7 @@ int arp_resolve_ip(struct arpcfg_s cfg, struct netiface_info_s me, netiface_ip4_
 	  break;
 	default: //Read datas!
 	  ret = recvfrom(fd, buffer, sizeof(arp_buffer_t), 0, (struct sockaddr*)&nic_dev, &msize);
-	  if(cfg.debug) logger(LOG_DEBUG, "ARP: Read %d bytes\n", ret);
+	  //if(cfg.debug) logger(LOG_DEBUG, "ARP: Read %d bytes\n", ret);
 	  _Bool isreply=0;
 	  switch(arp_is_arp_frame(buffer, ret)) {
 	    case 1:
@@ -360,17 +386,18 @@ int arp_resolve_ip(struct arpcfg_s cfg, struct netiface_info_s me, netiface_ip4_
 	      isreply = 1;
 	      break;
 	    case 0:
-	      if(cfg.debug) logger(LOG_DEBUG, "ARP Request\n");
+	      //if(cfg.debug) logger(LOG_DEBUG, "ARP Request\n");
 	      break;
 	    case -1:
-	      if(cfg.debug) logger(LOG_DEBUG, "Other packet...\n");
+	      //if(cfg.debug) logger(LOG_DEBUG, "Other packet...\n");
 	      break;
 	  }
 	  if(isreply) {
 	    struct ether_arp *earp = (struct  ether_arp*)(buffer + sizeof(ethhdr_t));  
-	    if(cfg.debug) logger(LOG_DEBUG, "Reply... Compare IP %d.%d.%d.%d with ip %s\n",
-			     iip[0], iip[1], iip[2], iip[3], dest_ip);
-	    if(memcmp(earp->arp_spa, iip, 4) == 0) {
+	    if(cfg.debug) logger(LOG_DEBUG, "Reply... Compare IP %d.%d.%d.%d(%s) with ip %d.%d.%d.%d\n",
+				 iip[0], iip[1], iip[2], iip[3], dest_ip, earp->arp_spa[0], earp->arp_spa[1], earp->arp_spa[2], earp->arp_spa[3]);
+	    if(memcmp(earp->arp_spa, iip, 4) == 0 || first_reply_can_be_default_gw) {
+	      first_reply_can_be_default_gw = 0;
 	      netiface_bmac_t b;
 	      memcpy(b, earp->arp_sha, 6);
 	      nettools_mac2str(b, *dest_mac);
