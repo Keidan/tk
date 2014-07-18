@@ -52,11 +52,12 @@
 
 
   /**
-   * @fn ping_t ping_new()
+   * @fn ping_t ping_new(const char* iface)
    * @brief Open an PING connection.
+   * @param iface The iface name to use.
    * @return The PING context else NULL on error.
    */
-  ping_t ping_new();
+  ping_t ping_new(const char *iface);
 
   /**
    * @fn void ping_delete(ping_t ping)
