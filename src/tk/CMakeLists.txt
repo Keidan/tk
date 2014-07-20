@@ -23,6 +23,7 @@ set(lib_src
   ${TK_SRC_DIR}/io/net/netprint.c
   ${TK_SRC_DIR}/io/net/netiface.c
   ${TK_SRC_DIR}/io/net/netiface_status.c
+  ${TK_SRC_DIR}/io/net/netlayer.c
   ${TK_SRC_DIR}/io/net/proto/arp.c
   ${TK_SRC_DIR}/io/net/proto/ping.c
 )
@@ -67,7 +68,7 @@ endif(HAVE_RTNETLINK_H)
 if(HAVE_LUA_H)
   set(lib_src ${lib_src} 
     ${TK_SRC_DIR}/io/lua.c
-    ${TK_SRC_DIR}/io/sr_lua.c
+#    ${TK_SRC_DIR}/io/sr_lua.c
   )
   set(link ${link} ${LUA_LIBRARY})
 endif(HAVE_LUA_H)

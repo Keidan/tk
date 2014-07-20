@@ -344,22 +344,15 @@ static void* ping_receive_event(void* data) {
  * @return checkum of 16-bit length
  */
 static uint16_t ping_cksum(uint16_t *buf, int nbytes) {
-  uint32_t sum = 0;
-  uint16_t oddbyte = 0;
-
-  while (nbytes > 1) {
-    sum += *buf++;
-    nbytes -= 2;
-  }
-
-  if (nbytes == 1) {
-    oddbyte = 0;
-    *((uint16_t *) &oddbyte) = *(uint8_t *) buf;
-    sum += oddbyte;
-  }
-  
-  sum = (sum >> 16) + (sum & 0xffff);
+  unsigned short *b = buf;
+  unsigned int sum=0;
+  unsigned short result;
+  int len = nbytes;
+  for ( sum = 0; len > 1; len -= 2 ) sum += *b++;
+  if ( len == 1 ) sum += *(unsigned char*)b;
+  sum = (sum >> 16) + (sum & 0xFFFF);
   sum += (sum >> 16);
+  result = ~sum;
   return (uint16_t) ~sum;
 }
 unsigned short ping_ip_csum(unsigned short *buf, int nwords) {
