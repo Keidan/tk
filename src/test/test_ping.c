@@ -16,8 +16,9 @@ int main(int argc, char** argv) {
   syssig_init(log_init_cast_user("test_ping", LOG_PID|LOG_CONS|LOG_PERROR), NULL);
 
   ping_t p = ping_new("wlan0");
+  if(!p) return 0;
   ping_set_event_handler(p, ping_event_handler, NULL);
-  ping_start(p, "192.168.43.1", 10000);
+  ping_start(p, "192.168.43.1", 150000);
 
   while(1) sleep(1);
   ping_delete(p);

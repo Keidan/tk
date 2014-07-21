@@ -24,6 +24,7 @@
 #include <tk/io/net/proto/ping.h>
 #include <tk/io/net/nettools.h>
 #include <tk/io/net/netsocket.h>
+#include <tk/io/net/netlayer.h>
 #include <tk/sys/log.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,13 +49,13 @@
 
 struct ping_s {
     netsocket_t sock;
-    htable_t ifaces;
     struct netiface_info_s iface;
     uint16_t seq;
     uint32_t timeout;
     pthread_t t_recv;
     systask_t timer;
     _Bool end;
+    netlayer_t layer;
     struct {
 	ping_event_handler_fct fct;
 	void* user_data;
@@ -66,9 +67,8 @@ struct ping_s {
     } dest;
 };
 
-#define DEFAULT_TTL 64
 #define ICMP_PACKET_SIZE 48
-#define PING_TIMEOUT    15
+#define PING_TIMEOUT    150000
 #define ICMPHDR_SIZE sizeof(struct icmphdr)
 #define create_ptr(local, param) struct ping_s *local = (struct ping_s*)param
 #define get_fd(p) netsocket_get_fd(p->sock)
@@ -89,14 +89,7 @@ struct icmp_frame {
 
 static uint16_t request = 1;
 
-/**
- * @fn static uint16_t ping_cksum(uint16_t *buf, int nbytes)
- * @brief This function is used calculate icmp header checksum
- * @param buf buffer,
- * @param nbytes size of buf
- * @return checkum of 16-bit length
- */
-static uint16_t ping_cksum(uint16_t *buf, int nbytes);
+
 /**
  * @fn static void* ping_receive_event(void* data)
  * @brief This function is a callback when a frame is received on the socket create
@@ -130,16 +123,17 @@ ping_t ping_new(const char *iface) {
   }
   memset(p, 0, sizeof(struct ping_s));
 
-
-  p->ifaces = netiface_list_new(NETIFACE_LVL_UDP, NETIFACE_KEY_NAME);
-  netiface_t ifa = netiface_list_get(p->ifaces, (char*)iface);
+  htable_t ifaces = netiface_list_new(NETIFACE_LVL_UDP, NETIFACE_KEY_NAME);
+  netiface_t ifa = netiface_list_get(ifaces, (char*)iface);
   if(!ifa) {
-    netiface_list_delete(p->ifaces);
+    netiface_list_delete(ifaces);
     logger(LOG_ERR, "ping iface failed\n");
     ping_delete(p);
     return NULL;
   }
+
   netiface_read(ifa, &p->iface);
+  netiface_list_delete(ifaces);
 
   if(nettools_is_ipv4(p->iface.ip4) != 1) {
     logger(LOG_ERR, "No valid IP found for iface %s\n", iface);
@@ -160,8 +154,16 @@ ping_t ping_new(const char *iface) {
     return NULL;
   }
 
-  if(netiface_bind(ifa) == -1) {
+  if(netsocket_bind_to_iface(p->sock, p->iface.index) == -1) {
     logger(LOG_ERR, "Unable to bind to the iface %s\n", iface);
+    ping_delete(p);
+    return NULL;
+  }
+
+  p->layer = netlayer_new();
+
+  if(pthread_create(&p->t_recv, NULL, ping_receive_event, p) != 0) {
+    logger(LOG_ERR, "Unable to start the receiver thread: (%d) %s\n", errno, strerror(errno));
     ping_delete(p);
     return NULL;
   }
@@ -170,12 +172,6 @@ ping_t ping_new(const char *iface) {
     ping_delete(p);
     return NULL;
   }
-  if(pthread_create(&p->t_recv, NULL, ping_receive_event, p) != 0) {
-    logger(LOG_ERR, "Unable to start the receiver thread: (%d) %s\n", errno, strerror(errno));
-    ping_delete(p);
-    return NULL;
-  }
-
   return p;
 }
 
@@ -187,13 +183,14 @@ ping_t ping_new(const char *iface) {
 void ping_delete(ping_t ping) {
   create_ptr(p, ping);
   if(!p) return;
+  if(p->layer)
+    netlayer_delete(p->layer), p->layer = NULL;
   if(p->sock) netsocket_delete(p->sock), p->sock = NULL;
   if(p->t_recv) {
     pthread_cancel(p->t_recv);
     pthread_join(p->t_recv, NULL);
     p->t_recv = 0;
   }
-  if(p->ifaces) netiface_list_delete(p->ifaces), p->ifaces = NULL;
   systask_delete(p->timer);
   p->handler.fct = NULL;
   free(p);
@@ -237,7 +234,6 @@ int ping_start(ping_t ping, const char* host, uint32_t delay) {
   systask_set_timeout(p->timer, delay);
 
   ping_send_from_iface(ping);
-
   systask_restart(p->timer);
   return 0;
 }
@@ -336,118 +332,34 @@ static void* ping_receive_event(void* data) {
   return NULL;
 }
 
-/**
- * @fn static uint16_t ping_cksum(uint16_t *buf, int nbytes)
- * @brief This function is used calculate icmp header checksum
- * @param buf buffer,
- * @param nbytes size of buf
- * @return checkum of 16-bit length
- */
-static uint16_t ping_cksum(uint16_t *buf, int nbytes) {
-  unsigned short *b = buf;
-  unsigned int sum=0;
-  unsigned short result;
-  int len = nbytes;
-  for ( sum = 0; len > 1; len -= 2 ) sum += *b++;
-  if ( len == 1 ) sum += *(unsigned char*)b;
-  sum = (sum >> 16) + (sum & 0xFFFF);
-  sum += (sum >> 16);
-  result = ~sum;
-  return (uint16_t) ~sum;
-}
-unsigned short ping_ip_csum(unsigned short *buf, int nwords) {
-    unsigned long sum;
-    for(sum=0; nwords>0; nwords--)
-        sum += *buf++;
-    sum = (sum >> 16) + (sum &0xffff);
-    sum += (sum >> 16);
-    return (unsigned short)(~sum);
-}
 
 static void ping_send_from_iface(ping_t ping) {
   create_ptr(p, ping);
   if(!p) return;
-  int tx_len = 0;
-  netiface_bmac_t src, dst;
-  memset(&src, 0, sizeof(netiface_bmac_t));
-  memset(&dst, 0, sizeof(netiface_bmac_t));
-  nettools_str2mac(p->dest.mac, dst);
-  nettools_str2mac(p->iface.mac, src);
-
-  uint32_t sendbuf_len = sizeof(struct ether_header) + sizeof(struct iphdr) + sizeof(struct icmp_frame);
-
-  char sendbuf[sendbuf_len];
-  memset(sendbuf, 0, sendbuf_len);
-
-  struct ether_header *eh = (struct ether_header *) sendbuf;
-  memcpy(eh->ether_shost, src, sizeof(netiface_bmac_t));
-  memcpy(eh->ether_dhost, dst, sizeof(netiface_bmac_t));
-  eh->ether_type = htons(ETH_P_IP);
-  tx_len += sizeof(struct ether_header);
-  struct iphdr *iph = (struct iphdr *) (sendbuf + tx_len);
-
-  /* IP Header */
-  iph->ihl = 5;
-  iph->version = 4;
-  iph->tos = 16; // Low delay
-  iph->id = htons(54321);
-  iph->ttl = DEFAULT_TTL; // hops
-  iph->protocol = IPPROTO_ICMP;
-  /* Source IP address, can be spoofed */
-  iph->saddr = inet_addr(p->iface.ip4);
-  /* Destination IP address */
-  iph->daddr = inet_addr(p->dest.ip);
-  tx_len += sizeof(struct iphdr);
-
+  netlayer_clear(p->layer);
+  netlayer_ethernet(p->layer, p->iface.mac, p->dest.mac, p->iface.index, ETH_P_IP);
+  netlayer_ip4(p->layer, NETLAYER_DEFAULT_IP4_TOS, NETLAYER_DEFAULT_IP4_TTL, 
+	       p->iface.ip4, p->dest.ip, IPPROTO_ICMP);
   struct timespec tp;
   int i, n;
-  struct icmp_frame *icmp = (struct icmp_frame*) (sendbuf + tx_len);
-  icmp->type = ICMP_ECHO;
-  icmp->code = 0;
-  icmp->id = htons(getpid());
-  icmp->sequence16b = htons(request);
-  icmp->payload.payload_sequence = htonl(request&0x0000FFFF);
+  struct icmp_frame icmp;
+  icmp.type = ICMP_ECHO;
+  icmp.code = 0;
+  icmp.id = htons(getpid());
+  icmp.sequence16b = htons(request);
+  icmp.payload.payload_sequence = htonl(request&0x0000FFFF);
 
   (void)clock_gettime(CLOCK_MONOTONIC ,&tp);
-  icmp->payload.timestamp = htonl((tp.tv_sec *1e3) + (tp.tv_nsec *1e-6));
+  icmp.payload.timestamp = htonl((tp.tv_sec *1e3) + (tp.tv_nsec *1e-6));
 
-  for (i=0; i< ICMP_PACKET_SIZE; i++)
-    icmp->payload.data[i] = i;
-
-  icmp->checksum = ping_cksum((uint16_t*)icmp, sizeof(struct icmp_frame));  
+  for (i=0; i< ICMP_PACKET_SIZE; i++) icmp.payload.data[i] = i;
+  icmp.checksum = netlayer_cksum((uint16_t*)&icmp, sizeof(struct icmp_frame));  
   p->seq = request;
-  tx_len += sizeof(struct icmp_frame);
+  netlayer_payload(p->layer, (uint8_t*)&icmp, sizeof(struct icmp_frame));
 
-  /* Length of IP payload and header */
-  iph->tot_len = htons(tx_len - sizeof(struct ether_header));
-  /* Calculate IP checksum on completed header */
-  iph->check = ping_ip_csum((unsigned short *)(sendbuf+sizeof(struct ether_header)), sizeof(struct iphdr)/2);
-
-  /* Destination address */
-  struct sockaddr_ll socket_address;
-  /*prepare sockaddr_ll*/
-  /*RAW communication*/
-  socket_address.sll_family   = PF_PACKET;
-  /*we don't use a protocoll above ethernet layer
-    ->just use anything here*/
-  socket_address.sll_protocol = htons(ETH_P_IP);
-  /*index of the network device
-    see full code later how to retrieve it*/
-  socket_address.sll_ifindex  = p->iface.index;
-  /*ARP hardware identifier is ethernet*/
-  socket_address.sll_hatype   = ARPHRD_ETHER;
-  socket_address.sll_pkttype  = PACKET_OTHERHOST;
-  /*address length*/
-  socket_address.sll_halen    = ETH_ALEN;
-  /*MAC - begin*/
-  memcpy(socket_address.sll_addr, dst, ETH_ALEN);
-  /*MAC - end*/
-  socket_address.sll_addr[6]  = 0x00;/*not used*/
-  socket_address.sll_addr[7]  = 0x00;/*not used*/
   /* Send packet */
-  if ((n = sendto(get_fd(p), sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll))) < 0)
+  if ((n = netlayer_finish(p->layer, get_fd(p))) < 0)
     logger(LOG_ERR, "Send failed %d: (%d) %s\n", get_fd(p), errno, strerror(errno));  
   logger(LOG_INFO, "ping %s %d bytes seq %d\n", p->dest.host, n, p->seq);
   request++;
-
 }
