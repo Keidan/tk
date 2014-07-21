@@ -55,7 +55,7 @@
   void netlayer_delete(netlayer_t nlayer);
 
   /**
-   * @fn void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, int next_eth_p)
+   * @fn void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, uint16_t next_eth_p)
    * @brief Build the ethernet header
    * @param netlayer netlayer pointer
    * @param hwr_src The source MAC address
@@ -63,7 +63,7 @@
    * @param iface_idx The interface idx to use
    * @param next_eth_p The next packet type (eg: ETH_P_IP)
    */
-  void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, int next_eth_p);
+  void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, uint16_t next_eth_p);
 
   /**
    * @fn void netlayer_ip4(netlayer_t nlayer, uint8_t tos, uint8_t ttl, char* src_ip, char* dst_ip, uint8_t next_ipproto)

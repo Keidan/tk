@@ -107,7 +107,7 @@ void netlayer_clear(netlayer_t nlayer) {
 
 
 /**
- * @fn void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, int next_eth_p)
+ * @fn void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, uint16_t next_eth_p)
  * @brief Build the ethernet header
  * @param nlayer netlayer pointer
  * @param hwr_src The source MAC address
@@ -115,7 +115,7 @@ void netlayer_clear(netlayer_t nlayer) {
  * @param iface_idx The interface idx to use
  * @param next_eth_p The next packet type (eg: ETH_P_IP)
  */
-void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, int next_eth_p) {
+void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, uint16_t next_eth_p) {
   create_ptr(nl, nlayer);
   nl->iface_idx = iface_idx;
   memset(&nl->hwr_src, 0, sizeof(netiface_bmac_t));
@@ -129,7 +129,7 @@ void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t
   memcpy(eh.ether_dhost, nl->hwr_dst, sizeof(netiface_bmac_t));
   eh.ether_type = htons(next_eth_p);//ETH_P_IP
   /* add the header to the buffer */
-  bytebuffer_copy(nl->buffer, (char*)&eh, sizeof(struct ether_header));
+  bytebuffer_copy(nl->buffer, &eh, sizeof(struct ether_header));
 }
 
 /**
@@ -158,7 +158,7 @@ void netlayer_ip4(netlayer_t nlayer, uint8_t tos, uint8_t ttl, char* src_ip, cha
   /* Destination IP address */
   iph.daddr = inet_addr(dst_ip);
   /* add the header to the buffer */
-  bytebuffer_append(nl->buffer, (char*)&iph, sizeof(struct iphdr));
+  bytebuffer_append(nl->buffer, &iph, sizeof(struct iphdr));
 }
 
 
@@ -171,7 +171,7 @@ void netlayer_ip4(netlayer_t nlayer, uint8_t tos, uint8_t ttl, char* src_ip, cha
  */
 void netlayer_payload(netlayer_t nlayer, uint8_t* buffer, uint32_t length) {
   create_ptr(nl, nlayer);
-  bytebuffer_append(nl->buffer, (char*)buffer, length);
+  bytebuffer_append(nl->buffer, buffer, length);
 }
 
 /**
