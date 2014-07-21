@@ -95,4 +95,11 @@
    */
   int netlayer_finish(netlayer_t nlayer, int fd);
 
+  /**
+   * @fn void netlayer_clear(netlayer_t nlayer)
+   * @brief Clear the internal buffer.
+   * @param nlayer netlayer pointer
+   */
+  void netlayer_clear(netlayer_t nlayer);
+
 #endif /* __NETLAYER_H__ */

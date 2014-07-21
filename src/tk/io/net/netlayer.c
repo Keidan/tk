@@ -95,6 +95,16 @@ void netlayer_delete(netlayer_t nlayer) {
   free(nl);
 }
 
+/**
+ * @fn void netlayer_clear(netlayer_t nlayer)
+ * @brief Clear the internal buffer.
+ * @param nlayer netlayer pointer
+ */
+void netlayer_clear(netlayer_t nlayer) {
+  create_ptr(nl, nlayer);
+  if(nl->buffer) bytebuffer_clear(nl->buffer); 
+}
+
 
 /**
  * @fn void netlayer_ethernet(netlayer_t nlayer, netiface_mac_t hwr_src, netiface_mac_t hwr_dst, uint32_t iface_idx, int next_eth_p)
