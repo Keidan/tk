@@ -82,14 +82,14 @@
   int bytebuffer_set_capacity(bytebuffer_t buffer, uint32_t capacity);
 
   /**
-   * @fn int bytebuffer_append(bytebuffer_t buffer, const char* bytes, uint32_t bytes_length)
+   * @fn int bytebuffer_append(bytebuffer_t buffer, const void* bytes, uint32_t bytes_length)
    * @brief Append a bytes into the buffer.
    * @param buffer The buffer.
    * @param bytes The bytes to append.
    * @param bytes_length The bytes length.
    * @return -1 on error else 0.
    */
-  int bytebuffer_append(bytebuffer_t buffer, const char* bytes, uint32_t bytes_length);
+  int bytebuffer_append(bytebuffer_t buffer, const void* bytes, uint32_t bytes_length);
 
   /**
    * @fn int bytebuffer_append_byte(bytebuffer_t buffer, const char c)
@@ -101,14 +101,14 @@
   int bytebuffer_append_byte(bytebuffer_t buffer, const char c);
 
   /**
-   * @fn int bytebuffer_copy(bytebuffer_t buffer, const char* bytes, uint32_t bytes_length)
+   * @fn int bytebuffer_copy(bytebuffer_t buffer, const void* bytes, uint32_t bytes_length)
    * @brief Erase the buffer with the copy bytes.
    * @param buffer The buffer.
    * @param bytes The bytes to copy.
    * @param bytes_length The bytes length.
    * @return -1 on error else 0.
    */
-  int bytebuffer_copy(bytebuffer_t buffer, const char* bytes, uint32_t bytes_length);
+  int bytebuffer_copy(bytebuffer_t buffer, const void* bytes, uint32_t bytes_length);
 
   /**
    * @fn int bytebuffer_copy_byte(bytebuffer_t buffer, const char c)

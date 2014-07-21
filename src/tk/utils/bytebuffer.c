@@ -33,7 +33,7 @@
 
 struct bytebuffer_s {
     int smagic;
-    char* bytes;
+    void* bytes;
     uint32_t length;
     uint32_t alength;
     int emagic;
@@ -53,7 +53,7 @@ bytebuffer_t bytebuffer_new() {
   b->smagic = SMAGIC;
   b->emagic = EMAGIC;
   bytebuffer_set_capacity(b, 1);
-  b->bytes[0] = 0;
+  memset(b->bytes, 0, b->alength);
   return b;
 }
 
@@ -144,7 +144,7 @@ int bytebuffer_set_capacity(bytebuffer_t buffer, uint32_t capacity) {
 
   b->alength = capacity + 1;
   b->bytes = tmp;
-  b->bytes[capacity] = 0;
+  memset(b->bytes + capacity, 0, 1);
   return 0;
 }
 
@@ -163,16 +163,16 @@ int bytebuffer_append_byte(bytebuffer_t buffer, const char c) {
 }
 
 /**
- * @fn int bytebuffer_append(bytebuffer_t buffer, const char* bytes, uint32_t bytes_length)
+ * @fn int bytebuffer_append(bytebuffer_t buffer, const void* bytes, uint32_t bytes_length)
  * @brief Append a bytes into the buffer.
  * @param buffer The buffer.
  * @param bytes The bytes to append.
  * @param bytes_length The bytes length.
  * @return -1 on error else 0.
  */
-int bytebuffer_append(bytebuffer_t buffer, const char* bytes, uint32_t bytes_length) {
+int bytebuffer_append(bytebuffer_t buffer, const void* bytes, uint32_t bytes_length) {
   struct bytebuffer_s *b = (struct bytebuffer_s*) buffer;
-  uint32_t slen = 0, diff;
+  uint32_t slen = 0, diff, of;
   char* tmp;
   if(!b) return -1;
   if(!bytes) return -1;
@@ -187,13 +187,14 @@ int bytebuffer_append(bytebuffer_t buffer, const char* bytes, uint32_t bytes_len
       return -1;
     }
     bzero(b->bytes, b->alength);
-    strncpy(b->bytes, bytes, b->length);
-  } else if((strlen(b->bytes) + slen) <= b->alength) {
+    memcpy(b->bytes, bytes, b->length);
+  } else if(b->length + slen <= b->alength) {
+    memcpy(b->bytes + b->length, bytes, slen);
     b->length += slen;
-    strncat(b->bytes, bytes, b->length);
   } else {
     diff = abs(b->alength - (b->length + slen)) + 1;
     b->alength += diff;
+    of = b->length;
     b->length = b->alength;//strlen(b->bytes) + slen;
     tmp = (char*)realloc(b->bytes, b->alength);
     if(!tmp) {
@@ -203,7 +204,7 @@ int bytebuffer_append(bytebuffer_t buffer, const char* bytes, uint32_t bytes_len
       return -1;
     }
     b->bytes = tmp;
-    strncat(b->bytes, bytes, b->length);
+    memcpy(b->bytes + of, bytes, slen);
   }
   return 0;
 }
@@ -223,14 +224,14 @@ int bytebuffer_copy_byte(bytebuffer_t buffer, const char c) {
 }
 
 /**
- * @fn int bytebuffer_copy(bytebuffer_t buffer, const char* bytes, uint32_t bytes_length)
+ * @fn int bytebuffer_copy(bytebuffer_t buffer, const void* bytes, uint32_t bytes_length)
  * @brief Erase the buffer with the copy bytes.
  * @param buffer The buffer.
  * @param bytes The bytes to copy.
  * @param bytes_length The bytes length.
  * @return -1 on error else 0.
  */
-int bytebuffer_copy(bytebuffer_t buffer, const char* bytes, uint32_t bytes_length) {
+int bytebuffer_copy(bytebuffer_t buffer, const void* bytes, uint32_t bytes_length) {
   struct bytebuffer_s *b = (struct bytebuffer_s*) buffer;
   if(!b) return -1;
   bytebuffer_clear(b);
