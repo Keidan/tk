@@ -115,6 +115,15 @@
   int netsocket_bind(netsocket_t sock);
 
   /**
+   * @fn int netsocket_bind_to_iface(netsocket_t sock, int iface_idx)
+   * @brief Bind a socket.
+   * @param sock The socket to bind.
+   * @param iface_idx Iface index.
+   * @return -1 on error else 0
+   */
+  int netsocket_bind_to_iface(netsocket_t sock, int iface_idx);
+
+  /**
    * @fn netsocket_t netsocket_accept(netsocket_t sock)
    * @brief Accept a new connection.
    * @param sock The server socket.

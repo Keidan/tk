@@ -30,7 +30,7 @@
 #include <string.h>
 #include <errno.h>
 #include <linux/tcp.h>
-
+#include <linux/if_packet.h>
 
 #define NETSOCKET_MAGIC 0xC00750c
 #define create_ptr(local, param) struct netsocket_s *local = (struct netsocket_s*)param
@@ -182,6 +182,30 @@ int netsocket_connect(netsocket_t sock) {
   return 0;
 }
 
+/**
+ * @fn int netsocket_bind_to_iface(netsocket_t sock, int iface_idx)
+ * @brief Bind a socket.
+ * @param sock The socket to bind.
+ * @param iface_idx Iface index.
+ * @return -1 on error else 0
+ */
+int netsocket_bind_to_iface(netsocket_t sock, int iface_idx) {
+  create_ptr(s, sock);
+  if(!test_ptr(s)) return -1;
+  struct sockaddr_ll sll;
+
+  memset(&sll, 0, sizeof(sll));
+
+  sll.sll_family = PF_PACKET;
+  sll.sll_ifindex = iface_idx;
+  sll.sll_protocol = htons(ETH_P_ALL); /* listen all packets */
+  /* Bind*/
+  if((bind(s->fd, (struct sockaddr *)&sll, sizeof(sll))) == -1) {
+    logger(LOG_ERR, "bind failed: (%d) %s.\n", errno, strerror(errno));
+    return -1;
+  }
+  return 0;
+}
 /**
  * @fn int netsocket_bind(netsocket_t sock)
  * @brief Bind a socket.
