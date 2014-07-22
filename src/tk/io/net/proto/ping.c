@@ -90,6 +90,16 @@ struct icmp_frame {
 static uint16_t request = 1;
 
 
+
+/**
+ * @fn static uint16_t ping_cksum(uint16_t *buf, int nbytes)
+ * @brief Checksum calculation.
+ * @param buf The buffer used to calculate
+ * @param nbytes The buffer size.
+ * @return The checksum.
+ */
+static uint16_t ping_cksum(uint16_t *buf, int nbytes);
+
 /**
  * @fn static void* ping_receive_event(void* data)
  * @brief This function is a callback when a frame is received on the socket create
@@ -153,13 +163,13 @@ ping_t ping_new(const char *iface) {
     ping_delete(p);
     return NULL;
   }
-
+/*
   if(netsocket_bind_to_iface(p->sock, p->iface.index) == -1) {
     logger(LOG_ERR, "Unable to bind to the iface %s\n", iface);
     ping_delete(p);
     return NULL;
   }
-
+*/
   p->layer = netlayer_new();
 
   if(pthread_create(&p->t_recv, NULL, ping_receive_event, p) != 0) {
@@ -282,7 +292,7 @@ static void* ping_receive_event(void* data) {
     clock_gettime(CLOCK_MONOTONIC ,&tp);
     nms  = (tp.tv_sec *1e3) + (tp.tv_nsec *1e-6);
 
-    nettools_print_hex(stdout, buf, reads, 0);
+    //nettools_print_hex(stdout, buf, reads, 0);
 
     ip_header = (struct iphdr *)(buf+sizeof(struct ether_header));
 
@@ -343,6 +353,7 @@ static void ping_send_from_iface(ping_t ping) {
   struct timespec tp;
   int i, n;
   struct icmp_frame icmp;
+  memset(&icmp, 0, sizeof(struct icmp_frame));
   icmp.type = ICMP_ECHO;
   icmp.code = 0;
   icmp.id = htons(getpid());
@@ -353,7 +364,7 @@ static void ping_send_from_iface(ping_t ping) {
   icmp.payload.timestamp = htonl((tp.tv_sec *1e3) + (tp.tv_nsec *1e-6));
 
   for (i=0; i< ICMP_PACKET_SIZE; i++) icmp.payload.data[i] = i;
-  icmp.checksum = netlayer_cksum((uint16_t*)&icmp, sizeof(struct icmp_frame));  
+  icmp.checksum = ping_cksum((uint16_t*)&icmp, sizeof(struct icmp_frame));  
   p->seq = request;
   netlayer_payload(p->layer, (uint8_t*)&icmp, sizeof(struct icmp_frame));
 
@@ -362,4 +373,24 @@ static void ping_send_from_iface(ping_t ping) {
     logger(LOG_ERR, "Send failed %d: (%d) %s\n", get_fd(p), errno, strerror(errno));  
   logger(LOG_INFO, "ping %s %d bytes seq %d\n", p->dest.host, n, p->seq);
   request++;
+}
+
+/**
+ * @fn static uint16_t ping_cksum(uint16_t *buf, int nbytes)
+ * @brief Checksum calculation.
+ * @param buf The buffer used to calculate
+ * @param nbytes The buffer size.
+ * @return The checksum.
+ */
+static uint16_t ping_cksum(uint16_t *buf, int nbytes) {
+  unsigned short *b = buf;
+  unsigned int sum=0;
+  unsigned short result;
+  int len = nbytes;
+  for ( sum = 0; len > 1; len -= 2 ) sum += *b++;
+  if ( len == 1 ) sum += *(unsigned char*)b;
+  sum = (sum >> 16) + (sum & 0xFFFF);
+  sum += (sum >> 16);
+  result = ~sum;
+  return result;
 }

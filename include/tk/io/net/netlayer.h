@@ -32,13 +32,13 @@
   #define NETLAYER_DEFAULT_IP4_TOS 16
 
   /**
-   * @fn uint16_t netlayer_cksum(uint16_t *buf, uint32_t nbytes)
+   * @fn uint16_t netlayer_cksum16(uint16_t *buf, uint32_t nbytes)
    * @brief Generic checksum calculation.
    * @param buf The buffer to calculate;
    * @param nbytes The buffer len.
    * @return The checksum.
    */
-  uint16_t netlayer_cksum(uint16_t *buf, uint32_t nbytes);
+  uint16_t netlayer_cksum16(uint16_t *buf, uint32_t nbytes);
 
   /**
    * @fn netlayer_t netlayer_new()

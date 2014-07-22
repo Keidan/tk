@@ -50,20 +50,19 @@ struct netlayer_s {
 #define create_ptr(local, param) struct netlayer_s *local = (struct netlayer_s*)param
 
 /**
- * @fn uint16_t netlayer_cksum(uint16_t *buf, uint32_t nbytes)
+ * @fn uint16_t netlayer_cksum16(uint16_t *buf, uint32_t nbytes)
  * @brief Generic checksum calculation.
  * @param buf The buffer to calculate;
  * @param nbytes The buffer len.
  * @return The checksum.
  */
-uint16_t netlayer_cksum(uint16_t *buf, uint32_t nbytes) {
-  uint16_t *b = buf;
-  uint32_t sum=0, len = nbytes;
-  for ( sum = 0; len > 1; len -= 2 ) sum += *b++;
-  if ( len == 1 ) sum += *(unsigned char*)b;
-  sum = (sum >> 16) + (sum & 0xFFFF);
+uint16_t netlayer_cksum16(uint16_t *buf, uint32_t nwords) {
+  unsigned long sum;
+  for(sum=0; nwords>0; nwords--)
+    sum += *buf++;
+  sum = (sum >> 16) + (sum &0xffff);
   sum += (sum >> 16);
-  return (uint16_t) ~sum;
+  return (uint16_t)(~sum);
 }
 
 /**
@@ -192,8 +191,9 @@ int netlayer_finish(netlayer_t nlayer, int fd) {
     /* Length of IP payload and header */
     iph->tot_len = htons(length - sizeof(struct ether_header));
     /* Calculate IP checksum on completed header */
-    iph->check = netlayer_cksum((uint16_t *)(buf+sizeof(struct ether_header)), sizeof(struct iphdr)/2);
+    iph->check = netlayer_cksum16((uint16_t *)(buf+sizeof(struct ether_header)), sizeof(struct iphdr)/2);
   }
+
   /* socket builder */
   /* Destination address */
   struct sockaddr_ll socket_address;
