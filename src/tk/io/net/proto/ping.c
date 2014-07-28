@@ -122,7 +122,7 @@ void* ping_timeout(void* ptr) {
     if(p->response) continue;
     logger(LOG_ERR, "Ping timeout reached %x, %x.\n", p, p->handler.user_data);
     if(p->handler.fct)
-      p->handler.fct(p, evd(PING_RESULT_TIMEOUT, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+      p->handler.fct(p, evd(PING_RESULT_TIMEOUT, p->seq, p->dest.host, p->dest.ip, p->timeout_delay, 0, p->handler.user_data));
   }
   pthread_exit(0);
   return NULL;
@@ -319,7 +319,7 @@ static void* ping_receive_event(void* data) {
     if(reads == -1) {
       logger(LOG_ERR, "Error in read: (%d) %s", errno, strerror(errno));
       if(p->handler.fct)
-  	p->handler.fct(p, evd(PING_RESULT_READ_ERROR, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_READ_ERROR, p->seq, p->dest.host, p->dest.ip, p->timeout_delay, 0, p->handler.user_data));
       break;
     }
     if(reads != COMPLETE_ICMP_FRAME_SIZE) continue; /* non icmp frame */
@@ -335,14 +335,14 @@ static void* ping_receive_event(void* data) {
     if (ip_header->protocol != IPPROTO_ICMP) {
       logger(LOG_ERR, "filtering non icmp receive");
       if(p->handler.fct)
-  	p->handler.fct(p, evd(PING_RESULT_NON_ICMP, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_NON_ICMP, p->seq, p->dest.host, p->dest.ip, p->timeout_delay, 0, p->handler.user_data));
       continue;
     }
 
     if (strcmp(p->dest.ip, dns)) {
       logger(LOG_ERR, "filtering not dns origin receive(%s), origin (%s)", dns, p->dest.ip);
       if(p->handler.fct)
-  	p->handler.fct(p, evd(PING_RESULT_NOT_DNS_ORIGIN, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_NOT_DNS_ORIGIN, p->seq, p->dest.host, p->dest.ip, p->timeout_delay, 0, p->handler.user_data));
       continue;
     }
 
@@ -351,7 +351,7 @@ static void* ping_receive_event(void* data) {
     if (icmp->type != ICMP_ECHOREPLY) {
       logger(LOG_ERR, "ping failed");
       if(p->handler.fct)
-  	p->handler.fct(p, evd(PING_RESULT_NOT_REPLY, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_NOT_REPLY, p->seq, p->dest.host, p->dest.ip, p->timeout_delay, 0, p->handler.user_data));
       continue;
     }
 
@@ -363,14 +363,14 @@ static void* ping_receive_event(void* data) {
   	     icmp->type, seq, ntohs(icmp->sequence16b));
 
       if(p->handler.fct)
-  	p->handler.fct(p, evd(PING_RESULT_NON_EXPECTED_FRAME, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_NON_EXPECTED_FRAME, p->seq, p->dest.host, p->dest.ip, p->timeout_delay, 0, p->handler.user_data));
       continue;
     }
     p->response = 1;
     uint32_t timestamp = (nms - ntohl(icmp->payload.timestamp));
     logger(LOG_INFO, "pong received (seq %d) in %d msec", seq, timestamp);
     if(p->handler.fct)
-      p->handler.fct(p, evd(PING_RESULT_SUCCESS, seq, p->dest.host, p->dest.ip, timestamp, p->handler.user_data));
+      p->handler.fct(p, evd(PING_RESULT_SUCCESS, seq, p->dest.host, p->dest.ip, p->timeout_delay, timestamp, p->handler.user_data));
   }
   pthread_exit(0);
   return NULL;

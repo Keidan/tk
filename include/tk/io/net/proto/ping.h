@@ -42,10 +42,11 @@
       uint16_t seq;
       char* host;
       char* ip;
+      uint32_t timeout;
       uint32_t timestamp;
       void* user_data;
   };
-  #define evd(result, seq, host, ip, timestamp, user_data) ((struct ping_event_data_s){result, seq, host, ip, timestamp, user_data})
+  #define evd(result, seq, host, ip, timeout, timestamp, user_data) ((struct ping_event_data_s){result, seq, host, ip, timeout, timestamp, user_data})
  
 
   typedef void (*ping_event_handler_fct)(ping_t p, struct ping_event_data_s data);
