@@ -271,6 +271,18 @@ int ping_start(ping_t ping, const char* host, uint32_t delay) {
 }
 
 /**
+ * @fn uint32_t ping_get_timeout(ping_t ping)
+ * @brief Get the ping timeout value (in s).
+ * @param ping The ping context.
+ * @return Get the ping value.
+ */
+uint32_t ping_get_timeout(ping_t ping) {
+  create_ptr(p, ping);
+  if(!p) return 0;
+  return p->timeout_delay;
+}
+
+/**
  * @fn void ping_set_event_handler(ping_t ping, ping_event_handler_fct evt, void* user_data)
  * @brief release the ping context.
  * @param ping The context.

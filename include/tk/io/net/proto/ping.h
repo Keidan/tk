@@ -93,4 +93,12 @@
    */
   void ping_stop(ping_t ping);
 
+  /**
+   * @fn uint32_t ping_get_timeout(ping_t ping)
+   * @brief Get the ping timeout value (in s).
+   * @param ping The ping context.
+   * @return Get the ping value.
+   */
+  uint32_t ping_get_timeout(ping_t ping);
+
 #endif /* __PING_H__ */
