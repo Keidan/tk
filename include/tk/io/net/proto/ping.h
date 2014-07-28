@@ -43,7 +43,7 @@
       char* host;
       char* ip;
       uint32_t timeout;
-      uint32_t timestamp;
+      double timestamp;
       void* user_data;
   };
   #define evd(result, seq, host, ip, timeout, timestamp, user_data) ((struct ping_event_data_s){result, seq, host, ip, timeout, timestamp, user_data})

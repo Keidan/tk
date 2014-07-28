@@ -9,7 +9,7 @@
 void ping_event_handler(ping_t p, struct ping_event_data_s data) {
   printf("Ping result: %d - %s(%s)\n", data.result, data.host, data.ip);
   if(data.result == PING_RESULT_SUCCESS)
-    printf("Ping ok (seq %d) in %d msec\n", data.seq, data.timestamp);
+    printf("Ping ok (seq %d) in %f msec\n", data.seq, data.timestamp);
   sleep(1);
   ping_start(p, "192.168.43.1", 15);
 }
