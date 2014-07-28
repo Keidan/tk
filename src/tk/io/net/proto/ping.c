@@ -310,7 +310,7 @@ static void* ping_receive_event(void* data) {
   struct timespec tp;
   struct icmp_frame *icmp;
   struct iphdr *ip_header;
-  uint32_t nms;
+  double nms;
   char *dns;
 
   while(!p->end) {
@@ -324,7 +324,7 @@ static void* ping_receive_event(void* data) {
     }
     if(reads != COMPLETE_ICMP_FRAME_SIZE) continue; /* non icmp frame */
     clock_gettime(CLOCK_MONOTONIC ,&tp);
-    nms  = (tp.tv_sec *1e3) + (tp.tv_nsec *1e-6);
+    nms  = (double)(tp.tv_sec *1e3) + (double)(tp.tv_nsec *1e-6);
 
     //nettools_print_hex(stdout, buf, reads, 0);
 
@@ -367,7 +367,7 @@ static void* ping_receive_event(void* data) {
       continue;
     }
     p->response = 1;
-    uint32_t timestamp = (nms - ntohl(icmp->payload.timestamp));
+    double timestamp = (nms - (double)ntohl(icmp->payload.timestamp));
     logger(LOG_INFO, "pong received (seq %d) in %d msec", seq, timestamp);
     if(p->handler.fct)
       p->handler.fct(p, evd(PING_RESULT_SUCCESS, seq, p->dest.host, p->dest.ip, p->timeout_delay, timestamp, p->handler.user_data));
