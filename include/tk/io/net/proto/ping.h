@@ -81,9 +81,16 @@
    * @brief Start the ping process.
    * @param ping The ping context.
    * @param host The host to ping.
-   * @param delay the timeout delay (in ms).
+   * @param delay the timeout delay (in s).
    * @return -1 on error else 0.
    */
   int ping_start(ping_t ping, const char* host, uint32_t delay);
+
+  /**
+   * @fn void ping_stop(ping_t ping)
+   * @brief stop the ping context.
+   * @param ping The context.
+   */
+  void ping_stop(ping_t ping);
 
 #endif /* __PING_H__ */

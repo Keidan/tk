@@ -42,7 +42,7 @@
 #include <netinet/ip_icmp.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include <tk/sys/systask.h>
+#include <semaphore.h>
 #include <tk/io/net/proto/arp.h>
 #include <netinet/ip.h>
 #include <netinet/ether.h>
@@ -51,10 +51,13 @@ struct ping_s {
     netsocket_t sock;
     struct netiface_info_s iface;
     uint16_t seq;
-    uint32_t timeout;
+    uint32_t timeout_delay;
     pthread_t t_recv;
-    systask_t timer;
+    pthread_t t_timeout;
+    sem_t sem_timeout;
+    sem_t sem_timeout_init;
     _Bool end;
+    _Bool response;
     netlayer_t layer;
     struct {
 	ping_event_handler_fct fct;
@@ -67,8 +70,8 @@ struct ping_s {
     } dest;
 };
 
+#define COMPLETE_ICMP_FRAME_SIZE 98
 #define ICMP_PACKET_SIZE 48
-#define PING_TIMEOUT    150000
 #define ICMPHDR_SIZE sizeof(struct icmphdr)
 #define create_ptr(local, param) struct ping_s *local = (struct ping_s*)param
 #define get_fd(p) netsocket_get_fd(p->sock)
@@ -110,14 +113,20 @@ static uint16_t ping_cksum(uint16_t *buf, int nbytes);
 static void* ping_receive_event(void* data);
 static void ping_send_from_iface(ping_t ping);
 
-void ping_timeout(void* ptr) {
-  create_ptr(p, ptr);
-  logger(LOG_ERR, "Ping timeout reached.\n");
-  ping_start(p, p->dest.host, systask_get_timeout(p->timer));
-  if(p->handler.fct)
-    p->handler.fct(p, evd(PING_RESULT_TIMEOUT, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+void* ping_timeout(void* ptr) {
+  struct ping_s *p = ptr;
+  sem_post(&p->sem_timeout_init);
+  while(!p->end) {
+    sem_wait(&p->sem_timeout);
+    sleep(p->timeout_delay);
+    if(p->response) continue;
+    logger(LOG_ERR, "Ping timeout reached %x, %x.\n", p, p->handler.user_data);
+    if(p->handler.fct)
+      p->handler.fct(p, evd(PING_RESULT_TIMEOUT, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  }
+  pthread_exit(0);
+  return NULL;
 }
-
 
 /**
  * @fn ping_t ping_new(const char* iface)
@@ -132,6 +141,7 @@ ping_t ping_new(const char *iface) {
     return NULL;
   }
   memset(p, 0, sizeof(struct ping_s));
+  sem_init(&p->sem_timeout, 0, 0);
 
   htable_t ifaces = netiface_list_new(NETIFACE_LVL_UDP, NETIFACE_KEY_NAME);
   netiface_t ifa = netiface_list_get(ifaces, (char*)iface);
@@ -157,19 +167,13 @@ ping_t ping_new(const char *iface) {
     return NULL;
   }
 
-  netsocket_set_fd(p->sock, socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL)));
+  netsocket_set_fd(p->sock, socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))); //IPPROTO_RAW));
   if(get_fd(p) < 0) {
     logger(LOG_ERR, "ping fd failed %d: (%d) %s\n", get_fd(p), errno, strerror(errno));
     ping_delete(p);
     return NULL;
   }
-/*
-  if(netsocket_bind_to_iface(p->sock, p->iface.index) == -1) {
-    logger(LOG_ERR, "Unable to bind to the iface %s\n", iface);
-    ping_delete(p);
-    return NULL;
-  }
-*/
+
   p->layer = netlayer_new();
 
   if(pthread_create(&p->t_recv, NULL, ping_receive_event, p) != 0) {
@@ -177,11 +181,7 @@ ping_t ping_new(const char *iface) {
     ping_delete(p);
     return NULL;
   }
-
-  if(!(p->timer = systask_new(PING_TIMEOUT, 1, ping_timeout, p))) {
-    ping_delete(p);
-    return NULL;
-  }
+  
   return p;
 }
 
@@ -196,14 +196,33 @@ void ping_delete(ping_t ping) {
   if(p->layer)
     netlayer_delete(p->layer), p->layer = NULL;
   if(p->sock) netsocket_delete(p->sock), p->sock = NULL;
+  p->end = 1;
+  ping_stop(p);
   if(p->t_recv) {
     pthread_cancel(p->t_recv);
     pthread_join(p->t_recv, NULL);
     p->t_recv = 0;
   }
-  systask_delete(p->timer);
   p->handler.fct = NULL;
   free(p);
+}
+
+/**
+ * @fn void ping_stop(ping_t ping)
+ * @brief stop the ping context.
+ * @param ping The context.
+ */
+void ping_stop(ping_t ping) {
+  create_ptr(p, ping);
+  if(!p) return;
+  p->response = 1;
+  sem_post(&p->sem_timeout);
+  sem_destroy(&p->sem_timeout);
+  if(p->t_timeout) {
+    pthread_cancel(p->t_timeout);
+    pthread_join(p->t_timeout, NULL);
+    p->t_timeout = 0;
+  }
 }
 
 
@@ -212,25 +231,21 @@ void ping_delete(ping_t ping) {
  * @brief Start the ping process.
  * @param ping The ping context.
  * @param host The host to ping.
- * @param delay the timeout delay (in ms).
+ * @param delay the timeout delay (in s).
  * @return -1 on error else 0.
  */
 int ping_start(ping_t ping, const char* host, uint32_t delay) {
   struct sockaddr_in addr;
   create_ptr(p, ping);
   if(!p) return -1;
-
-
+  p->timeout_delay = delay;
   if(nettools_ip_to_sockaddr(host, &addr)) {
     logger(LOG_ERR, "Unable to resove the host: %s\n", host);
     return -1;
   }
   addr.sin_family = AF_INET;
-  bzero(p->dest.host, sizeof(p->dest.host));
-  bzero(p->dest.ip, sizeof(p->dest.ip));
   strcpy(p->dest.host, host);
   strcpy(p->dest.ip, inet_ntoa(addr.sin_addr));
-
 
   if(is_valid_index(p->iface)) {
     struct arpcfg_s acfg = {ARP_MAX_ATTEMPTS,ARP_TIMEOUT,1};
@@ -238,13 +253,20 @@ int ping_start(ping_t ping, const char* host, uint32_t delay) {
       logger(LOG_ERR, "Unable to resolve the host %s\n", host);
       return -1;
     }
-  }  
+  }
+  p->response = 0;
+  sem_init(&p->sem_timeout_init, 0, 0);
+  if(pthread_create(&p->t_timeout, NULL, ping_timeout, p) != 0) {
+    logger(LOG_ERR, "Unable to start the timeout thread: (%d) %s\n", errno, strerror(errno));
+    sem_destroy(&p->sem_timeout_init);
+    ping_delete(p);
+    return -1;
+  }
+  sem_wait(&p->sem_timeout_init);
+  sem_destroy(&p->sem_timeout_init);
 
-  p->end = 0;
-  systask_set_timeout(p->timer, delay);
-
+  sem_post(&p->sem_timeout);
   ping_send_from_iface(ping);
-  systask_restart(p->timer);
   return 0;
 }
 
@@ -281,14 +303,14 @@ static void* ping_receive_event(void* data) {
 
   while(!p->end) {
     memset(buf, 0, sizeof(buf));
-    int reads = read(get_fd(p), buf, sizeof(4096));
+    int reads = read(get_fd(p), buf, 4096);
     if(reads == -1) {
       logger(LOG_ERR, "Error in read: (%d) %s", errno, strerror(errno));
       if(p->handler.fct)
-	p->handler.fct(p, evd(PING_RESULT_READ_ERROR, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_READ_ERROR, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
       break;
     }
-
+    if(reads != COMPLETE_ICMP_FRAME_SIZE) continue; /* non icmp frame */
     clock_gettime(CLOCK_MONOTONIC ,&tp);
     nms  = (tp.tv_sec *1e3) + (tp.tv_nsec *1e-6);
 
@@ -301,14 +323,14 @@ static void* ping_receive_event(void* data) {
     if (ip_header->protocol != IPPROTO_ICMP) {
       logger(LOG_ERR, "filtering non icmp receive");
       if(p->handler.fct)
-	p->handler.fct(p, evd(PING_RESULT_NON_ICMP, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_NON_ICMP, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
       continue;
     }
 
     if (strcmp(p->dest.ip, dns)) {
       logger(LOG_ERR, "filtering not dns origin receive(%s), origin (%s)", dns, p->dest.ip);
       if(p->handler.fct)
-	p->handler.fct(p, evd(PING_RESULT_NOT_DNS_ORIGIN, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_NOT_DNS_ORIGIN, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
       continue;
     }
 
@@ -317,24 +339,24 @@ static void* ping_receive_event(void* data) {
     if (icmp->type != ICMP_ECHOREPLY) {
       logger(LOG_ERR, "ping failed");
       if(p->handler.fct)
-	p->handler.fct(p, evd(PING_RESULT_NOT_REPLY, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_NOT_REPLY, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
       continue;
     }
 
     seq = ntohl(icmp->payload.payload_sequence);
     if ((seq != p->seq) ||
-	(ntohs(icmp->sequence16b) != p->seq)) {
+  	(ntohs(icmp->sequence16b) != p->seq)) {
 
       logger(LOG_ERR, "receive non expected frame: type:%d seq:%d %d",
-	     icmp->type, seq, ntohs(icmp->sequence16b));
+  	     icmp->type, seq, ntohs(icmp->sequence16b));
 
       if(p->handler.fct)
-	p->handler.fct(p, evd(PING_RESULT_NON_EXPECTED_FRAME, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
+  	p->handler.fct(p, evd(PING_RESULT_NON_EXPECTED_FRAME, p->seq, p->dest.host, p->dest.ip, 0, p->handler.user_data));
       continue;
     }
+    p->response = 1;
     uint32_t timestamp = (nms - ntohl(icmp->payload.timestamp));
     logger(LOG_INFO, "pong received (seq %d) in %d msec", seq, timestamp);
-    systask_stop(p->timer);
     if(p->handler.fct)
       p->handler.fct(p, evd(PING_RESULT_SUCCESS, seq, p->dest.host, p->dest.ip, timestamp, p->handler.user_data));
   }
@@ -359,15 +381,12 @@ static void ping_send_from_iface(ping_t ping) {
   icmp.id = htons(getpid());
   icmp.sequence16b = htons(request);
   icmp.payload.payload_sequence = htonl(request&0x0000FFFF);
-
   (void)clock_gettime(CLOCK_MONOTONIC ,&tp);
   icmp.payload.timestamp = htonl((tp.tv_sec *1e3) + (tp.tv_nsec *1e-6));
-
   for (i=0; i< ICMP_PACKET_SIZE; i++) icmp.payload.data[i] = i;
   icmp.checksum = ping_cksum((uint16_t*)&icmp, sizeof(struct icmp_frame));  
   p->seq = request;
   netlayer_payload(p->layer, (uint8_t*)&icmp, sizeof(struct icmp_frame));
-
   /* Send packet */
   if ((n = netlayer_finish(p->layer, get_fd(p))) < 0)
     logger(LOG_ERR, "Send failed %d: (%d) %s\n", get_fd(p), errno, strerror(errno));  

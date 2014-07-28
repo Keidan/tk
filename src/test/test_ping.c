@@ -10,6 +10,8 @@ void ping_event_handler(ping_t p, struct ping_event_data_s data) {
   printf("Ping result: %d - %s(%s)\n", data.result, data.host, data.ip);
   if(data.result == PING_RESULT_SUCCESS)
     printf("Ping ok (seq %d) in %d msec\n", data.seq, data.timestamp);
+  sleep(1);
+  ping_start(p, "192.168.43.1", 15);
 }
 
 int main(int argc, char** argv) {
@@ -18,7 +20,7 @@ int main(int argc, char** argv) {
   ping_t p = ping_new("wlan0");
   if(!p) return 0;
   ping_set_event_handler(p, ping_event_handler, NULL);
-  ping_start(p, "192.168.43.1", 150000);
+  ping_start(p, "192.168.43.1", 15);
 
   while(1) sleep(1);
   ping_delete(p);
