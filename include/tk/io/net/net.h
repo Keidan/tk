@@ -29,6 +29,7 @@
   #include <tk/io/net/netfilter.h>
   #include <tk/io/net/netroute.h>
   #include <tk/io/net/nettun.h>
-
+  #include <tk/io/net/netlayer.h>
+  #include <tk/io/net/proto/ping.h>
 
 #endif /* __NET_H__ */
