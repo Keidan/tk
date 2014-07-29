@@ -96,6 +96,7 @@ int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const ne
   int i, count, fd;
   netiface_t iface;
   *ifaces = netiface_list_new(NETIFACE_LVL_RAW, NETIFACE_KEY_FD);
+  if(!*ifaces) return -1;
   count = htable_get_keys(*ifaces, &keys);
   for(i = 0; i < count; i++) {
     iface = htable_lookup(*ifaces, keys[i]);
