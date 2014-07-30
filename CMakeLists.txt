@@ -11,7 +11,7 @@ else()
   set(DISTRIBUTION "release")
 endif()
 message("-- Target mode: ${DISTRIBUTION}")
-
+add_definitions(-D_GNU_SOURCE)
 add_definitions(-D__USE_FILE_OFFSET64)
 add_definitions(-D__USE_LARGEFILE64)
 add_definitions(-D_LARGEFILE64_SOURCE)

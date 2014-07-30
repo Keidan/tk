@@ -22,7 +22,7 @@
  */
 #ifndef __FILE_H__
   #define __FILE_H__
-
+/*
   #ifndef __USE_FILE_OFFSET64
     #define __USE_FILE_OFFSET64
   #endif
@@ -35,7 +35,7 @@
   #ifndef _FILE_OFFSET_BIT
     #define _FILE_OFFSET_BIT 64
   #endif
-
+*/
   #include <time.h>
   #include <stdio.h>
   #include <tk/utils/fifo.h>
@@ -102,6 +102,7 @@
    */
   off64_t file_size64(const char* filename);
 #endif
+
   /**
    * @fn int file_time(const char* fname, struct tm* t)
    * @brief Getting the file time.
