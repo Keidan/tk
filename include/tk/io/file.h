@@ -75,6 +75,7 @@
    */
   off_t file_fsize(FILE* file);
 
+#ifdef __USE_FILE_OFFSET64
   /**
    * @fn off64_t file_fsize64(FILE* file)
    * @brief Getting the file size.
@@ -82,6 +83,7 @@
    * @return off64_t.
    */
   off64_t file_fsize64(FILE* file);
+#endif
 
   /**
    * @fn off_t file_size(FILE* file)
@@ -91,6 +93,7 @@
    */
   off_t file_size(const char* filename);
 
+#ifdef __USE_FILE_OFFSET64
   /**
    * @fn off64_t file_size64(FILE* file)
    * @brief Getting the file size.
@@ -98,7 +101,7 @@
    * @return off64_t.
    */
   off64_t file_size64(const char* filename);
-
+#endif
   /**
    * @fn int file_time(const char* fname, struct tm* t)
    * @brief Getting the file time.
