@@ -36,6 +36,8 @@
       _Bool        alloc;
   };
 
+  #define llist_sizeof() sizeof(struct ll_s)
+
   typedef ll_st* llist_t;
 
   typedef void (* llist_printable_t)(void* data);
