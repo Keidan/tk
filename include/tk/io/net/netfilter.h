@@ -33,7 +33,7 @@
   #endif
 
   #define NETFILTER_TCP IPPROTO_TCP
-  #define NETFILTER_uDP IPPROTO_UDP
+  #define NETFILTER_UDP IPPROTO_UDP
 
   typedef char ipt_tablelabel [255];
   typedef char ipt_targetlabel [255];
