@@ -73,4 +73,11 @@
    */
   void netprint_print_tcp(struct tcphdr *tcp);
 
+  /**
+   * @fn void netprint_print_icmp(struct icmphdr *icmp)
+   * @brief Print the ICMPv4 header
+   * @param tcp ICMPv4 header.
+   */
+  void netprint_print_icmp(struct icmphdr *icmp);
+
 #endif /* __NETPRINT_H__ */

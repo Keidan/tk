@@ -28,7 +28,21 @@
 #include <tk/sys/log.h>
 #include <linux/udp.h>
 #include <linux/tcp.h>
+#include <time.h>
+#include <linux/icmp.h>
 
+struct icmp_echo_s {
+    uint8_t type;
+    uint8_t code;
+    uint16_t checksum;
+    uint16_t id;
+    uint16_t sequence16b;
+    struct {
+	uint32_t sequence;
+	uint32_t timestamp;
+	uint8_t data[48];
+    } payload;
+};
 
 #define SET_NSET(cond) (!!(cond)), NETPRINT_SET_NSET(cond)
 
@@ -76,6 +90,9 @@ void netprint_print_headers(const net_buffer_t buffer, __u32 length, struct nett
     } else if(net.udp) {
       /* printf the UDP header */
       netprint_print_upd(net.udp);
+    } else if(net.icmp4) {
+      /* printf the ICMPv4 header */
+      netprint_print_icmp(net.icmp4);
     }
     /* If the packet contains an ARP header */
   } else if(net.arp) {
@@ -209,4 +226,41 @@ void netprint_print_tcp(struct tcphdr *tcp) {
   printf("\t\t.... ...%d = Fin: %s\n", SET_NSET(tcp->fin));
   printf("\tWindow size: %d\n\tChecksum: 0x%04x\n", tcp->window, tcp->check);
   printf("\tUrg ptr: %d\n", tcp->urg_ptr);
+}
+
+/**
+ * @fn void netprint_print_icmp(struct icmphdr *icmp)
+ * @brief Print the ICMPv4 header
+ * @param tcp ICMPv4 header.
+ */
+void netprint_print_icmp(struct icmphdr *icmp) {
+  printf("Internet Control Message Protocol\n");
+  char ctype[30];
+  uint32_t nms;
+  struct timespec tp;
+  clock_gettime(CLOCK_MONOTONIC ,&tp);
+  nms  = (tp.tv_sec *1e3) + (tp.tv_nsec *1e-6);
+  switch(icmp->type) {
+    case ICMP_ECHOREPLY: strcpy(ctype, "Echo Reply\n"); break;
+    case ICMP_DEST_UNREACH: strcpy(ctype, "Destination Unreachable\n"); break;
+    case ICMP_SOURCE_QUENCH: strcpy(ctype, "Source Quench\n"); break;
+    case ICMP_REDIRECT: strcpy(ctype, "Redirect (change route)\n"); break;
+    case ICMP_ECHO: strcpy(ctype, "Echo Request\n"); break;
+    case ICMP_TIME_EXCEEDED: strcpy(ctype, "Time Exceeded\n"); break;
+    case ICMP_PARAMETERPROB: strcpy(ctype, "Parameter Problem\n"); break;
+    case ICMP_TIMESTAMP: strcpy(ctype, "Timestamp Request\n"); break;
+    case ICMP_TIMESTAMPREPLY: strcpy(ctype, "Timestamp Reply\n"); break;
+    case ICMP_INFO_REQUEST: strcpy(ctype, "Information Request\n"); break;
+    case ICMP_INFO_REPLY: strcpy(ctype, "Information Reply\n"); break;
+    case ICMP_ADDRESS: strcpy(ctype, "Address Mask Request\n"); break;
+    case ICMP_ADDRESSREPLY: strcpy(ctype, "Address Mask Reply\n"); break;
+  }
+
+  printf("\tType: (%d) %s\n", icmp->type, ctype);
+  printf("\tChecksum: 0x%04x\n", icmp->checksum);
+  if (icmp->type == ICMP_ECHOREPLY) {
+    struct icmp_echo_s *echo = (struct icmp_echo_s*)icmp;
+    printf("\tSequence: %d %d\n", echo->payload.sequence, echo->sequence16b);
+    printf("\tTimestamp: %d  %d ms\n", echo->payload.timestamp, (uint32_t)(nms - echo->payload.timestamp));
+  }
 }

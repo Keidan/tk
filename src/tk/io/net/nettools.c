@@ -43,6 +43,7 @@
 #include <netinet/in.h>
 #include <linux/udp.h>
 #include <linux/tcp.h>
+#include <linux/icmp.h>
 
 static struct nettools_subnet_s subnet_table [] = {
   {1, 31, "128.0.0.0"},
@@ -457,7 +458,24 @@ int nettools_decode_buffer(const net_buffer_t buffer, __u32 length, struct netto
         net->udp->len = htons(net->udp->len);
       }
     } else if(protocol == IPPROTO_ICMP) {
-      fprintf(stderr, "***ICMPv4 UNSUPPORTED ***\n");
+      struct icmphdr *icmp4 = (struct icmphdr*)(buffer + offset);
+      net->icmp4 = (struct icmphdr *)malloc(sizeof(struct icmphdr));
+      if(!net->icmp4) {
+	nettools_release_buffer(net);
+	logger(LOG_ERR, "Unable to alloc memory for icmp v4 header!\n");
+	return -1;
+      }
+      memcpy(net->icmp4, icmp4, sizeof(struct icmphdr));
+      offset += sizeof(struct icmphdr);
+      if(convert == NETTOOLS_CONVERT_NET2HOST) {
+	net->icmp4->un.echo.sequence = ntohs(net->icmp4->un.echo.sequence);
+	net->icmp4->un.echo.id = ntohs(net->icmp4->un.echo.id);
+	net->icmp4->checksum = ntohs(net->icmp4->checksum);
+      } else if(convert == NETTOOLS_CONVERT_HOST2NET) {
+	net->icmp4->un.echo.sequence = htons(net->icmp4->un.echo.sequence);
+	net->icmp4->un.echo.id = htons(net->icmp4->un.echo.id);
+        net->icmp4->checksum = htons(net->icmp4->checksum);
+      }
     } else if(protocol == IPPROTO_ICMPV6) {
       fprintf(stderr, "***ICMPv6 UNSUPPORTED ***\n");
     }
@@ -520,6 +538,7 @@ void nettools_release_buffer(struct nettools_headers_s *net) {
   if(net->ipv4) free(net->ipv4), net->ipv4 = NULL;
   if(net->udp) free(net->udp), net->udp = NULL;
   if(net->tcp) free(net->tcp), net->tcp = NULL;
+  if(net->icmp4) free(net->icmp4), net->icmp4 = NULL;
 }
 
 /**

@@ -67,6 +67,7 @@
       struct iphdr  *ipv4;
       struct udphdr *udp;
       struct tcphdr *tcp;
+      struct icmphdr *icmp4;
   };
 
   /**
