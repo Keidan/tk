@@ -32,6 +32,8 @@
   #include <arpa/inet.h>
   #include <sys/select.h>
 
+  //#define NETTOOLS_PRINT_TRAILER 1
+
   /* nombre max de chars dans une ligne */
   #define PRINT_HEX_MAX_PER_LINES 16
 

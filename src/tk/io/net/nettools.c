@@ -442,7 +442,9 @@ int nettools_decode_buffer(const net_buffer_t buffer, __u32 length, struct netto
         net->tcp->check = htons(net->tcp->check);
       }
       if(!net->tcp->psh && !net->tcp->syn && (length - offset)) {
+#if defined(NETTOOLS_PRINT_TRAILER) && NETTOOLS_PRINT_TRAILER == 1
 	fprintf(stderr, "TCP Trailer: Not supported (%d bytes)\n", (length - offset));
+#endif
 	offset += (length - offset);
       }
     } else if(protocol == IPPROTO_UDP) {
@@ -525,7 +527,9 @@ int nettools_decode_buffer(const net_buffer_t buffer, __u32 length, struct netto
       offset += sizeof(struct arphdr2);
     }
     if((length - offset)) {
+#if defined(NETTOOLS_PRINT_TRAILER) && NETTOOLS_PRINT_TRAILER == 1
       fprintf(stderr, "ARP Trailer: Not supported (%d bytes)\n", (length - offset));
+#endif
       offset += (length - offset);
     }
   }
