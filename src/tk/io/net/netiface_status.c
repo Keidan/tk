@@ -5,6 +5,25 @@
 #include <tk/utils/string.h>
 #include <tk/utils/stringtoken.h>
 
+
+/**
+ * @fn static long netiface_status_extract_long(stringtoken_t tokens, long def)
+ * @brief Extract long value from token.
+ * @param tokens The token.
+ * @param def The default value.
+ * @return the value.
+ */
+static long netiface_status_extract_long(stringtoken_t tokens, long def);
+
+/**
+ * @fn static int netiface_status_extract_int(stringtoken_t tokens, int def)
+ * @brief Extract int value from token.
+ * @param tokens The token.
+ * @param def The default value.
+ * @return the value.
+ */
+static int netiface_status_extract_int(stringtoken_t tokens, int def);
+
 /**
  * @fn int netiface_status_load_wireless(const char* iface_name, struct wireless_s *wireless)
  * @brief Load the wireless informations.
@@ -27,22 +46,24 @@ int netiface_status_load_wireless(const char* iface_name, struct wireless_s *wir
       stringtoken_t tokens = stringtoken_init(line, ":. ");
       char* devname = stringtoken_next_token(tokens);
       if(!strcmp(devname, iface_name)) {
-	wireless->internal.status = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->quality.link = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->quality.level = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->quality.noise = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->discarded_packets.nwid = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->discarded_packets.crypt = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->discarded_packets.frag = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->discarded_packets.retry = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->discarded_packets.misc = string_parse_int(stringtoken_next_token(tokens), 0);
-	wireless->internal.missed_beacon = string_parse_int(stringtoken_next_token(tokens), 0);
+	wireless->internal.status = netiface_status_extract_int(tokens, 0);
+	wireless->quality.link = netiface_status_extract_int(tokens, 0);
+	wireless->quality.level = netiface_status_extract_int(tokens, 0);
+	wireless->quality.noise = netiface_status_extract_int(tokens, 0);
+	wireless->discarded_packets.nwid = netiface_status_extract_int(tokens, 0);
+	wireless->discarded_packets.crypt = netiface_status_extract_int(tokens, 0);
+	wireless->discarded_packets.frag = netiface_status_extract_int(tokens, 0);
+	wireless->discarded_packets.retry = netiface_status_extract_int(tokens, 0);
+	wireless->discarded_packets.misc = netiface_status_extract_int(tokens, 0);
+	wireless->internal.missed_beacon = netiface_status_extract_int(tokens, 0);
 	if(stringtoken_has_more_tokens(tokens))
-	  wireless->internal.we21 = string_parse_int(stringtoken_next_token(tokens), 0);
+	  wireless->internal.we21 = netiface_status_extract_int(tokens, 0);
 	wireless->internal.wireless = 1;
 	stringtoken_release(tokens);
+	free(devname);
 	break;
       }
+      free(devname);
       stringtoken_release(tokens);
     }
     if(line) free(line);
@@ -72,31 +93,65 @@ int netiface_status_load_packets(const char* iface_name, struct packets_s *packe
       stringtoken_t tokens = stringtoken_init(line, ":. ");
       char* devname = stringtoken_next_token(tokens);
       if(!strcmp(devname, iface_name)) {
-	packets->rx.bytes = string_parse_long(stringtoken_next_token(tokens), 0);
-	packets->rx.packets = string_parse_long(stringtoken_next_token(tokens), 0);
-	packets->rx.errors = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->rx.dropped = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->rx.fifo_errors = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->rx.frame_errors = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->rx.compressed = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->rx.multicast = string_parse_int(stringtoken_next_token(tokens), 0);
+	packets->rx.bytes = netiface_status_extract_long(tokens, 0L);
+	packets->rx.packets = netiface_status_extract_long(tokens, 0L);
+	packets->rx.errors = netiface_status_extract_int(tokens, 0);
+	packets->rx.dropped = netiface_status_extract_int(tokens, 0);
+	packets->rx.fifo_errors = netiface_status_extract_int(tokens, 0);
+	packets->rx.frame_errors = netiface_status_extract_int(tokens, 0);
+	packets->rx.compressed = netiface_status_extract_int(tokens, 0);
+	packets->rx.multicast = netiface_status_extract_int(tokens, 0);
 									
-	packets->tx.bytes = string_parse_long(stringtoken_next_token(tokens), 0);
-	packets->tx.packets = string_parse_long(stringtoken_next_token(tokens), 0);
-	packets->tx.errors = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->tx.dropped = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->tx.fifo_errors = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->tx.collisions = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->tx.carrier_errors = string_parse_int(stringtoken_next_token(tokens), 0);
-	packets->tx.compressed = string_parse_int(stringtoken_next_token(tokens), 0);
+	packets->tx.bytes = netiface_status_extract_long(tokens, 0L);
+	packets->tx.packets = netiface_status_extract_long(tokens, 0L);
+	packets->tx.errors = netiface_status_extract_int(tokens, 0);
+	packets->tx.dropped = netiface_status_extract_int(tokens, 0);
+	packets->tx.fifo_errors = netiface_status_extract_int(tokens, 0);
+	packets->tx.collisions = netiface_status_extract_int(tokens, 0);
+	packets->tx.carrier_errors = netiface_status_extract_int(tokens, 0);
+	packets->tx.compressed = netiface_status_extract_int(tokens, 0);
 	packets->valid = 1;
 	stringtoken_release(tokens);
+	if(devname) free(devname);
 	break;
       }
+      if(devname) free(devname);
       stringtoken_release(tokens);
     }
     if(line) free(line);
     fclose(f);
   } else return -1;
   return 0;
+}
+
+
+/**
+ * @fn static long netiface_status_extract_long(stringtoken_t tokens, long def)
+ * @brief Extract long value from token.
+ * @param tokens The token.
+ * @param def The default value.
+ * @return the value.
+ */
+static long netiface_status_extract_long(stringtoken_t tokens, long def) {
+  long l = 0L;
+  char* temp = stringtoken_next_token(tokens);
+  l = string_parse_long(temp, def);
+  free(temp);
+  return l;
+}
+
+
+/**
+ * @fn static int netiface_status_extract_int(stringtoken_t tokens, int def)
+ * @brief Extract int value from token.
+ * @param tokens The token.
+ * @param def The default value.
+ * @return the value.
+ */
+static int netiface_status_extract_int(stringtoken_t tokens, int def) {
+  int l = 0;
+  char* temp = stringtoken_next_token(tokens);
+  l = string_parse_int(temp, def);
+  free(temp);
+  return l;
 }

@@ -123,7 +123,10 @@ char* stringtoken_next_token(stringtoken_t tok) {
   }
   char* s = string_substring(t->str, t->offset, i);
   t->offset += i + 1; // go just after the sep
-  if(!strlen(s)) s = stringtoken_next_token(tok);
+  if(!strlen(s)) {
+    free(s);
+    s = stringtoken_next_token(tok);
+  }
   return s;
 }
 

@@ -80,6 +80,15 @@ static struct nettools_subnet_s subnet_table [] = {
   {32, 0, "255.255.255.255"}
 };
 
+/**
+ * @fn static int nettools_status_extract_int(stringtoken_t tokens, int def)
+ * @brief Extract int value from token.
+ * @param tokens The token.
+ * @param def The default value.
+ * @return the value.
+ */
+static int nettools_extract_int(stringtoken_t tokens, int def);
+
 
 
 /**
@@ -722,11 +731,26 @@ void nettools_get_subnet(netiface_ip4_t ip, netiface_ip4_t mask, netiface_ip4_t 
   stringtoken_t tok1 = stringtoken_init(ip, ".");
   stringtoken_t tok2 = stringtoken_init(mask, ".");
   for(i = 0; i < 4; i++) {
-    a = string_parse_int(stringtoken_next_token(tok1), 0);
-    b = string_parse_int(stringtoken_next_token(tok2), 0);
+    a = nettools_extract_int(tok1, 0);
+    b = nettools_extract_int(tok2, 0);
     sub[i] = a & b;
   }
   stringtoken_release(tok1);
   stringtoken_release(tok2);
   sprintf(&subnet[0], "%d.%d.%d.%d", sub[0], sub[1], sub[2], sub[3]);
+}
+
+/**
+ * @fn static int nettools_status_extract_int(stringtoken_t tokens, int def)
+ * @brief Extract int value from token.
+ * @param tokens The token.
+ * @param def The default value.
+ * @return the value.
+ */
+static int nettools_extract_int(stringtoken_t tokens, int def) {
+  int l = 0;
+  char* temp = stringtoken_next_token(tokens);
+  l = string_parse_int(temp, def);
+  free(temp);
+  return l;
 }
