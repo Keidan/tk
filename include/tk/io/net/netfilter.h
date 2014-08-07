@@ -24,7 +24,7 @@
   #define __NETFILTER_H__
 
   #include <linux/types.h>
-  #include <libiptc/libiptc.h>
+  #include <netinet/in.h>
   #include <tk/io/net/netiface.h>
   #include <tk/utils/llist.h>
 
@@ -35,6 +35,7 @@
   #define NETFILTER_TCP IPPROTO_TCP
   #define NETFILTER_UDP IPPROTO_UDP
 
+  typedef char ipt_chainlabel[32];
   typedef char ipt_tablelabel [255];
   typedef char ipt_targetlabel [255];
   typedef char netfilter_ip4cidr_t[19];

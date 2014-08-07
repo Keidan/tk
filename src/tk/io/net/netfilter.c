@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include <libiptc/libiptc.h>
 
 /************ Macros */
 /* Here begins some of the code taken from iptables-save.c **************** */
