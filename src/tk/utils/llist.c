@@ -163,8 +163,8 @@ _Bool llist_is_empty(llist_t list) {
 void llist_print(FILE* std, llist_t list, llist_printable_t printable) {
   while(list) {
     if(printable == NULL)
-      fprintf(std, "llist %#x={ data=%#x, next=%#x }\n", 
-	      (size_t)list, (size_t)list->data, (size_t)list->next);
+      fprintf(std, "llist 0x%p={ data=0X%p, next=0x%p }\n", 
+	      list, list->data, list->next);
     else printable(list->data);
     list = list->next;
   }
