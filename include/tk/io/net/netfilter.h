@@ -25,6 +25,11 @@
 
   #include <linux/types.h>
   #include <netinet/in.h>
+  #include <netinet/ip.h>
+  #include <netinet/in.h>
+  #include <netinet/ip_icmp.h>
+  #include <netinet/tcp.h>
+  #include <netinet/udp.h>
   #include <tk/io/net/netiface.h>
   #include <tk/utils/llist.h>
 
