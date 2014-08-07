@@ -9,6 +9,9 @@ set(cmake_generated ${CMAKE_BINARY_DIR}/CMakeCache.txt
                     ${CMAKE_BINARY_DIR}/src/tk/cmake_install.cmake  
                     ${CMAKE_BINARY_DIR}/src/tk/Makefile
                     ${CMAKE_BINARY_DIR}/src/tk/CMakeFiles
+                    ${CMAKE_BINARY_DIR}/src/test/cmake_install.cmake  
+                    ${CMAKE_BINARY_DIR}/src/test/Makefile
+                    ${CMAKE_BINARY_DIR}/src/test/CMakeFiles
                     ${CMAKE_BINARY_DIR}/bin/x86
                     ${CMAKE_BINARY_DIR}/bin/x86_64
                     ${CMAKE_BINARY_DIR}/bin/xscale
