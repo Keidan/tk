@@ -164,7 +164,7 @@ void llist_print(FILE* std, llist_t list, llist_printable_t printable) {
   while(list) {
     if(printable == NULL)
       fprintf(std, "llist %#x={ data=%#x, next=%#x }\n", 
-	      (uint32_t)list, (uint32_t)list->data, (uint32_t)list->next);
+	      (size_t)list, (size_t)list->data, (size_t)list->next);
     else printable(list->data);
     list = list->next;
   }
