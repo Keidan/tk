@@ -170,6 +170,7 @@ static struct ipt_entry_match* netfilter_build_match_udp(struct netfilter_rule_s
 /*************/
 /************Global fields */
 static pthread_mutex_t hard_lock = PTHREAD_MUTEX_INITIALIZER;
+static const char* modprobe = "/sbin/modprobe";
 
 /**
  * @fn void netfilter_delete(netfilter_t netf)
@@ -213,11 +214,11 @@ netfilter_t netfilter_new(ipt_tablelabel tablename) {
   strcpy(nf->table, tablename);
   nf->h = iptc_init(nf->table);
   if (!nf->h) {
-    probe_insert(KMOD_IPV4_NAME, NULL, 0);
+    probe_insert(KMOD_IPV4_NAME, modprobe, 0);
     usleep(250000);
     nf->h = iptc_init(nf->table);
     if (!nf->h) {
-      probe_insert(KMOD_IPV4_NAME, NULL, 0);
+      probe_insert(KMOD_IPV4_NAME, modprobe, 0);
       usleep(500000);
       nf->h = iptc_init(nf->table);
     }
