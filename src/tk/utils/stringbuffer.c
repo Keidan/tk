@@ -340,7 +340,7 @@ int stringbuffer_vprintf(stringbuffer_t buffer, const char* fmt, va_list pa) {
   uint32_t ltmp = 40;
   char *p, c, tmp[ltmp];
   int i, count, idx;
-  stringbuffer_clear(b);
+  //stringbuffer_clear(b);
   p = (char*)fmt;
   while(*p != '\0') {
     if(*p == '%') {
