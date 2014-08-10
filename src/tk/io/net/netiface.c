@@ -98,7 +98,7 @@ llist_t netiface_get_names(void) {
   int n_ifaces, i, fd;
   struct ifreq ifr, *iff;
   struct ifconf ifc;
-  const char* name;
+  char* name;
 
   memset(&ifr, 0, sizeof(ifr));
 
@@ -115,7 +115,7 @@ llist_t netiface_get_names(void) {
   while(1){
     if(!nameindex[i].if_name) break;
     name = nameindex[i++].if_name;
-    names = llist_pushback_and_alloc(names, &name, strlen(name));
+    names = llist_pushback_and_alloc(names, name, strlen(name) + 1);
   }
   /* Release the pointer */
   if_freenameindex(nameindex);
@@ -156,7 +156,7 @@ llist_t netiface_get_names(void) {
     }
     if(!found) {
       name = item->ifr_name;
-      names = llist_pushback_and_alloc(names, &name, strlen(name));
+      names = llist_pushback_and_alloc(names, name, strlen(name) + 1);
     }
   }
   return names;
@@ -178,12 +178,13 @@ htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
   while(names) {
     temp = names;
     names = names->next;
-    name = llist_value(temp);
+    name = llist_value(temp); 
     if(netiface_prepare_iface(level, type, &table, name) == -1) {
       llist_clear(&names);
       return NULL;
     }
   }
+  llist_clear(&names);
   return table;
 }
 
