@@ -87,22 +87,18 @@ int netiface_create(netiface_name_t name, netiface_ip4_t ip) {
 
 
 /**
- * @fn htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type)
- * @brief List all available interfaces.
- * @param level Socket level.
- * @param type The table key type
- * @return The table list (key:see key type, value:netiface_t)
+ * @fn llist_t netiface_get_names(void)
+ * @brief List all available interfaces names.
+ * @return The table list of names.
  */
-htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
+llist_t netiface_get_names(void) {
   char buf[1024];
-  htable_t table = htable_new();
-  char **keys = NULL;
-  int j, count;
-  struct netiface_s* it;
+  llist_t names = NULL, temp, temp_list;
   _Bool found;
   int n_ifaces, i, fd;
   struct ifreq ifr, *iff;
   struct ifconf ifc;
+  const char* name;
 
   memset(&ifr, 0, sizeof(ifr));
 
@@ -110,7 +106,7 @@ htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
   struct if_nameindex *nameindex = if_nameindex();
   if(nameindex == NULL){
     logger(LOG_ERR, "if_nameindex: (%d) %s.\n", errno, strerror(errno));
-    htable_delete(table);
+    llist_clear(&names);
     return NULL;
   }
 
@@ -118,10 +114,8 @@ htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
   i = 0; /* init */
   while(1){
     if(!nameindex[i].if_name) break;
-    if(netiface_prepare_iface(level, type, &table, nameindex[i++].if_name) == -1) {
-      if_freenameindex(nameindex);
-      return NULL;
-    }
+    name = nameindex[i++].if_name;
+    names = llist_pushback_and_alloc(names, &name, strlen(name));
   }
   /* Release the pointer */
   if_freenameindex(nameindex);
@@ -131,7 +125,7 @@ htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
   fd = socket(AF_INET, SOCK_DGRAM, 0);
   if(fd < 0) {
     logger(LOG_ERR, "socket: (%d) %s.\n", errno, strerror(errno));
-    htable_delete(table);
+    llist_clear(&names);
     return NULL;
   }
   /* Query available interfaces. */
@@ -140,7 +134,7 @@ htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
   if(ioctl(fd, SIOCGIFCONF, &ifc) < 0) {
     logger(LOG_ERR, "SIOCGIFCONF: (%d) %s.\n", errno, strerror(errno));
     close(fd);
-    htable_delete(table);
+    llist_clear(&names);
     return NULL;
   }
   close(fd);
@@ -149,19 +143,45 @@ htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
   n_ifaces = ifc.ifc_len / sizeof(struct ifreq);
   for(i = 0; i < n_ifaces; i++) {
     struct ifreq *item = &iff[i];
-    count = htable_get_keys(table, &keys);
     found = 0;
-    for(j = 0; j < count; j++) {
-      it = (struct netiface_s*)htable_lookup(table, keys[j]);
-      if(!strcmp(it->name, item->ifr_name)) {
+    temp_list = names;
+    while(temp_list) {
+      temp = temp_list;
+      temp_list = temp_list->next;
+      name = llist_value(temp);
+      if(!strcmp(name, item->ifr_name)) {
 	found = 1;
 	break;
       }
     }
-    free(keys);
     if(!found) {
-      if(netiface_prepare_iface(level, type, &table, item->ifr_name) == -1)
-	return NULL;
+      name = item->ifr_name;
+      names = llist_pushback_and_alloc(names, &name, strlen(name));
+    }
+  }
+  return names;
+}
+/**
+ * @fn htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type)
+ * @brief List all available interfaces.
+ * @param level Socket level.
+ * @param type The table key type
+ * @return The table list (key:see key type, value:netiface_t)
+ */
+htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type) {
+  htable_t table = htable_new();
+  llist_t names = netiface_get_names();
+  llist_t temp;
+  char* name;
+
+  if(!names) return NULL;
+  while(names) {
+    temp = names;
+    names = names->next;
+    name = llist_value(temp);
+    if(netiface_prepare_iface(level, type, &table, name) == -1) {
+      llist_clear(&names);
+      return NULL;
     }
   }
   return table;

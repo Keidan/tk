@@ -26,6 +26,7 @@
   #include <net/if.h>
   #include <net/if_arp.h>
   #include <net/ethernet.h>
+  #include <tk/utils/llist.h>
   #include <tk/utils/htable.h>
   #include <stdio.h>
   #include <tk/io/net/netiface_status.h>
@@ -112,6 +113,13 @@
   int netiface_create(netiface_name_t name, netiface_ip4_t ip);
 
   #define netiface_list_get(ifaces, key) htable_lookup(ifaces, key)
+
+  /**
+   * @fn llist_t netiface_get_names(void)
+   * @brief List all available interfaces names.
+   * @return The table list of names.
+   */
+  llist_t netiface_get_names(void);
 
   /**
    * @fn htable_t netiface_list_new(netiface_sock_level level, netiface_key_type type)
