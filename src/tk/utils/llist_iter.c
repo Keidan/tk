@@ -51,6 +51,17 @@ llist_iter_t llist_iter_alloc(llist_t list) {
 }
 
 /**
+ * @fn void llist_iter_init(llist_iter_t it, llist_t list)
+ * @brief Init without allocation (do not call llist_iter_free)
+ * @param it Iterator.
+ * @param list The list.
+ */
+void llist_iter_init(llist_iter_t it, llist_t list) {
+  llist_it_ptr_t* ptr = ( llist_it_ptr_t*)it;
+  ptr->__root__ = list;
+  ptr->__node__ = list;
+}
+/**
  * @fn void llist_iter_free(llist_iter_t it)
  * @brief Release the resources.
  * @param it The iterator to be release.

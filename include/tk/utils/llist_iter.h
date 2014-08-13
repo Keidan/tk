@@ -46,6 +46,13 @@
    */
   void llist_iter_free(llist_iter_t it);
 
+  /**
+   * @fn void llist_iter_init(llist_iter_t it, llist_t list)
+   * @brief Init without allocation (do not call llist_iter_free)
+   * @param it Iterator.
+   * @param list The list.
+   */
+  void llist_iter_init(llist_iter_t it, llist_t list);
 
   /**
    * @fn llist_t llist_iter_next(llist_iter_t it)
