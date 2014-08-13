@@ -9,6 +9,9 @@ set(lib_src
   ${TK_SRC_DIR}/utils/llist.c 
   ${TK_SRC_DIR}/utils/llist_iter.c 
   ${TK_SRC_DIR}/utils/fifo.c
+  ${TK_SRC_DIR}/utils/cache/virtual_cache_item.c
+  ${TK_SRC_DIR}/utils/cache/virtual_cache.c
+  ${TK_SRC_DIR}/utils/cache/cache.c
   ${TK_SRC_DIR}/sys/log.c 
   ${TK_SRC_DIR}/sys/syssig.c 
   ${TK_SRC_DIR}/sys/systools.c 

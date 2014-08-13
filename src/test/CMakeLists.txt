@@ -84,3 +84,10 @@ if(HAVE_LUA_H)
   add_executable(test_lua ${bin_src})
   target_link_libraries(test_lua tk)
 endif(HAVE_LUA_H)
+
+#cache case
+set(bin_src 
+  ${TEST_SRC_DIR}/test_cache.c 
+)
+add_executable(test_cache ${bin_src})
+target_link_libraries(test_cache tk)
