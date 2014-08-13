@@ -88,6 +88,16 @@ llist_t llist_iter_next(llist_iter_t it) {
 }
 
 /**
+ * @fn llist_value(llist_iter_next(it))
+ * @brief Get the current iterator and moves to the next.
+ * @param it Iterator.
+ * @return The current element value or NULL.
+ */
+void* llist_iter_next_value(llist_iter_t it) {
+  return llist_value(llist_iter_next(it));
+}
+
+/**
  * @fn _Bool llist_iter_rewind(llist_iter_t it)
  * @brief Rewind the iterator to the start position into the list
  * @param it Iterator.
