@@ -352,6 +352,29 @@ size_t htable_get_keys(htable_st *table, char ***keys) {
 }
 
 /**
+ * @fn llist_t htable_get_keys_list(htable_st *table)
+ * @brief Get all keys in a llist_t.
+ * @param table The table.
+ * @return The key list.
+ */
+llist_t htable_get_keys_list(htable_st *table) {
+  llist_t list = NULL;
+  size_t i = 0;
+  for(i=0;i<table->knum;i++) {
+    if (table->house[i]) {
+      list = llist_pushback(list, table->house[i]->key);
+      htable_el_st *temp = table->house[i];
+      while(temp->next) {
+	if(temp->next->key)
+	  list = llist_pushback(list, temp->next->key);
+	temp = temp->next;
+      }
+    }
+  }
+  return list;
+}
+
+/**
  * @fn size_t htable_get_elements(htable_st *table, htable_el_st ***elements)
  * @brief Get all elements.
  * @param table The table.
@@ -375,6 +398,28 @@ size_t htable_get_elements(htable_st *table, htable_el_st ***elements) {
     }
   }
   return count;
+}
+
+/**
+ * @fn llist_t htable_get_elements_list(htable_st *table)
+ * @brief Get all elements.
+ * @param table The table.
+ * @return The elements list of htable_el_st*.
+ */
+llist_t htable_get_elements_list(htable_st *table) {
+  llist_t list = NULL;
+  size_t i = 0;
+  for(i=0;i<table->knum;i++) {
+    if (table->house[i]) {
+      list = llist_pushback(list, table->house[i]);
+      htable_el_st *temp = table->house[i];
+      while(temp->next) {
+	list = llist_pushback(list, temp->next);
+        temp = temp->next;
+      }
+    }
+  }
+  return list;
 }
 
 /**

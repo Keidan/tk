@@ -26,6 +26,7 @@
   #include <sys/types.h>
   #include <stdint.h>
   #include <stdbool.h>
+  #include <tk/utils/llist.h>
 
   typedef struct htable_el_s htable_el_st;
 
@@ -202,6 +203,14 @@
     size_t htable_get_keys(htable_st *table, char ***keys);
 
     /**
+     * @fn llist_t htable_get_keys_list(htable_st *table)
+     * @brief Get all keys in a llist_t.
+     * @param table The table.
+     * @return The key list.
+     */
+    llist_t htable_get_keys_list(htable_st *table);
+
+    /**
      * @fn size_t htable_get_elements(htable_st *table, htable_el_st ***elements)
      * @brief Get all elements.
      * @param table The table.
@@ -209,6 +218,14 @@
      * @return The elements count, the incomming elements pointer is allocated by this function (*elements).
      */
     size_t htable_get_elements(htable_st *table, htable_el_st ***elements);
+
+    /**
+     * @fn llist_t htable_get_elements_list(htable_st *table)
+     * @brief Get all elements.
+     * @param table The table.
+     * @return The elements list of htable_el_st*.
+     */
+    llist_t htable_get_elements_list(htable_st *table);
 
     /**
      * @fn htable_resize_et htable_resize(htable_st *table, size_t size)
