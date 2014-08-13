@@ -7,7 +7,7 @@
  * tk
  *
  * @par Copyright
- * Copyright 2011-2013 Keidan, all right reserved
+ * Copyright 2011-2014 Keidan, all right reserved
  *
  * This software is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY.
@@ -124,5 +124,23 @@
    * @return The binary representation.
    */
   const char* const string_hex2bin(const char* hexstr);
+
+  /**
+   * @fn _Bool string_startswith(const char *str, const char *prefix)
+   * @brief Test if the string starts with the prefix.
+   * @param str The source string.
+   * @param prefix The prefix string to find.
+   * @return true/false
+   */
+  _Bool string_startswith(const char *str, const char *prefix);
+
+  /**
+   * @fn _Bool string_endswith(const char *str, const char *suffix)
+   * @brief Test if the string ends with the suffix.
+   * @param str The source string.
+   * @param suffix The suffix string to find.
+   * @return true/false
+   */
+  _Bool string_endswith(const char *str, const char *suffix);
 
 #endif /* __STRING_H__ */

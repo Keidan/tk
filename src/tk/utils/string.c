@@ -7,7 +7,7 @@
 * tk
 *
 * @par Copyright
-* Copyright 2011-2013 Keidan, all right reserved
+* Copyright 2011-2014 Keidan, all right reserved
 *
 * This software is distributed in the hope that it will be useful, but WITHOUT
 * ANY WARRANTY.
@@ -223,4 +223,32 @@ const char* const string_hex2bin(const char* hexstr) {
     hexstr++;
   }
   return str;
+}
+
+
+/**
+ * @fn _Bool string_startswith(const char *str, const char *prefix)
+ * @brief Test if the string starts with the prefix.
+ * @param str The source string.
+ * @param prefix The prefix string to find.
+ * @return true/false
+ */
+_Bool string_startswith(const char *str, const char *prefix) {
+  if(!str || !prefix) return 0;
+  size_t prefix_l = strlen(prefix), str_l = strlen(str);
+  return str_l < prefix_l ? 0 : strncmp(prefix, str, prefix_l) == 0;
+}
+
+/**
+ * @fn _Bool string_endswith(const char *str, const char *suffix)
+ * @brief Test if the string ends with the suffix.
+ * @param str The source string.
+ * @param suffix The suffix string to find.
+ * @return true/false
+ */
+_Bool string_endswith(const char *str, const char *suffix) {
+  if(!str || !suffix) return 0;
+  size_t suffix_l = strlen(suffix), str_l = strlen(str);
+  if(suffix_l > str_l) return 0;
+  return strncmp(str + str_l - suffix_l, suffix, suffix_l) == 0;
 }
