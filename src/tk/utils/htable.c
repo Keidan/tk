@@ -59,31 +59,43 @@ void htable_el_delete(htable_el_st *element) {
   if(element) {
     if(element->key)
       free(element->key), element->key = NULL;
-    if(element->value)
+    if(element->alloc_value && element->value)
       free(element->value), element->value = NULL;
     free(element);
   }
 }
 
 /**
- * @fn htable_st* htable_new()
+ * @fn htable_st* htable_new(void)
  * @brief Creation of a new htable.
  * @return The new htable or NULL if no memory.
  */
-htable_st *htable_new() {
+htable_st *htable_new(void) {
   return  htable_new_with_capacity(DEFAULT_KNUM);
 }
 
 /**
- * @fn htable_st* htable_new_with_capacity(int capacity)
+ * @fn htable_st* htable_new1(_Bool alloc_value)
  * @brief Creation of a new htable.
+ * @param alloc_value Alloc the input value or juste copy.
+ * @return The new htable or NULL if no memory.
+ */
+htable_st* htable_new1(_Bool alloc_value) {
+  return  htable_new1_with_capacity(alloc_value, DEFAULT_KNUM);
+}
+
+/**
+ * @fn htable_st* htable_new1_with_capacity(_Bool alloc_value, int capacity)
+ * @brief Creation of a new htable.
+ * @param alloc_value Alloc the input value or juste copy.
  * @param capacity Set the table capacity
  * @return The new htable or NULL if no memory.
  */
-htable_st * htable_new_with_capacity(int capacity) {
+htable_st * htable_new1_with_capacity(_Bool alloc_value, int capacity) {
   htable_st *table = calloc(1, sizeof(htable_st));
   if (!table)
     return NULL;
+  table->alloc_value = alloc_value;
   table->knum = capacity;
   table->kratio = DEFAULT_KRATIO;
   table->mklen = DEFAULT_MKLEN;
@@ -93,6 +105,16 @@ htable_st * htable_new_with_capacity(int capacity) {
     return NULL;
   }
   return table;
+}
+
+/**
+ * @fn htable_st* htable_new_with_capacity(int capacity)
+ * @brief Creation of a new htable.
+ * @param capacity Set the table capacity
+ * @return The new htable or NULL if no memory.
+ */
+htable_st * htable_new_with_capacity(int capacity) {
+  return htable_new1_with_capacity(true, capacity);
 }
 
 /**
@@ -157,13 +179,17 @@ int htable_add(htable_st *table, char *key, void *value, size_t vlen) {
   htable_el_st *element = htable_el_new();
   if (!element)
     return -1; // No Memory
+  element->alloc_value = table->alloc_value;
   element->key = malloc(internal_key_length);
-  element->value = malloc(internal_value_length);
   bzero(element->key, internal_key_length);
-  bzero(element->value, internal_value_length);
+  if(element->alloc_value) {
+    element->value = malloc(internal_value_length);
+    bzero(element->value, internal_value_length);
+  } else element->value = value;
   if (element->key && element->value) {
     memcpy(element->key, key, klen);
-    memcpy(element->value, value, vlen);
+    if(element->alloc_value)
+      memcpy(element->value, value, vlen);
   } else {
     if (element->key) {
       free(element->key);
@@ -274,28 +300,28 @@ void* htable_lookup(htable_st *table, char *key) {
 }
 
 /**
- * @fn int htable_has_key(htable_st *table, char *key)
+ * @fn _Bool htable_has_key(htable_st *table, char *key)
  * @brief Check if the table contains this key.
  * @param table The table.
  * @param key The key.
- * @return 1 if error else 0.
+ * @return true/false
  */
-int htable_has_key(htable_st *table, char *key) {
+_Bool htable_has_key(htable_st *table, char *key) {
   size_t klen = strlen(key);
   size_t hash = htable_hash(key, table->knum);
   if (!table->house[hash])
-    return 0; // key not found
+    return false; // key not found
   htable_el_st *temp = table->house[hash];
   while(temp) {
     while(temp && temp->klen!=klen)
       temp = temp->next;
     if(temp) {
       if (!memcmp(temp->key, key, klen))
-        return 1; // key found
+        return true; // key found
       temp=temp->next;
     }
   }
-  return 0; // key not found   
+  return false; // key not found   
 }
 
 /**

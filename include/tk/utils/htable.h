@@ -38,6 +38,7 @@
       size_t vlen;                   /**< The value length. */
       char   *key;                   /**< The key. */
       void   *value;                 /**< The value. */
+      _Bool  alloc_value;
       htable_el_st * next;   /**< The next element. */
   };
 
@@ -51,6 +52,7 @@
       uint32_t knum;                 /**< Key num. */
       size_t kratio;                 /**< Key ratio. */
       size_t mklen;                  /**< Max key len. */
+      _Bool  alloc_value;
   } htable_st;
   typedef htable_st *htable_t;
 
@@ -105,11 +107,19 @@
     uint32_t htable_hash(char *key, uint32_t max_key);
 
     /**
-     * @fn htable_st* htable_new()
+     * @fn htable_st* htable_new(void)
      * @brief Creation of a new htable.
      * @return The new htable or NULL if no memory.
      */
-    htable_st* htable_new();
+    htable_st* htable_new(void);
+
+    /**
+     * @fn htable_st* htable_new1(_Bool alloc_value)
+     * @brief Creation of a new htable.
+     * @param alloc_value Alloc the input value or juste copy.
+     * @return The new htable or NULL if no memory.
+     */
+    htable_st* htable_new1(_Bool alloc_value);
 
     /**
      * @fn htable_st* htable_new_with_capacity(int capacity)
@@ -118,6 +128,15 @@
      * @return The new htable or NULL if no memory.
      */
     htable_st * htable_new_with_capacity(int capacity);
+
+    /**
+     * @fn htable_st* htable_new1_with_capacity(_Bool alloc_value, int capacity)
+     * @brief Creation of a new htable.
+     * @param alloc_value Alloc the input value or juste copy.
+     * @param capacity Set the table capacity
+     * @return The new htable or NULL if no memory.
+     */
+    htable_st * htable_new1_with_capacity(_Bool alloc_value, int capacity);
 
     /**
      * @fn void htable_delete(htable_st *table)
@@ -164,14 +183,14 @@
     void* htable_lookup(htable_st *table, char *key);
 
     /**
-     * @fn int htable_has_key(htable_st *table, char *key)
+     * @fn _Bool htable_has_key(htable_st *table, char *key)
      * @brief Check if the table contains this key.
      * @param table The table.
      * @param key The key.
      * @param klen The key len.
-     * @return 1 if error else 0.
+     * @return true/false.
      */
-    int htable_has_key(htable_st *table, char *key);
+    _Bool htable_has_key(htable_st *table, char *key);
 
     /**
      * @fn size_t htable_get_keys(htable_st *table, char ***keys)
