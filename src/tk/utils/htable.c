@@ -411,10 +411,10 @@ llist_t htable_get_elements_list(htable_st *table) {
   size_t i = 0;
   for(i=0;i<table->knum;i++) {
     if (table->house[i]) {
-      list = llist_pushback(list, table->house[i]);
+      list = llist_pushback(list, table->house[i]->value);
       htable_el_st *temp = table->house[i];
       while(temp->next) {
-	list = llist_pushback(list, temp->next);
+	list = llist_pushback(list, temp->next->value);
         temp = temp->next;
       }
     }
