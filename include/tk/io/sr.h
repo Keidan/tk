@@ -26,7 +26,7 @@
   #include <stdint.h>
   #include <tk/utils/string.h>
 
-  #define SR_DEVICE_NAME_LENGTH      0x10
+  #define SR_DEVICE_NAME_LENGTH      0x50
   #define SR_PRINTF_BUF_LEN          0xFF
   #define SR_DELAY_ON_READ_ERROR     0x05
 
