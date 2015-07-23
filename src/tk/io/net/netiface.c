@@ -382,7 +382,7 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
   if(ioctl(iff->fd, SIOCGIFADDR, &devea) == 0) {
     sa = (struct sockaddr_in *)&devea.ifr_addr;
     strncpy(info->ip4, inet_ntoa(sa->sin_addr), sizeof(netiface_ip4_t));
-  } else
+  } else if(errno != 99)
     logger(LOG_ERR, "Unable to get the ipv4 address: (%d) %s\n", errno, strerror(errno));
 
 
@@ -390,14 +390,14 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
   if (ioctl(iff->fd, SIOCGIFNETMASK, &devea) == 0) {
     sa = (struct sockaddr_in*) &devea.ifr_netmask;
     strncpy(info->mask, inet_ntoa(sa->sin_addr), sizeof(netiface_ip4_t));
-  } else
+  } else if(errno != 99)
     logger(LOG_ERR, "Unable to get the netmask address: (%d) %s\n", errno, strerror(errno));
 
   // Get the broadcast address
   if (ioctl(iff->fd, SIOCGIFBRDADDR, &devea) == 0) {
     struct sockaddr_in *sbcast = (struct sockaddr_in *)&devea.ifr_broadaddr;
     strncpy(info->bcast, inet_ntoa(sbcast->sin_addr), sizeof(netiface_ip4_t));
-  } else
+  } else if(errno != 99)
     logger(LOG_ERR, "Unable to get the broad cast address: (%d) %s\n", errno, strerror(errno));
 
   // Get the mac address and familly
@@ -410,7 +410,7 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
 	    devea.ifr_hwaddr.sa_data[3]&0xFF,
 	    devea.ifr_hwaddr.sa_data[4]&0xFF,
 	    devea.ifr_hwaddr.sa_data[5]&0xFF);
-  } else
+  } else if(errno != 99)
     logger(LOG_ERR, "Unable to get the mac address: (%d) %s\n", errno, strerror(errno));
 
   // Get the metric
@@ -418,13 +418,13 @@ int netiface_read(const netiface_t iface, netiface_info_t info) {
     info->metric = devea.ifr_metric;
     if(!info->metric) info->metric++;
   }
-  else
+  else if(errno != 99)
     logger(LOG_ERR, "Unable to get the iface metric: (%d) %s\n", errno, strerror(errno));
 
   // Get the MTU
   if (ioctl(iff->fd, SIOCGIFMTU, &devea) == 0)
     info->mtu = devea.ifr_mtu;
-  else
+  else if(errno != 99)
     logger(LOG_ERR, "Unable to get the iface mtu: (%d) %s\n", errno, strerror(errno));
 
   /* Get status */
