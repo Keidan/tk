@@ -105,11 +105,16 @@ int nettools_prepare_ifaces(htable_t *ifaces, int *maxfd, fd_set *rset, const ne
   char** keys;
   int i, count, fd;
   netiface_t iface;
+  netiface_name_t name;
   *ifaces = netiface_list_new(NETIFACE_LVL_RAW, NETIFACE_KEY_FD);
   if(!*ifaces) return -1;
   count = htable_get_keys(*ifaces, &keys);
   for(i = 0; i < count; i++) {
     iface = htable_lookup(*ifaces, keys[i]);
+    if(strlen(iname)) {
+      netiface_get_name(iface, name);
+      if(strcmp(iname, name)) continue;
+    }
     if(netiface_get_fd(iface, &fd) == -1) return -1;
     if(fd > *maxfd) *maxfd = fd;
     FD_SET(fd, rset);
